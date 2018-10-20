@@ -1,4 +1,12 @@
-import {UserController} from "./controller/UserController";
+import { UserController } from "./controller/UserController";
+
+export interface IRoute {
+    method: string;
+    route: string;
+    controller: any;
+    action: string;
+    protected?: boolean;
+}
 
 export const Routes = [{
     method: "get",
