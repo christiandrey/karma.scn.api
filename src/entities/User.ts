@@ -1,10 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, Column } from "typeorm";
+import { BaseEntity } from "./BaseEntity";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { IsEmail, MinLength } from "class-validator";
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
 
-    @PrimaryGeneratedColumn()
-    id: number;
+    @Column()
+    type: UserTypeEnum;
 
     @Column()
     firstName: string;
@@ -13,6 +16,16 @@ export class User {
     lastName: string;
 
     @Column()
-    age: number;
+    phone: string;
+
+    @Column()
+    @IsEmail()
+    email: string;
+
+    @Column()
+    @MinLength(10, {
+        message: "Password is too short"
+    })
+    password: string;
 
 }

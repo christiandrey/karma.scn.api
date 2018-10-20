@@ -1,8 +1,14 @@
+import { IJsonResponse } from "../interfaces/IJsonResponse";
+
 export namespace Methods {
 
     // -------------------------------------------------------------------------------------------------
-    /** Fades an hex color */
-    export function fade(hex: string, opacity: number = 1): string {
-        return ""
+    /** Returns a jsonResponse Object */
+    export function getJsonResponse<T>(data: T, message = "", status = true): IJsonResponse<T> {
+        return {
+            status,
+            message,
+            data
+        } as IJsonResponse<T>;
     }
 }

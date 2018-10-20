@@ -6,7 +6,8 @@
     "password": "OJQNFKhr$7AqLbN3w9Gt",
     "database": "karmaScn",
     "synchronize": false,
-    "logging": false,
+    "logging": true,
+    "logger": "file",
     "entities": [
         "src/entities/**/*.ts"
     ],
