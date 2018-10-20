@@ -2,7 +2,7 @@
 // import { Strategy, ExtractJwt, StrategyOptions, VerifiedCallback } from "passport-jwt";
 // import * as PassportLocal from "passport-local";
 // import { getRepository } from "typeorm";
-// import { User } from "../entity/User";
+// import { User } from "../entities/User";
 // import { Constants } from "../shared/constants";
 
 // const LocalStrategy = PassportLocal.Strategy;

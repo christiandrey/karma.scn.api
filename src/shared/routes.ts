@@ -1,4 +1,4 @@
-import { UserController } from "../controller/UserController";
+import { UsersController } from "../controller/UsersController";
 
 export interface IRoute {
     method: string;
@@ -11,21 +11,21 @@ export interface IRoute {
 export const Routes = [{
     method: "get",
     route: "/users",
-    controller: UserController,
+    controller: UsersController,
     action: "all"
 }, {
     method: "get",
     route: "/users/:id",
-    controller: UserController,
+    controller: UsersController,
     action: "one"
 }, {
     method: "post",
     route: "/users",
-    controller: UserController,
+    controller: UsersController,
     action: "save"
 }, {
     method: "delete",
     route: "/users",
-    controller: UserController,
+    controller: UsersController,
     action: "remove"
 }];

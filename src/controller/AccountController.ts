@@ -1,12 +1,12 @@
 // import { NextFunction, Request, Response } from "express";
-// import { User } from "../entity/User";
+// import { User } from "../entities/User";
 // import { getRepository } from "typeorm";
 // import * as passport from "passport";
 // import { IVerifyOptions } from "passport-local";
 // import * as JWT from "jsonwebtoken";
 // import { Constants } from "../shared/constants";
 
-// export class AuthController {
+// export class AccountController {
 
 //     private userRepository = getRepository(User);
 

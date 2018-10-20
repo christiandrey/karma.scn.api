@@ -6,7 +6,7 @@ import { Request, Response } from "express";
 import { Routes } from "./shared/routes";
 // import { Routes, IRoute } from "./routes";
 // import * as passport from "passport";
-import { User } from "./entity/User";
+import { User } from "./entities/User";
 
 createConnection().then(async connection => {
 
