@@ -3,7 +3,7 @@
 // import * as PassportLocal from "passport-local";
 // import { getRepository } from "typeorm";
 // import { User } from "../entity/User";
-// import { Constants } from "../constants";
+// import { Constants } from "../shared/constants";
 
 // const LocalStrategy = PassportLocal.Strategy;
 // const userRepository = getRepository(User);

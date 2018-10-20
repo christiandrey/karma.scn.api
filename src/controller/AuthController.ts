@@ -4,7 +4,7 @@
 // import * as passport from "passport";
 // import { IVerifyOptions } from "passport-local";
 // import * as JWT from "jsonwebtoken";
-// import { Constants } from "../constants";
+// import { Constants } from "../shared/constants";
 
 // export class AuthController {
 
