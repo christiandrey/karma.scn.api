@@ -6,6 +6,7 @@ import { TimelineUpdate } from "./TimelineUpdate";
 import { TimelinePhoto } from "./TimelinePhoto";
 import { Article } from "./Article";
 import { Discussion } from "./Discussion";
+import { Webinar } from "./Webinar";
 
 @Entity()
 export class Comment extends BaseEntity {
@@ -36,4 +37,7 @@ export class Comment extends BaseEntity {
 
     @ManyToOne(type => TimelinePhoto, timelinePhoto => timelinePhoto.comments)
     timelinePhoto: Array<TimelinePhoto>;
+
+    @ManyToOne(type => Webinar, webinar => webinar.comments)
+    webinar: Array<Webinar>;
 }

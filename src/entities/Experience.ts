@@ -30,5 +30,5 @@ export class Experience extends BaseEntity {
     current: boolean;
 
     @Column()
-    companyLogo: string;
+    companyLogoUrl: string;
 }

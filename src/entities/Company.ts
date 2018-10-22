@@ -21,7 +21,7 @@ export class Company extends BaseEntity {
 
     @Column()
     @OneToOne(type => Media)
-    logo: Media;
+    logoUrl: Media;
 
     @Column()
     postalBox: number;

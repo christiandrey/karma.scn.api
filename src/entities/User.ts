@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, JoinColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from "typeorm";
+import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches } from "class-validator";
@@ -10,6 +10,10 @@ import { Experience } from "./Experience";
 import { Skill } from "./Skill";
 import { Article } from "./Article";
 import { Resource } from "./Resource";
+import { Certificate } from "./Certificate";
+import { Notification } from "./Notification";
+import { Webinar } from "./Webinar";
+import { Address } from "./Address";
 
 @Entity()
 export class User extends BaseEntity {
@@ -22,6 +26,13 @@ export class User extends BaseEntity {
 
     @Column()
     lastName: string;
+
+    @OneToOne(type => Address)
+    @JoinColumn()
+    address?: Address;
+
+    @Column()
+    latestExperience: Experience;
 
     @Column()
     @IsLowercase()
@@ -55,13 +66,13 @@ export class User extends BaseEntity {
         cascade: ["remove"]
     })
     @JoinColumn()
-    company: Company;
+    company?: Company;
 
-    @OneToMany(type => Media, media => media.user, {
+    @OneToMany(type => Certificate, certificate => certificate.user, {
         eager: true,
         cascade: true
     })
-    certifications: Array<Media>; //TODO Change to New Entity
+    certifications: Array<Certificate>;
 
     @Column()
     @IsFQDN()
@@ -91,7 +102,9 @@ export class User extends BaseEntity {
     @MaxLength(500)
     description: string;
 
-    @OneToMany(type => Experience, experience => experience.user)
+    @OneToMany(type => Experience, experience => experience.user, {
+        eager: true
+    })
     experiences: Array<Experience>;
 
     @ManyToOne(type => Skill, {
@@ -109,4 +122,19 @@ export class User extends BaseEntity {
         eager: true
     })
     views: Array<View>;
+
+    @OneToMany(type => Notification, notification => notification.user)
+    notifications: Array<Notification>;
+
+    @ManyToMany(type => Webinar, webinar => webinar.participants)
+    attendedWebinars: Array<Webinar>;
+
+    @AfterLoad()
+    getLatestExperience() {
+        const experiences = this.experiences;
+
+        if (experiences.length > 0) {
+            this.latestExperience = experiences[0];
+        }
+    }
 }
