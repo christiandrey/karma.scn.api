@@ -100,6 +100,8 @@ export class AccountController {
         return JWT.sign({
             id: user.id,
             email: user.email
-        }, Constants.cipherKey);
+        }, Constants.cipherKey, {
+                expiresIn: "7 days"
+            });
     }
 }
