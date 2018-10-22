@@ -14,7 +14,6 @@ import { Certificate } from "./Certificate";
 import { Notification } from "./Notification";
 import { Webinar } from "./Webinar";
 import { Address } from "./Address";
-import { Chance } from "chance";
 import { Methods } from "../shared/methods";
 
 @Entity()
@@ -103,14 +102,17 @@ export class User extends BaseEntity {
     @IsFQDN()
     twitterUrl: string;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     cpdPoints: number;
 
     @OneToMany(type => Connection, connection => connection.user)
     connections: Array<Connection>;
 
     @Column({
-        length: 500
+        length: 500,
+        nullable: true
     })
     @MaxLength(500)
     description: string;
@@ -145,14 +147,14 @@ export class User extends BaseEntity {
     @BeforeInsert()
     createNewUrlToken() {
         const email = this.email.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Methods.hash(email)}`;
+        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Math.abs(Methods.hash(email))}`;
         this.urlToken = urlToken;
     }
 
     @BeforeUpdate()
     updateUrlToken() {
         const email = this.email.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Methods.hash(email)}`;
+        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Math.abs(Methods.hash(email))}`;
         this.urlToken = urlToken;
     }
 
@@ -160,7 +162,7 @@ export class User extends BaseEntity {
     getLatestExperience() {
         const experiences = this.experiences;
 
-        if (experiences.length > 0) {
+        if (!!experiences && experiences.length > 0) {
             this.latestExperience = experiences[0];
         }
     }

@@ -8,9 +8,7 @@ export class View extends BaseEntity {
     @ManyToOne(type => User, user => user.views)
     user: User;
 
-    @OneToOne(type => User, {
-        eager: true,
-    })
+    @OneToOne(type => User)
     @JoinColumn()
     viewedBy: User;
 }

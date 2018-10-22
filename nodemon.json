@@ -6,7 +6,9 @@
         "node_modules"
     ],
     "watch": [
-        "src/controller"
+        "src/controller",
+        "src/shared",
+        "src/auth"
     ],
     "exec": "yarn start",
     "ext": "ts"

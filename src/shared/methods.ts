@@ -1,4 +1,5 @@
 import { IJsonResponse } from "../interfaces/IJsonResponse";
+import { Validator } from "class-validator";
 
 export namespace Methods {
 
@@ -23,5 +24,12 @@ export namespace Methods {
             hash |= 0; // Convert to 32bit integer
         }
         return hash;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Validates an email address */
+    export async function validateEmail(email: string): Promise<boolean> {
+        const validator = new Validator();
+        return await validator.isEmail(email);
     }
 }

@@ -18,10 +18,14 @@ export class TimelineUpdate extends BaseEntity {
     @Column()
     isDisabled: boolean;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     commentsCount: number;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     likesCount: number;
 
     @OneToMany(type => Comment, comment => comment.timelineUpdate, {

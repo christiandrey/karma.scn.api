@@ -19,7 +19,9 @@ export class Webinar extends BaseEntity {
     @JoinColumn()
     anchor: User;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     cpdPoints: number;
 
     @Column()

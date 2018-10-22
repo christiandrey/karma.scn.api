@@ -1,60 +1,105 @@
-// import { NextFunction, Request, Response } from "express";
-// import { User } from "../entities/User";
-// import { getRepository } from "typeorm";
-// import * as passport from "passport";
-// import { IVerifyOptions } from "passport-local";
-// import * as JWT from "jsonwebtoken";
-// import { Constants } from "../shared/constants";
+import { NextFunction, Request, Response } from "express";
+import { User } from "../entities/User";
+import { getRepository } from "typeorm";
+import * as passport from "passport";
+import { IVerifyOptions } from "passport-local";
+import * as JWT from "jsonwebtoken";
+import { Constants } from "../shared/constants";
+import { FormResponse } from "../dto/classes/FormResponse";
+import { Methods } from "../shared/methods";
+import { RegisterDetails } from "../dto/classes/RegisterDetails";
+import { validate } from "class-validator";
+import * as bcrypt from "bcrypt";
 
-// export class AccountController {
+export class AccountController {
 
-//     private userRepository = getRepository(User);
+    private userRepository = getRepository(User);
 
-//     async login(req: Request, resp: Response, next: NextFunction) {
-//         passport.authenticate("local", {
-//             session: false
-//         }, (error, user: User, info: IVerifyOptions) => {
-//             if (!user) {
-//                 const { message } = info;
-//                 const response = { message };
-//                 return resp.status(400).json(response);
-//             }
+    async login(req: Request, resp: Response, next: NextFunction) {
+        passport.authenticate("local", {
+            session: false
+        }, (error, user: User, info: IVerifyOptions) => {
+            if (!user) {
+                const { message } = info;
+                const response = new FormResponse();
 
-//             req.login(user, {
-//                 session: false
-//             }, error => {
-//                 if (!!error) {
-//                     resp.send(error);
-//                 }
-//                 const token = this.getUserToken(user);
-//                 const response = { token };
-//                 return resp.json(response);
-//             });
-//         })(req, resp);
-//     }
+                response.isValid = false;
+                response.errors = [message];
 
-//     async register(req: Request, resp: Response, next: NextFunction) {
-//         const user = req.body as User;
-//         const { email } = user;
-//         let dbUser = await this.userRepository.findOne({ email });
+                return resp.json(Methods.getJsonResponse(response, message, false));
+            }
 
-//         if (!!dbUser) {
-//             const response = {
-//                 message: "A user with this email already exists"
-//             }
-//             return response;
-//         } else {
-//             dbUser = await this.userRepository.save(user);
-//             const token = this.getUserToken(dbUser);
-//             const response = { token };
-//             return response;
-//         }
-//     }
+            req.login(user, {
+                session: false
+            }, error => {
+                if (!!error) {
+                    const response = new FormResponse();
 
-//     private getUserToken(user: User): string {
-//         return JWT.sign({
-//             id: user.id,
-//             email: user.email
-//         }, Constants.cipherKey);
-//     }
-// }
+                    response.isValid = false;
+                    response.errors = [error.toString()];
+
+                    return resp.json(Methods.getJsonResponse(response, error.toString(), false));
+                }
+                const token = this.getUserToken(user);
+                const response = new FormResponse<string>();
+
+                response.isValid = true;
+                response.target = token;
+
+                return resp.json(Methods.getJsonResponse(response, "Logged in successfully"));
+            });
+        })(req, resp);
+    }
+
+    async register(req: Request, resp: Response, next: NextFunction) {
+        const registerDetails = req.body as RegisterDetails;
+        const validationResult = await validate(registerDetails);
+
+        if (validationResult.length) {
+            const response = new FormResponse();
+            response.isValid = false;
+            response.errors = validationResult.map(x => x.toString());
+
+            return Methods.getJsonResponse(response, "Invalid sign in details", false);
+        }
+
+        const { email } = registerDetails;
+        let dbUser = await this.userRepository.findOne({ email });
+
+        if (!!dbUser) {
+            const response = new FormResponse({
+                isValid: false,
+                errors: ["A user with this email already exists"]
+            });
+            return Methods.getJsonResponse(response, "A user with this email already exists", false);
+        } else {
+            const { firstName, lastName, email, password, type, phone } = registerDetails;
+            const user = new User();
+
+            user.firstName = firstName;
+            user.lastName = lastName;
+            user.email = email.toLowerCase();
+            user.password = await bcrypt.hash(password, 2);
+            user.type = type;
+            user.phone = phone;
+
+            dbUser = await this.userRepository.save(user);
+
+            const token = this.getUserToken(dbUser);
+
+            const response = new FormResponse<string>({
+                isValid: true,
+                target: token
+            });
+
+            return Methods.getJsonResponse(response, "New user was created successfully");
+        }
+    }
+
+    private getUserToken(user: User): string {
+        return JWT.sign({
+            id: user.id,
+            email: user.email
+        }, Constants.cipherKey);
+    }
+}

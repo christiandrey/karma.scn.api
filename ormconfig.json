@@ -4,7 +4,7 @@
     "port": 3306,
     "username": "root",
     "password": "OJQNFKhr$7AqLbN3w9Gt",
-    "database": "karmaScn",
+    "database": "karmascn",
     "synchronize": false,
     "logging": true,
     "logger": "file",

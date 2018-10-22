@@ -60,7 +60,9 @@ export class Job extends BaseEntity {
     @MaxLength(1000)
     requirements: string;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     viewCount: number;
 
     @BeforeInsert()

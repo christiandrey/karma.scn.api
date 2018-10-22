@@ -3,7 +3,7 @@ import { IFormResponse } from "../interfaces/IFormResponse";
 export class FormResponse<T> implements IFormResponse<T> {
     isValid: boolean;
     errors: Array<string>;
-    target: T;
+    target?: T;
 
     constructor(dto?: IFormResponse<T> | any) {
 

@@ -15,7 +15,9 @@ export class Discussion extends BaseEntity {
     @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
-    @Column("int")
+    @Column("int", {
+        default: 0
+    })
     commentsCount: number;
 
     @OneToMany(type => Comment, comment => comment.discussion, {
