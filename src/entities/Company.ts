@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, ManyToOne } from "typeorm";
+import { Entity, Column, OneToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { IsEmail, IsFQDN, IsDate, IsNotEmpty, MaxLength, IsLowercase, Matches } from "class-validator";
 import { BusinessRegistrationTypeEnum } from "../enums/BusinessRegistrationTypeEnum";
@@ -19,11 +19,14 @@ export class Company extends BaseEntity {
     @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
-    @Column()
-    @OneToOne(type => Media)
-    logoUrl: Media;
+    @Column({
+        nullable: true
+    })
+    logoUrl: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     postalBox: number;
 
     @OneToOne(type => Address, {
@@ -36,7 +39,9 @@ export class Company extends BaseEntity {
     @Column()
     phone: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     website: string;
 
@@ -47,23 +52,30 @@ export class Company extends BaseEntity {
     @Column()
     backgroundCheck: boolean;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     noBackgroundCheckReason: string;
 
     @Column()
     registrationType: BusinessRegistrationTypeEnum;
 
     @Column()
+    @IsNotEmpty()
     registrationNumber: string;
 
     @Column()
     @IsDate()
     registrationDate: Date;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     taxpayersIdentificationNumber: number;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     vatRegistrationNumber: number;
 
     @Column("double")
@@ -101,4 +113,16 @@ export class Company extends BaseEntity {
 
     @Column()
     verified: boolean;
+
+    @BeforeInsert()
+    createNewUrlToken() {
+        const urlToken = this.name.toLowerCase().replace(/[^a-z]/g, "");
+        this.urlToken = urlToken;
+    }
+
+    @BeforeUpdate()
+    updateUrlToken() {
+        const urlToken = this.name.toLowerCase().replace(/[^a-z]/g, "");
+        this.urlToken = urlToken;
+    }
 }

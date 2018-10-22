@@ -23,12 +23,16 @@ export class Experience extends BaseEntity {
     @IsDate()
     startDate: Date;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     endDate: Date;
 
     @Column()
     current: boolean;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     companyLogoUrl: string;
 }

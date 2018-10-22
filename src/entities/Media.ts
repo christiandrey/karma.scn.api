@@ -14,7 +14,9 @@ export class Media extends BaseEntity {
     @Column()
     type: MediaTypeEnum;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     note: string;
 
     @ManyToOne(type => User, user => user.certifications)

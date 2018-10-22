@@ -6,16 +6,23 @@ import { Country } from "./Country";
 @Entity()
 export class Address extends BaseEntity {
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     addressLine1: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     addressLine2: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     city: string;
 
     @Column()
+    @IsNotEmpty()
     state: string;
 
     @ManyToOne(type => Country, country => country.addresses, {

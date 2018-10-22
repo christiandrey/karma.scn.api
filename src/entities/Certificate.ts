@@ -24,7 +24,9 @@ export class Certificate extends BaseEntity {
     @JoinColumn()
     media: Media;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     issuerLogoUrl: string;
 }

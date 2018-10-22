@@ -1,7 +1,7 @@
-import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad } from "typeorm";
+import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
-import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches } from "class-validator";
+import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha } from "class-validator";
 import { Company } from "./Company";
 import { Media } from "./Media";
 import { View } from "./View";
@@ -14,6 +14,8 @@ import { Certificate } from "./Certificate";
 import { Notification } from "./Notification";
 import { Webinar } from "./Webinar";
 import { Address } from "./Address";
+import { Chance } from "chance";
+import { Methods } from "../shared/methods";
 
 @Entity()
 export class User extends BaseEntity {
@@ -22,16 +24,19 @@ export class User extends BaseEntity {
     type: UserTypeEnum;
 
     @Column()
+    @IsAlpha()
     firstName: string;
 
     @Column()
+    @IsAlpha()
     lastName: string;
 
     @OneToOne(type => Address)
     @JoinColumn()
     address?: Address;
 
-    @Column()
+    @OneToOne(type => Experience)
+    @JoinColumn()
     latestExperience: Experience;
 
     @Column()
@@ -74,19 +79,27 @@ export class User extends BaseEntity {
     })
     certifications: Array<Certificate>;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     facebookUrl: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     linkedInUrl: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     googlePlusUrl: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     @IsFQDN()
     twitterUrl: string;
 
@@ -128,6 +141,20 @@ export class User extends BaseEntity {
 
     @ManyToMany(type => Webinar, webinar => webinar.participants)
     attendedWebinars: Array<Webinar>;
+
+    @BeforeInsert()
+    createNewUrlToken() {
+        const email = this.email.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Methods.hash(email)}`;
+        this.urlToken = urlToken;
+    }
+
+    @BeforeUpdate()
+    updateUrlToken() {
+        const email = this.email.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const urlToken = `${this.firstName.toLowerCase()}${this.lastName.toLowerCase()}${Methods.hash(email)}`;
+        this.urlToken = urlToken;
+    }
 
     @AfterLoad()
     getLatestExperience() {

@@ -17,7 +17,8 @@ export class Resource extends BaseEntity {
     title: string;
 
     @Column({
-        length: 500
+        length: 500,
+        nullable: true
     })
     @MaxLength(500)
     description: string;
