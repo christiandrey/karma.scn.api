@@ -23,21 +23,21 @@ export const Routes = [{
     action: "register"
 }, {
     method: "post",
-    route: "/categories/create",
+    route: "/categories",
     controller: CategoriesController,
     action: "createAsync",
     protected: true,
     admin: true
 }, {
     method: "put",
-    route: "/categories/update",
+    route: "/categories",
     controller: CategoriesController,
     action: "updateAsync",
     protected: true,
     admin: true
 }, {
     method: "delete",
-    route: "/categories/delete/:id",
+    route: "/categories/:id",
     controller: CategoriesController,
     action: "deleteAsync",
     protected: true,

@@ -13,8 +13,11 @@ export class CategoriesController {
 
     async createAsync(request: Request, response: Response, next: NextFunction) {
         const category = request.body as Category;
-        const validationResult = await validate(category);
 
+        // ------------------------------------------------------------------------
+        // Validate Incoming Data
+        // ------------------------------------------------------------------------
+        const validationResult = await validate(category);
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
@@ -23,10 +26,25 @@ export class CategoriesController {
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }
 
+        // ------------------------------------------------------------------------
+        // Check for existing Entity
+        // ------------------------------------------------------------------------
+        const existingCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title) });
+        if (!!existingCategory) {
+            const invalidResponse = new FormResponse({
+                isValid: false,
+                errors: ["A category with the same title already exists"]
+            } as IFormResponse);
+            return Methods.getJsonResponse(invalidResponse, "A category with the same title already exists", false);
+        }
+
+        // ------------------------------------------------------------------------
+        // Create New Entity
+        // ------------------------------------------------------------------------
         const categoryToCreate = new Category();
         categoryToCreate.title = category.title;
 
-        const dbCategory = await this.categoryRepository.save(category);
+        const dbCategory = await this.categoryRepository.save(categoryToCreate);
         const validResponse = new FormResponse<Category>({
             isValid: true,
             target: MapCategory.inCategoriesControllerCreateAsync(dbCategory)
@@ -46,11 +64,7 @@ export class CategoriesController {
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }
 
-        const existingCategory = await this.categoryRepository.findOne({
-            where: {
-                id: category.id
-            }
-        });
+        const existingCategory = await this.categoryRepository.findOne({ id: category.id });
 
         if (!existingCategory) {
             const invalidResponse = new FormResponse({
@@ -62,7 +76,7 @@ export class CategoriesController {
 
         existingCategory.title = category.title;
 
-        const dbCategory = await this.categoryRepository.save(category);
+        const dbCategory = await this.categoryRepository.save(existingCategory);
         const validResponse = new FormResponse<Category>({
             isValid: true,
             target: MapCategory.inCategoriesControllerUpdateAsync(dbCategory)
