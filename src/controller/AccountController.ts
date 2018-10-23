@@ -10,6 +10,8 @@ import { Methods } from "../shared/methods";
 import { RegisterDetails } from "../dto/classes/RegisterDetails";
 import { validate } from "class-validator";
 import * as bcrypt from "bcrypt";
+import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
+import { EmailService } from "../services/emailService";
 
 export class AccountController {
 
@@ -31,7 +33,7 @@ export class AccountController {
 
             req.login(user, {
                 session: false
-            }, error => {
+            }, (error) => {
                 if (!!error) {
                     const response = new FormResponse();
 
@@ -40,6 +42,7 @@ export class AccountController {
 
                     return resp.json(Methods.getJsonResponse(response, error.toString(), false));
                 }
+
                 const token = this.getUserToken(user);
                 const response = new FormResponse<string>();
 
@@ -84,6 +87,14 @@ export class AccountController {
             user.phone = phone;
 
             dbUser = await this.userRepository.save(user);
+
+            // const sendEmailConfig = {
+            //     to: user.email,
+            //     subject: "Welcome to SCN",
+            //     text: "Welcome to the Supply Chain Network"
+            // } as SendEmailConfig;
+
+            // const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
 
             const token = this.getUserToken(dbUser);
 

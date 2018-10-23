@@ -7,6 +7,7 @@ export interface IRoute {
     controller: any;
     action: string;
     protected?: boolean;
+    admin?: boolean;
 }
 
 // export const Routes = [{
@@ -41,4 +42,11 @@ export const Routes = [{
     route: "/account/register",
     controller: AccountController,
     action: "register"
+}, {
+    method: "get",
+    route: "/users/search",
+    controller: UsersController,
+    action: "search",
+    protected: true,
+    admin: true
 }];

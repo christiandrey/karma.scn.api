@@ -6,6 +6,7 @@ import { User } from "../entities/User";
 import { Constants } from "../shared/constants";
 import { Methods } from "../shared/methods";
 import * as bcrypt from "bcrypt";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
 
 const LocalStrategy = PassportLocal.Strategy;
 const userRepository = getRepository(User);
@@ -47,7 +48,11 @@ passport.use(new LocalStrategy({
 // JWT STRATEGY
 // ---------------------------------------------------
 
-passport.use(new Strategy({
+// -----------------------------------
+// USER-RULE
+// -----------------------------------
+
+passport.use("user-rule", new Strategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: Constants.cipherKey
 }, async (jwtPayload: any, callback: VerifiedCallback) => {
@@ -55,4 +60,24 @@ passport.use(new Strategy({
     const user = await userRepository.findOne({ id });
 
     return callback(null, user);
+}));
+
+// -----------------------------------
+// ADMIN-RULE
+// -----------------------------------
+
+passport.use("admin-rule", new Strategy({
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: Constants.cipherKey
+}, async (jwtPayload: any, callback: VerifiedCallback) => {
+    const id = jwtPayload.id;
+    const user = await userRepository.findOne({ id });
+
+    if (!!user) {
+        if (user.type === UserTypeEnum.Admin) {
+            return callback(null, user);
+        }
+    }
+
+    return callback(null, null);
 }));
