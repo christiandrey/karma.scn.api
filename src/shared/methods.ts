@@ -32,4 +32,13 @@ export namespace Methods {
         const validator = new Validator();
         return await validator.isEmail(email);
     }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Converts any string to camelCase */
+    export function toCamelCase(text: string): string {
+        return text
+            .replace(/\s(.)/g, function ($1) { return $1.toUpperCase(); })
+            .replace(/\s/g, '')
+            .replace(/^(.)/, function ($1) { return $1.toLowerCase(); });
+    }
 }
