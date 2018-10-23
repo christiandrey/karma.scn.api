@@ -1,5 +1,6 @@
 import { UsersController } from "../controller/UsersController";
 import { AccountController } from "../controller/AccountController";
+import { CategoriesController } from "../controller/CategoriesController";
 
 export interface IRoute {
     method: string;
@@ -21,10 +22,24 @@ export const Routes = [{
     controller: AccountController,
     action: "register"
 }, {
-    method: "get",
-    route: "/users/search",
-    controller: UsersController,
-    action: "search",
+    method: "post",
+    route: "/categories/create",
+    controller: CategoriesController,
+    action: "createAsync",
+    protected: true,
+    admin: true
+}, {
+    method: "put",
+    route: "/categories/update",
+    controller: CategoriesController,
+    action: "updateAsync",
+    protected: true,
+    admin: true
+}, {
+    method: "delete",
+    route: "/categories/delete/:id",
+    controller: CategoriesController,
+    action: "deleteAsync",
     protected: true,
     admin: true
 }];
