@@ -1,3 +1,4 @@
+// import "./prototypes/prototypes";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import * as express from "express";
@@ -5,7 +6,6 @@ import * as bodyParser from "body-parser";
 import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
 import * as passport from "passport";
-import { User } from "./entities/User";
 
 createConnection().then(async connection => {
 

@@ -5,4 +5,8 @@ export namespace Constants {
     export const emailSender = "noreply@scn.com";
 
     export const passwordHashCipherKey = "3AtMY72o%PK60#X5&f9Hj%QT8Q3weMLWazOAN9sUy7sdyp3MznPqX0V6eDCeVewBp@v$!s";
+
+    export const locationEverywhere = "everywhere";
+
+    export const categoryAll = "all";
 }

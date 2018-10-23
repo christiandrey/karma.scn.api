@@ -18,9 +18,7 @@ export class AccountController {
     private userRepository = getRepository(User);
 
     async login(req: Request, resp: Response, next: NextFunction) {
-        passport.authenticate("local", {
-            session: false
-        }, (error, user: User, info: IVerifyOptions) => {
+        passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
             if (!user) {
                 const { message } = info;
                 const response = new FormResponse();
@@ -31,9 +29,7 @@ export class AccountController {
                 return resp.json(Methods.getJsonResponse(response, message, false));
             }
 
-            req.login(user, {
-                session: false
-            }, (error) => {
+            req.login(user, { session: false }, (error) => {
                 if (!!error) {
                     const response = new FormResponse();
 
@@ -60,6 +56,7 @@ export class AccountController {
 
         if (validationResult.length) {
             const response = new FormResponse();
+
             response.isValid = false;
             response.errors = validationResult.map(x => x.toString());
 
@@ -74,6 +71,7 @@ export class AccountController {
                 isValid: false,
                 errors: ["A user with this email already exists"]
             });
+
             return Methods.getJsonResponse(response, "A user with this email already exists", false);
         } else {
             const { firstName, lastName, email, password, type, phone } = registerDetails;
@@ -97,7 +95,6 @@ export class AccountController {
             // const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
 
             const token = this.getUserToken(dbUser);
-
             const response = new FormResponse<string>({
                 isValid: true,
                 target: token

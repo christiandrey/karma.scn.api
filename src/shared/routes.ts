@@ -1,6 +1,7 @@
 import { UsersController } from "../controller/UsersController";
 import { AccountController } from "../controller/AccountController";
 import { CategoriesController } from "../controller/CategoriesController";
+import { SearchController } from "../controller/SearchController";
 
 export interface IRoute {
     method: string;
@@ -42,4 +43,10 @@ export const Routes = [{
     action: "deleteAsync",
     protected: true,
     admin: true
+}, {
+    method: "get",
+    route: "/search/:type/:category/:location",
+    controller: SearchController,
+    action: "searchAsync",
+    protected: true
 }];

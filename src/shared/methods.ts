@@ -41,4 +41,15 @@ export namespace Methods {
             .replace(/\s/g, '')
             .replace(/^(.)/, function ($1) { return $1.toLowerCase(); });
     }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Checks if a string contains a substring */
+    export function includesSubstring(text: string, substring: string, ignoreCase = false): boolean {
+        var origin = text;
+        if (ignoreCase) {
+            origin = origin.toLowerCase();
+            substring = substring.toLowerCase();
+        }
+        return origin.indexOf(substring) !== -1;
+    }
 }

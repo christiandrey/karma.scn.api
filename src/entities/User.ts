@@ -30,7 +30,9 @@ export class User extends BaseEntity {
     @IsAlpha()
     lastName: string;
 
-    @OneToOne(type => Address)
+    @OneToOne(type => Address, {
+        eager: true
+    })
     @JoinColumn()
     address?: Address;
 

@@ -17,6 +17,11 @@ export class Media extends BaseEntity {
     @Column({
         nullable: true
     })
+    url: string;
+
+    @Column({
+        nullable: true
+    })
     note: string;
 
     @ManyToOne(type => User, user => user.certifications)
