@@ -15,7 +15,7 @@ export class CategoriesController {
         const category = request.body as Category;
 
         // ------------------------------------------------------------------------
-        // Validate Incoming Data
+        // Validate the data
         // ------------------------------------------------------------------------
         const validationResult = await validate(category);
         if (validationResult.length > 0) {
@@ -29,7 +29,7 @@ export class CategoriesController {
         // ------------------------------------------------------------------------
         // Check for existing Entity
         // ------------------------------------------------------------------------
-        const existingCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title) });
+        const existingCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
         if (!!existingCategory) {
             const invalidResponse = new FormResponse({
                 isValid: false,
@@ -67,11 +67,8 @@ export class CategoriesController {
         const existingCategory = await this.categoryRepository.findOne({ id: category.id });
 
         if (!existingCategory) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: ["Category was not found"]
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Category was not found", false);
+            Methods.sendErrorResponse(response, 404, "Category was not found");
+            return;
         }
 
         existingCategory.title = category.title;

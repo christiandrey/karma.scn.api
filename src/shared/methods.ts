@@ -1,5 +1,6 @@
 import { IJsonResponse } from "../interfaces/IJsonResponse";
 import { Validator } from "class-validator";
+import { Response } from "express";
 
 export namespace Methods {
 
@@ -11,6 +12,18 @@ export namespace Methods {
             message,
             data
         } as IJsonResponse<T>;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Creates an error response and sends it to the client */
+    export function sendErrorResponse(resp: Response, status: number, message = ""): void {
+        const response = {
+            status: false,
+            message,
+            errors: [message]
+        }
+
+        resp.status(status).send(resp.json(response));
     }
 
     // -------------------------------------------------------------------------------------------------

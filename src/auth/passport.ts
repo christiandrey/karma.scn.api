@@ -55,11 +55,17 @@ passport.use(new LocalStrategy({
 passport.use("user-rule", new Strategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: Constants.cipherKey
-}, async (jwtPayload: any, callback: VerifiedCallback) => {
+}, async (jwtPayload: any, done: VerifiedCallback) => {
     const id = jwtPayload.id;
     const user = await userRepository.findOne({ id });
 
-    return callback(null, user);
+    if (!!user) {
+        const authenticatedUser = new User();
+        authenticatedUser.id = user.id;
+        return done(null, authenticatedUser);
+    }
+
+    return done(null, null);
 }));
 
 // -----------------------------------
@@ -69,15 +75,17 @@ passport.use("user-rule", new Strategy({
 passport.use("admin-rule", new Strategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: Constants.cipherKey
-}, async (jwtPayload: any, callback: VerifiedCallback) => {
+}, async (jwtPayload: any, done: VerifiedCallback) => {
     const id = jwtPayload.id;
     const user = await userRepository.findOne({ id });
 
     if (!!user) {
         if (user.type === UserTypeEnum.Admin) {
-            return callback(null, user);
+            const authenticatedUser = new User();
+            authenticatedUser.id = user.id;
+            return done(null, authenticatedUser);
         }
     }
 
-    return callback(null, null);
+    return done(null, null);
 }));

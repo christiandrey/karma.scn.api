@@ -3,8 +3,6 @@ import { User } from "../entities/User";
 import { getRepository } from "typeorm";
 import * as passport from "passport";
 import { IVerifyOptions } from "passport-local";
-import * as JWT from "jsonwebtoken";
-import { Constants } from "../shared/constants";
 import { FormResponse } from "../dto/classes/FormResponse";
 import { Methods } from "../shared/methods";
 import { RegisterDetails } from "../dto/classes/RegisterDetails";
@@ -12,6 +10,7 @@ import { validate } from "class-validator";
 import * as bcrypt from "bcrypt";
 import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
 import { EmailService } from "../services/emailService";
+import { UserService } from "../services/userService";
 
 export class AccountController {
 
@@ -39,7 +38,7 @@ export class AccountController {
                     return resp.json(Methods.getJsonResponse(response, error.toString(), false));
                 }
 
-                const token = this.getUserToken(user);
+                const token = UserService.getUserToken(user);
                 const response = new FormResponse<string>();
 
                 response.isValid = true;
@@ -94,7 +93,7 @@ export class AccountController {
 
             // const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
 
-            const token = this.getUserToken(dbUser);
+            const token = UserService.getUserToken(user);
             const response = new FormResponse<string>({
                 isValid: true,
                 target: token
@@ -102,14 +101,5 @@ export class AccountController {
 
             return Methods.getJsonResponse(response, "New user was created successfully");
         }
-    }
-
-    private getUserToken(user: User): string {
-        return JWT.sign({
-            id: user.id,
-            email: user.email
-        }, Constants.cipherKey, {
-                expiresIn: "7 days"
-            });
     }
 }
