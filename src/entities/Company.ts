@@ -15,8 +15,6 @@ export class Company extends BaseEntity {
     name: string;
 
     @Column()
-    @IsLowercase()
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
     @Column({
@@ -124,5 +122,35 @@ export class Company extends BaseEntity {
     updateUrlToken() {
         const urlToken = this.name.toLowerCase().replace(/[^a-z]/g, "");
         this.urlToken = urlToken;
+    }
+
+    constructor(dto?: Company | any) {
+        super(dto);
+
+        dto = dto || {} as Company;
+
+        this.name = dto.name;
+        this.urlToken = dto.urlToken;
+        this.logoUrl = dto.logoUrl;
+        this.postalBox = dto.postalBox;
+        this.address = dto.address ? new Address(dto.address) : null;
+        this.phone = dto.phone;
+        this.website = dto.website;
+        this.email = dto.email;
+        this.backgroundCheck = dto.backgroundCheck;
+        this.noBackgroundCheckReason = dto.noBackgroundCheckReason;
+        this.registrationType = dto.registrationType;
+        this.registrationNumber = dto.registrationNumber;
+        this.registrationDate = dto.registrationDate;
+        this.taxpayersIdentificationNumber = dto.taxpayersIdentificationNumber;
+        this.vatRegistrationNumber = dto.vatRegistrationNumber;
+        this.averageAnnualContractValue = dto.averageAnnualContractValue;
+        this.highestSingularContractValue = dto.highestSingularContractValue;
+        this.productsDescription = dto.productsDescription;
+        this.category = dto.category ? new Category(dto.category) : null;
+        this.products = dto.products ? dto.products.map(p => new Product(p)) : null;
+        this.documents = dto.documents ? dto.documents.map(d => new Media(d)) : null;
+        this.user = dto.user ? new User(dto.user) : null;
+        this.verified = dto.verified;
     }
 }

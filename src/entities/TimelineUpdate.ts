@@ -47,4 +47,18 @@ export class TimelineUpdate extends BaseEntity {
     getLikesCount() {
         this.likesCount = this.likes.length;
     }
+
+    constructor(dto?: TimelineUpdate | any) {
+        super(dto);
+
+        dto = dto || {} as TimelineUpdate;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.content = dto.content;
+        this.isDisabled = dto.isDisabled;
+        this.commentsCount = dto.commentsCount;
+        this.likesCount = dto.likesCount;
+        this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
+        this.likes = dto.likes ? dto.likes.map(l => new Like(l)) : null;
+    }
 }

@@ -17,4 +17,14 @@ export class Connection extends BaseEntity {
 
     @Column()
     status: ConnectionStatusEnum;
+
+    constructor(dto?: Connection | any) {
+        super(dto);
+
+        dto = dto || {} as Connection;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.connectedTo = dto.connectedTo ? new User(dto.connectedTo) : null;
+        this.status = dto.status;
+    }
 }

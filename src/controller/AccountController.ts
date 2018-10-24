@@ -20,29 +20,29 @@ export class AccountController {
         passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
             if (!user) {
                 const { message } = info;
-                const response = new FormResponse();
-
-                response.isValid = false;
-                response.errors = [message];
+                const response = new FormResponse({
+                    isValid: false,
+                    errors: [message]
+                });
 
                 return resp.json(Methods.getJsonResponse(response, message, false));
             }
 
             req.login(user, { session: false }, (error) => {
                 if (!!error) {
-                    const response = new FormResponse();
-
-                    response.isValid = false;
-                    response.errors = [error.toString()];
+                    const response = new FormResponse({
+                        isValid: false,
+                        errors: [error.toString()]
+                    });
 
                     return resp.json(Methods.getJsonResponse(response, error.toString(), false));
                 }
 
                 const token = UserService.getUserToken(user);
-                const response = new FormResponse<string>();
-
-                response.isValid = true;
-                response.target = token;
+                const response = new FormResponse<string>({
+                    isValid: true,
+                    target: token
+                });
 
                 return resp.json(Methods.getJsonResponse(response, "Logged in successfully"));
             });
@@ -50,14 +50,14 @@ export class AccountController {
     }
 
     async register(req: Request, resp: Response, next: NextFunction) {
-        const registerDetails = req.body as RegisterDetails;
+        const registerDetails = new RegisterDetails(req.body);
         const validationResult = await validate(registerDetails);
 
         if (validationResult.length) {
-            const response = new FormResponse();
-
-            response.isValid = false;
-            response.errors = validationResult.map(x => x.toString());
+            const response = new FormResponse({
+                isValid: false,
+                errors: validationResult.map(x => x.toString())
+            });
 
             return Methods.getJsonResponse(response, "Invalid sign in details", false);
         }
@@ -74,14 +74,12 @@ export class AccountController {
             return Methods.getJsonResponse(response, "A user with this email already exists", false);
         } else {
             const { firstName, lastName, email, password, type, phone } = registerDetails;
-            const user = new User();
+            const user = new User({
+                firstName, lastName, type, phone,
+                email: email.toLowerCase()
+            });
 
-            user.firstName = firstName;
-            user.lastName = lastName;
-            user.email = email.toLowerCase();
             user.password = await bcrypt.hash(password, 2);
-            user.type = type;
-            user.phone = phone;
 
             dbUser = await this.userRepository.save(user);
 

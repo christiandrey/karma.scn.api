@@ -11,8 +11,6 @@ export class Discussion extends BaseEntity {
     author: User;
 
     @Column()
-    @IsLowercase()
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
     @Column("int", {
@@ -24,4 +22,15 @@ export class Discussion extends BaseEntity {
         eager: true
     })
     comments: Array<Comment>;
+
+    constructor(dto?: Discussion | any) {
+        super(dto);
+
+        dto = dto || {} as Discussion;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.urlToken = dto.urlToken;
+        this.commentsCount = dto.commentsCount;
+        this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
+    }
 }

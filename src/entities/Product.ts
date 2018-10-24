@@ -8,13 +8,11 @@ import { Company } from "./Company";
 export class Product extends BaseEntity {
 
     @Column()
-    @IsNotEmpty()
-    @IsAlphanumeric()
-    @Matches(/^[a-z]/)
     name: string;
 
     @Column()
     @IsNotEmpty()
+    @Matches(/^[a-zA-Z0-9\s&-]*$/)
     title: string;
 
     @ManyToOne(type => Category, category => category.products, {
@@ -24,4 +22,15 @@ export class Product extends BaseEntity {
 
     @ManyToMany(type => Company, company => company.products)
     companies: Array<Company>;
+
+    constructor(dto?: Product | any) {
+        super(dto);
+
+        dto = dto || {} as Product;
+
+        this.name = dto.name;
+        this.title = dto.title;
+        this.category = dto.category ? new Category(dto.category) : null;
+        this.companies = dto.companies ? dto.companies.map(c => new Company(c)) : null;
+    }
 }

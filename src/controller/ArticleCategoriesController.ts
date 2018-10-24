@@ -11,7 +11,7 @@ export class ArticleCategoriesController {
     private articleCategoryRepository = getRepository(ArticleCategory);
 
     async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const articleCategory = req.body as ArticleCategory;
+        const articleCategory = new ArticleCategory(req.body);
 
         // ------------------------------------------------------------------------
         // Validate Incoming Data
@@ -28,8 +28,8 @@ export class ArticleCategoriesController {
         // ------------------------------------------------------------------------
         // Check for existing Entity
         // ------------------------------------------------------------------------
-        const existingArticleCategory = await this.articleCategoryRepository.findOne({ name: Methods.toCamelCase(articleCategory.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
-        if (!!existingArticleCategory) {
+        const dbArticleCategory = await this.articleCategoryRepository.findOne({ name: Methods.toCamelCase(articleCategory.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
+        if (!!dbArticleCategory) {
             const invalidResponse = new FormResponse({
                 isValid: false,
                 errors: ["An article category with the same title already exists"]
@@ -40,19 +40,20 @@ export class ArticleCategoriesController {
         // ------------------------------------------------------------------------
         // Create New Entity
         // ------------------------------------------------------------------------
-        const articleCategoryToCreate = new ArticleCategory();
-        articleCategoryToCreate.title = articleCategory.title;
+        const articleCategoryToCreate = new ArticleCategory({
+            title: articleCategory.title
+        });
 
-        const dbArticleCategory = await this.articleCategoryRepository.save(articleCategoryToCreate);
+        const createdArticleCategory = await this.articleCategoryRepository.save(articleCategoryToCreate);
         const validResponse = new FormResponse<ArticleCategory>({
             isValid: true,
-            target: MapArticleCategory.inArticleCategoriesControllerCreateAsync(dbArticleCategory)
+            target: MapArticleCategory.inArticleCategoriesControllerCreateAsync(createdArticleCategory)
         });
         return Methods.getJsonResponse(validResponse);
     }
 
     async updateAsync(req: Request, resp: Response, next: NextFunction) {
-        const articleCategory = req.body as ArticleCategory;
+        const articleCategory = new ArticleCategory(req.body);
         const validationResult = await validate(articleCategory);
 
         if (validationResult.length > 0) {
@@ -63,19 +64,19 @@ export class ArticleCategoriesController {
             return Methods.getJsonResponse(invalidResponse, "Article Category data provided was not valid", false);
         }
 
-        const existingArticleCategory = await this.articleCategoryRepository.findOne({ id: articleCategory.id });
+        const dbArticleCategory = await this.articleCategoryRepository.findOne({ id: articleCategory.id });
 
-        if (!existingArticleCategory) {
+        if (!dbArticleCategory) {
             Methods.sendErrorResponse(resp, 404, "Article Category was not found");
             return;
         }
 
-        existingArticleCategory.title = articleCategory.title;
+        dbArticleCategory.title = articleCategory.title;
 
-        const dbArticleCategory = await this.articleCategoryRepository.save(existingArticleCategory);
+        const updatedArticleCategory = await this.articleCategoryRepository.save(dbArticleCategory);
         const validResponse = new FormResponse<ArticleCategory>({
             isValid: true,
-            target: MapArticleCategory.inArticleCategoriesControllerUpdateAsync(dbArticleCategory)
+            target: MapArticleCategory.inArticleCategoriesControllerUpdateAsync(updatedArticleCategory)
         });
         return Methods.getJsonResponse(validResponse);
     }

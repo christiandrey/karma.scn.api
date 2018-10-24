@@ -27,17 +27,33 @@ export class Comment extends BaseEntity {
     childComments: Array<Comment>;
 
     @ManyToOne(type => Article, article => article.comments)
-    article: Array<Article>;
+    article: Article;
 
     @ManyToOne(type => Discussion, discussion => discussion.comments)
-    discussion: Array<Discussion>;
+    discussion: Discussion;
 
     @ManyToOne(type => TimelineUpdate, timelineUpdate => timelineUpdate.comments)
-    timelineUpdate: Array<TimelineUpdate>;
+    timelineUpdate: TimelineUpdate;
 
     @ManyToOne(type => TimelinePhoto, timelinePhoto => timelinePhoto.comments)
-    timelinePhoto: Array<TimelinePhoto>;
+    timelinePhoto: TimelinePhoto;
 
     @ManyToOne(type => Webinar, webinar => webinar.comments)
-    webinar: Array<Webinar>;
+    webinar: Webinar;
+
+    constructor(dto?: Comment | any) {
+        super(dto);
+
+        dto = dto || {} as Comment;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.content = dto.content;
+        this.parentComment = dto.parentComment ? new Comment(dto.parentComment) : null;
+        this.childComments = dto.childComments ? dto.childComments.map(x => new Comment(x)) : null;
+        this.article = dto.article ? new Article(dto.article) : null;
+        this.discussion = dto.discussion ? new Discussion(dto.discussion) : null;
+        this.timelineUpdate = dto.timelineUpdate ? new TimelineUpdate(dto.timelineUpdate) : null;
+        this.timelinePhoto = dto.timelinePhoto ? new TimelinePhoto(dto.timelinePhoto) : null;
+        this.webinar = dto.webinar ? new Webinar(dto.webinar) : null;
+    }
 }

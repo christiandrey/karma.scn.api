@@ -11,4 +11,13 @@ export class View extends BaseEntity {
     @OneToOne(type => User)
     @JoinColumn()
     viewedBy: User;
+
+    constructor(dto?: View | any) {
+        super(dto);
+
+        dto = dto || {} as View;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.viewedBy = dto.user ? new User(dto.viewedBy) : null;
+    }
 }

@@ -10,4 +10,12 @@ export abstract class BaseEntity {
 
     @UpdateDateColumn()
     modifiedDate: Date;
+
+    constructor(dto?: BaseEntity) {
+        dto = dto || {} as BaseEntity;
+
+        this.id = dto.id;
+        this.createdDate = dto.createdDate;
+        this.modifiedDate = dto.modifiedDate;
+    }
 }

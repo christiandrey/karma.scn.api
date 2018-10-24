@@ -16,6 +16,7 @@ export class Webinar extends BaseEntity {
     @OneToOne(type => User, {
         eager: true,
     })
+    @IsNotEmpty()
     @JoinColumn()
     anchor: User;
 
@@ -37,20 +38,7 @@ export class Webinar extends BaseEntity {
     @Column({
         length: 15
     })
-    @IsLowercase()
-    @Length(15)
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
-
-    @BeforeInsert()
-    generateUrlToken() {
-        const chance = new Chance();
-        const urlToken = chance.string({
-            length: 15,
-            pool: "abcdefghijklmnopqrstuvwxyz0123456789"
-        });
-        this.urlToken = urlToken;
-    }
 
     @OneToOne(type => Media)
     @JoinColumn()
@@ -76,4 +64,34 @@ export class Webinar extends BaseEntity {
         eager: true
     })
     comments: Array<Comment>;
+
+    @BeforeInsert()
+    generateUrlToken() {
+        const chance = new Chance();
+        const urlToken = chance.string({
+            length: 15,
+            pool: "abcdefghijklmnopqrstuvwxyz0123456789"
+        });
+        this.urlToken = urlToken;
+    }
+
+    constructor(dto?: Webinar | any) {
+        super(dto);
+
+        dto = dto || {} as Webinar;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.anchor = dto.anchor ? new User(dto.anchor) : null;
+        this.cpdPoints = dto.cpdPoints;
+        this.topic = dto.topic;
+        this.description = dto.description;
+        this.urlToken = dto.urlToken;
+        this.cpdPoints = dto.cpdPoints;
+        this.transcript = dto.transcript ? new Media(dto.transcript) : null;
+        this.startDateTime = dto.startDateTime;
+        this.createAnnouncement = dto.createAnnouncement;
+        this.status = dto.status;
+        this.participants = dto.participants ? dto.participants.map(p => new User(p)) : null;
+        this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
+    }
 }

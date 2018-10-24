@@ -35,4 +35,19 @@ export class Experience extends BaseEntity {
         nullable: true
     })
     companyLogoUrl: string;
+
+    constructor(dto?: Experience | any) {
+        super(dto);
+
+        dto = dto || {} as Experience;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.role = dto.role;
+        this.description = dto.description;
+        this.organization = dto.organization;
+        this.startDate = dto.startDate;
+        this.endDate = dto.endDate;
+        this.current = dto.current;
+        this.companyLogoUrl = dto.companyLogoUrl;
+    }
 }

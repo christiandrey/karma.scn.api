@@ -10,4 +10,13 @@ export class Country extends BaseEntity {
 
     @OneToMany(type => Address, address => address.country)
     addresses: Array<Address>;
+
+    constructor(dto?: Country | any) {
+        super(dto);
+
+        dto = dto || {} as Country;
+
+        this.name = dto.name;
+        this.addresses = dto.addresses ? dto.addresses.map(a => new Address(a)) : null;
+    }
 }

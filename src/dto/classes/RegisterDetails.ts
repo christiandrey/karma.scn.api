@@ -20,4 +20,16 @@ export class RegisterDetails {
         message: "Password has to be a minimum of 3 characters"
     })
     password: string;
+
+    constructor(dto?: RegisterDetails | any) {
+
+        dto = dto || {} as RegisterDetails;
+
+        this.firstName = dto.firstName;
+        this.lastName = dto.lastName;
+        this.type = dto.type;
+        this.phone = dto.phone;
+        this.email = dto.email;
+        this.password = dto.password;
+    }
 }

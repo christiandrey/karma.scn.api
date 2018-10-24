@@ -27,4 +27,16 @@ export class Resource extends BaseEntity {
     @IsFQDN()
     @IsNotEmpty()
     purchaseUrl: string;
+
+    constructor(dto?: Resource | any) {
+        super(dto);
+
+        dto = dto || {} as Resource;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.isPublished = dto.isPublished;
+        this.title = dto.title;
+        this.description = dto.description;
+        this.purchaseUrl = dto.purchaseUrl;
+    }
 }

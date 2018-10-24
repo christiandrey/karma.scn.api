@@ -63,7 +63,7 @@ export class ArticlesController {
     }
 
     async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const article = req.body as Article;
+        const article = new Article(req.body);
 
         // ------------------------------------------------------------------------
         // Validate the data
@@ -83,8 +83,8 @@ export class ArticlesController {
         // ------------------------------------------------------------------------
 
         const urlToken = article.title.toLowerCase().replace(/[^a-z0-9-\s+]/g, "").replace(/\s+/g, "-").replace(/\-+/g, "-");
-        const existingArticle = await this.articleRepository.findOne({ urlToken });
-        if (!!existingArticle) {
+        const dbArticle = await this.articleRepository.findOne({ urlToken });
+        if (!!dbArticle) {
             const invalidResponse = new FormResponse({
                 isValid: false,
                 errors: ["An article with the same title already exists"]
@@ -97,33 +97,25 @@ export class ArticlesController {
         // ------------------------------------------------------------------------
 
         const { title, synopsis, body } = article;
-        const featuredImage = new Media();
-        const articleCategory = new ArticleCategory();
-        const articleToCreate = new Article();
-        const author = new User();
 
-        featuredImage.id = article.featuredImage.id;
-        articleCategory.id = article.category.id;
-        author.id = UserService.getAuthenticatedUserId(req);
+        const articleToCreate = new Article({
+            title, synopsis, body,
+            status: ArticleStatusEnum.Pending,
+            featuredImage: new Media({ id: article.featuredImage.id }),
+            articleCategory: new ArticleCategory({ id: article.category.id }),
+            author: new User({ id: UserService.getAuthenticatedUserId(req) })
+        });
 
-        articleToCreate.title = title;
-        articleToCreate.synopsis = synopsis;
-        articleToCreate.body = body;
-        articleToCreate.featuredImage = featuredImage;
-        articleToCreate.category = articleCategory;
-        articleToCreate.status = ArticleStatusEnum.Pending;
-        articleToCreate.author = author;
-
-        const dbArticle = await this.articleRepository.save(articleToCreate);
+        const createdArticle = await this.articleRepository.save(articleToCreate);
         const validResponse = new FormResponse<Article>({
             isValid: true,
-            target: MapArticle.inArticlesControllerCreateAsync(dbArticle)
+            target: MapArticle.inArticlesControllerCreateAsync(createdArticle)
         });
         return Methods.getJsonResponse(validResponse);
     }
 
     async updateAsync(req: Request, resp: Response, next: NextFunction) {
-        const article = req.body as Article;
+        const article = new Article(req.body);
         const authenticatedUser = await UserService.getAuthenticatedUserAsync(req);
         const validationResult = await validate(Article);
 
@@ -135,14 +127,14 @@ export class ArticlesController {
             return Methods.getJsonResponse(invalidResponse, "Article data provided was not valid", false);
         }
 
-        const existingArticle = await this.articleRepository.findOne({ id: article.id });
+        const dbArticle = await this.articleRepository.findOne({ id: article.id });
 
-        if (!existingArticle) {
+        if (!dbArticle) {
             Methods.sendErrorResponse(resp, 404, "Article was not found");
             return;
         }
 
-        if (existingArticle.isPublished) {
+        if (dbArticle.isPublished) {
             if (authenticatedUser.type !== UserTypeEnum.Admin) {
                 Methods.sendErrorResponse(resp, 401, "Only Administrators can edit articles after they have been published");
                 return;
@@ -150,19 +142,17 @@ export class ArticlesController {
         }
 
         const { title, synopsis, body } = article;
-        const featuredImage = new Media();
-        const articleCategory = new ArticleCategory();
 
-        article.title = title;
-        article.synopsis = synopsis;
-        article.body = body;
-        article.featuredImage = featuredImage;
-        article.category = articleCategory;
+        dbArticle.title = title;
+        dbArticle.synopsis = synopsis;
+        dbArticle.body = body;
+        dbArticle.featuredImage = new Media({ id: article.featuredImage.id });
+        dbArticle.category = new ArticleCategory({ id: article.category.id });
 
-        const dbArticle = await this.articleRepository.save(existingArticle);
+        const updatedArticle = await this.articleRepository.save(dbArticle);
         const validResponse = new FormResponse<Article>({
             isValid: true,
-            target: MapArticle.inArticlesControllerUpdateAsync(dbArticle)
+            target: MapArticle.inArticlesControllerUpdateAsync(updatedArticle)
         });
         return Methods.getJsonResponse(validResponse);
     }

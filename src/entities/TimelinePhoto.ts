@@ -47,4 +47,18 @@ export class TimelinePhoto extends BaseEntity {
     getLikesCount() {
         this.likesCount = this.likes.length;
     }
+
+    constructor(dto?: TimelinePhoto | any) {
+        super(dto);
+
+        dto = dto || {} as TimelinePhoto;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.url = dto.url;
+        this.isDisabled = dto.isDisabled;
+        this.commentsCount = dto.commentsCount;
+        this.likesCount = dto.likesCount;
+        this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
+        this.likes = dto.likes ? dto.likes.map(l => new Like(l)) : null;
+    }
 }

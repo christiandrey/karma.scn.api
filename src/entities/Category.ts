@@ -12,7 +12,7 @@ export class Category extends BaseEntity {
 
     @Column()
     @IsNotEmpty()
-    @Matches(/[a-zA-Z0-9\s&-]/g)
+    @Matches(/^[a-zA-Z0-9\s&-]*$/)
     title: string;
 
     @OneToMany(type => Product, product => product.category)
@@ -26,5 +26,15 @@ export class Category extends BaseEntity {
     @BeforeUpdate()
     updateCategoryName() {
         this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+    }
+
+    constructor(dto?: Category | any) {
+        super(dto);
+
+        dto = dto || {} as Category;
+
+        this.name = dto.name;
+        this.title = dto.title;
+        this.products = dto.products ? dto.products.map(p => new Product(p)) : null;
     }
 }

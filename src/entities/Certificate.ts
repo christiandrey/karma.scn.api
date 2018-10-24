@@ -29,4 +29,17 @@ export class Certificate extends BaseEntity {
     })
     @IsFQDN()
     issuerLogoUrl: string;
+
+    constructor(dto?: Certificate | any) {
+        super(dto);
+
+        dto = dto || {} as Certificate;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.issuer = dto.issuer;
+        this.certificateNumber = dto.certificateNumber;
+        this.dateOfIssue = dto.dateOfIssue;
+        this.media = dto.media ? new Media(dto.media) : null;
+        this.issuerLogoUrl = dto.issuerLogoUrl;
+    }
 }

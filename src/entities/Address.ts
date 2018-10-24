@@ -30,4 +30,16 @@ export class Address extends BaseEntity {
     })
     @IsNotEmpty()
     country: Country;
+
+    constructor(dto?: Address | any) {
+        super(dto);
+
+        dto = dto || {} as Address;
+
+        this.addressLine1 = dto.addressLine1;
+        this.addressLine2 = dto.addressLine2;
+        this.city = dto.city;
+        this.state = dto.state;
+        this.country = dto.country ? new Country(dto.country) : null;
+    }
 }

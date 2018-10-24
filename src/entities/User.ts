@@ -41,8 +41,6 @@ export class User extends BaseEntity {
     latestExperience: Experience;
 
     @Column()
-    @IsLowercase()
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
     @Column()
@@ -167,5 +165,38 @@ export class User extends BaseEntity {
         if (!!experiences && experiences.length > 0) {
             this.latestExperience = experiences[0];
         }
+    }
+
+    constructor(dto?: User | any) {
+        super(dto);
+
+        dto = dto || {} as User;
+
+        this.type = dto.type;
+        this.firstName = dto.firstName;
+        this.lastName = dto.lastName;
+        this.address = dto.address ? new Address(dto.address) : null;
+        this.latestExperience = dto.latestExperience ? new Experience(dto.latestExperience) : null;
+        this.urlToken = dto.urlToken;
+        this.phone = dto.phone;
+        this.email = dto.email;
+        this.password = dto.password;
+        this.profilePhoto = dto.profilePhoto ? new Media(dto.profilePhoto) : null;
+        this.company = dto.company ? new Company(dto.company) : null;
+        this.certifications = dto.certifications ? dto.certifications.map(c => new Certificate(c)) : null;
+        this.facebookUrl = dto.facebookUrl;
+        this.linkedInUrl = dto.linkedInUrl;
+        this.googlePlusUrl = dto.googlePlusUrl;
+        this.twitterUrl = dto.twitterUrl;
+        this.cpdPoints = dto.cpdPoints;
+        this.connections = dto.connections ? dto.connections.map(c => new Connection(c)) : null;
+        this.description = dto.description;
+        this.experiences = dto.experiences ? dto.experiences.map(e => new Experience(e)) : null;
+        this.skills = dto.skills ? dto.skills.map(s => new Skill(s)) : null;
+        this.articles = dto.articles ? dto.articles.map(a => new Article(a)) : null;
+        this.resources = dto.resources ? dto.resources.map(r => new Resource(r)) : null;
+        this.views = dto.views ? dto.views.map(v => new View(v)) : null;
+        this.notifications = dto.notifications ? dto.notifications.map(n => new Notification(n)) : null;
+        this.attendedWebinars = dto.attendedWebinars ? dto.attendedWebinars.map(a => new Webinar(a)) : null;
     }
 }

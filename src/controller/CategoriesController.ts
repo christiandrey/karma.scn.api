@@ -11,8 +11,8 @@ export class CategoriesController {
 
     private categoryRepository = getRepository(Category);
 
-    async createAsync(request: Request, response: Response, next: NextFunction) {
-        const category = request.body as Category;
+    async createAsync(req: Request, resp: Response, next: NextFunction) {
+        const category = new Category(req.body);
 
         // ------------------------------------------------------------------------
         // Validate the data
@@ -29,8 +29,8 @@ export class CategoriesController {
         // ------------------------------------------------------------------------
         // Check for existing Entity
         // ------------------------------------------------------------------------
-        const existingCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
-        if (!!existingCategory) {
+        const dbCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
+        if (!!dbCategory) {
             const invalidResponse = new FormResponse({
                 isValid: false,
                 errors: ["A category with the same title already exists"]
@@ -41,19 +41,20 @@ export class CategoriesController {
         // ------------------------------------------------------------------------
         // Create New Entity
         // ------------------------------------------------------------------------
-        const categoryToCreate = new Category();
-        categoryToCreate.title = category.title;
+        const categoryToCreate = new Category({
+            title: category.title
+        });
 
-        const dbCategory = await this.categoryRepository.save(categoryToCreate);
+        const createdCategory = await this.categoryRepository.save(categoryToCreate);
         const validResponse = new FormResponse<Category>({
             isValid: true,
-            target: MapCategory.inCategoriesControllerCreateAsync(dbCategory)
+            target: MapCategory.inCategoriesControllerCreateAsync(createdCategory)
         });
         return Methods.getJsonResponse(validResponse);
     }
 
-    async updateAsync(request: Request, response: Response, next: NextFunction) {
-        const category = request.body as Category;
+    async updateAsync(req: Request, resp: Response, next: NextFunction) {
+        const category = new Category(req.body);
         const validationResult = await validate(category);
 
         if (validationResult.length > 0) {
@@ -64,25 +65,25 @@ export class CategoriesController {
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }
 
-        const existingCategory = await this.categoryRepository.findOne({ id: category.id });
+        const dbCategory = await this.categoryRepository.findOne({ id: category.id });
 
-        if (!existingCategory) {
-            Methods.sendErrorResponse(response, 404, "Category was not found");
+        if (!dbCategory) {
+            Methods.sendErrorResponse(resp, 404, "Category was not found");
             return;
         }
 
-        existingCategory.title = category.title;
+        dbCategory.title = category.title;
 
-        const dbCategory = await this.categoryRepository.save(existingCategory);
+        const updatedCategory = await this.categoryRepository.save(dbCategory);
         const validResponse = new FormResponse<Category>({
             isValid: true,
-            target: MapCategory.inCategoriesControllerUpdateAsync(dbCategory)
+            target: MapCategory.inCategoriesControllerUpdateAsync(updatedCategory)
         });
         return Methods.getJsonResponse(validResponse);
     }
 
-    async deleteAsync(request: Request, response: Response, next: NextFunction) {
-        const categoryToDelete = await this.categoryRepository.findOne(request.params.id);
+    async deleteAsync(req: Request, resp: Response, next: NextFunction) {
+        const categoryToDelete = await this.categoryRepository.findOne(req.params.id);
 
         if (!!categoryToDelete) {
             try {

@@ -15,4 +15,14 @@ export class Announcement extends BaseEntity {
 
     @Column()
     isPublished: boolean;
+
+    constructor(dto?: Announcement | any) {
+        super(dto);
+
+        dto = dto || {} as Announcement;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.content = dto.content;
+        this.isPublished = dto.isPublished;
+    }
 }

@@ -18,8 +18,6 @@ export class Article extends BaseEntity {
     title: string;
 
     @Column()
-    @IsLowercase()
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
     @OneToOne(type => Media, {
@@ -67,5 +65,23 @@ export class Article extends BaseEntity {
     @BeforeUpdate()
     updateUrlToken() {
         this.urlToken = this.title.toLowerCase().replace(/[^a-z0-9-\s+]/g, "").replace(/\s+/g, "-").replace(/\-+/g, "-");
+    }
+
+    constructor(dto?: Article | any) {
+        super(dto);
+
+        dto = dto || {} as Article;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.title = dto.title;
+        this.urlToken = dto.urlToken;
+        this.featuredImage = dto.featuredImage ? new Media(dto.featuredImage) : null;
+        this.synopsis = dto.synopsis;
+        this.body = dto.body;
+        this.category = dto.category ? new ArticleCategory(dto.category) : null;
+        this.isPublished = dto.isPublished;
+        this.publicationDate = dto.publicationDate;
+        this.status = dto.status;
+        this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
     }
 }

@@ -15,9 +15,6 @@ export class Job extends BaseEntity {
     @Column({
         length: 15
     })
-    @IsLowercase()
-    @Length(15)
-    @Matches(/[a-z0-9-]/g)
     urlToken: string;
 
     @Column()
@@ -73,5 +70,24 @@ export class Job extends BaseEntity {
             pool: "abcdefghijklmnopqrstuvwxyz0123456789"
         });
         this.urlToken = urlToken;
+    }
+
+    constructor(dto?: Job | any) {
+        super(dto);
+
+        dto = dto || {} as Job;
+
+        this.author = dto.author ? new User(dto.author) : null;
+        this.urlToken = dto.urlToken;
+        this.title = dto.title;
+        this.type = dto.type;
+        this.isPublished = dto.isPublished;
+        this.address = dto.address ? new Address(dto.address) : null;
+        this.organizationName = dto.organizationName;
+        this.applicationUrl = dto.applicationUrl;
+        this.description = dto.description;
+        this.roles = dto.roles;
+        this.requirements = dto.requirements;
+        this.viewCount = dto.viewCount;
     }
 }

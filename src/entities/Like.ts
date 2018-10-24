@@ -11,8 +11,18 @@ export class Like extends BaseEntity {
     user: User;
 
     @ManyToOne(type => TimelineUpdate, timelineUpdate => timelineUpdate.likes)
-    timelineUpdate: Array<TimelineUpdate>;
+    timelineUpdate: TimelineUpdate;
 
     @ManyToOne(type => TimelinePhoto, timelinePhoto => timelinePhoto.likes)
-    timelinePhoto: Array<TimelinePhoto>;
+    timelinePhoto: TimelinePhoto;
+
+    constructor(dto?: Like | any) {
+        super(dto);
+
+        dto = dto || {} as Like;
+
+        this.user = dto.user ? new User(dto.user) : null;
+        this.timelineUpdate = dto.timelineUpdate ? new TimelineUpdate(dto.timelineUpdate) : null;
+        this.timelinePhoto = dto.timelinePhoto ? new TimelinePhoto(dto.timelinePhoto) : null;
+    }
 }
