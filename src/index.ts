@@ -3,16 +3,24 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import * as express from "express";
 import * as bodyParser from "body-parser";
+import * as passport from "passport";
+import * as fileUpload from "express-fileupload";
 import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
-import * as passport from "passport";
 
 createConnection().then(async connection => {
 
     require("./auth/passport");
 
     const app = express();
+
     app.use(bodyParser.json());
+    app.use(fileUpload({
+        limits: { fileSize: 5 * 1024 * 1024 },  //== SET THE MAXIMUM UPLOAD SIZE TO 5MB ==//
+        safeFileNames: true,
+        preserveExtension: 4,
+        abortOnLimit: true
+    }));
 
     Routes.forEach((route: IRoute) => {
         if (route.protected) {

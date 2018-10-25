@@ -1,6 +1,7 @@
 import { IJsonResponse } from "../interfaces/IJsonResponse";
 import { Validator } from "class-validator";
-import { Response } from "express";
+import { Response, Request } from "express";
+import * as path from "path";
 
 export namespace Methods {
 
@@ -23,7 +24,7 @@ export namespace Methods {
             errors: [message]
         }
 
-        resp.status(status).send(resp.json(response));
+        resp.status(status).send(response);
     }
 
     // -------------------------------------------------------------------------------------------------
@@ -64,5 +65,42 @@ export namespace Methods {
             substring = substring.toLowerCase();
         }
         return origin.indexOf(substring) !== -1;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Get file extension */
+    export function getExtension(name: string): string {
+        if (!!name) {
+            const length = name.length;
+            const index = name.lastIndexOf(".");
+            return name.substr(index, length - 1);
+        }
+        return undefined;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Get application Host Name */
+    export function getAppHostName(req: Request): string {
+        return `${req.protocol}://${req.headers.host}`;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Get Base Folder Path */
+    export function getBaseFolder(): string {
+        return path.dirname(require.main.filename);
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Asynchronous foreach */
+    export async function forEachAsync<T>(list: Array<T>, callback: (item: T, index?: number) => void): Promise<void> {
+        await Promise.all(list.map((item, index) => callback(item, index)));
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Asynchronous foreach sequentially */
+    export async function forEachSequentialAsync<T>(list: Array<T>, callback: (item: T, index?: number) => void): Promise<void> {
+        for (let index = 0; index < list.length; index++) {
+            await callback(list[index], index);
+        }
     }
 }

@@ -9,4 +9,15 @@ export namespace Constants {
     export const locationEverywhere = "everywhere";
 
     export const categoryAll = "all";
+
+    export const imageExtensions = [".jpg", ".jpeg", ".png", ".gif"];
+
+    export const documentExtensions = [".pdf"];
+
+    export const paths = {
+
+        imageUploadPath: "/uploads/images/",
+
+        documentUploadPath: "/uploads/documents/"
+    }
 }

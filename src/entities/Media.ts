@@ -22,7 +22,7 @@ export class Media extends BaseEntity {
     @Column({
         nullable: true
     })
-    note: string;
+    note?: string;
 
     @ManyToOne(type => User, user => user.certifications)
     user: User;

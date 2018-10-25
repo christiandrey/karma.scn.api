@@ -4,6 +4,7 @@ import { CategoriesController } from "../controller/CategoriesController";
 import { SearchController } from "../controller/SearchController";
 import { ArticleCategoriesController } from "../controller/ArticleCategoriesController";
 import { ArticlesController } from "../controller/ArticlesController";
+import { MediaController } from "../controller/MediaController";
 
 export interface IRoute {
     method: string;
@@ -111,4 +112,10 @@ export const Routes = [{
     action: "unPublishAsync",
     protected: true,
     admin: true
+}, {
+    method: "post",
+    route: "/media",
+    controller: MediaController,
+    action: "uploadAsync",
+    protected: true
 }];
