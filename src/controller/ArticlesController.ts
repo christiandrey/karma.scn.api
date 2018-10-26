@@ -12,6 +12,8 @@ import { Media } from "../entities/Media";
 import { ArticleCategory } from "../entities/ArticleCategory";
 import { ArticleStatusEnum } from "../enums/ArticleStatusEnum";
 import { UserService } from "../services/userService";
+import { CommentService } from "../services/commentService";
+import { Comment } from "../entities/Comment";
 
 export class ArticlesController {
 
@@ -34,7 +36,7 @@ export class ArticlesController {
         return Methods.getJsonResponse(response);
     }
 
-    async getAll(req: Request, resp: Response, next: NextFunction) {
+    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
         const articles = await this.articleRepository.find({
             where: {
                 isPublished: true
@@ -49,7 +51,7 @@ export class ArticlesController {
         return Methods.getJsonResponse(response, `${articles.length} articles found`);
     }
 
-    async getByUrlToken(req: Request, resp: Response, next: NextFunction) {
+    async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
         const urlToken = req.params.urlToken as string;
         const article = await this.articleRepository.findOne({ urlToken });
 
@@ -201,5 +203,19 @@ export class ArticlesController {
         const response = MapArticle.inArticlesControllerPublishAsync(unpublishedArticle);
 
         return Methods.getJsonResponse(response, "Article was successfully unpublished");
+    }
+
+    async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
+        const article = await this.articleRepository.findOne({ id: req.params.id });
+
+        if (!article) {
+            Methods.sendErrorResponse(resp, 404, "Article was not found");
+            return;
+        }
+
+        const comment = new Comment(req.body);
+        comment.article = new Article({ id: article.id });
+
+        return await CommentService.addCommentAsync(req, comment);
     }
 }

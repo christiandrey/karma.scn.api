@@ -16,6 +16,11 @@ export class Announcement extends BaseEntity {
     @Column()
     isPublished: boolean;
 
+    @Column({
+        nullable: true
+    })
+    publicationDate: Date;
+
     constructor(dto?: Announcement | any) {
         super(dto);
 
@@ -24,5 +29,6 @@ export class Announcement extends BaseEntity {
         this.author = dto.author ? new User(dto.author) : null;
         this.content = dto.content;
         this.isPublished = dto.isPublished;
+        this.publicationDate = dto.publicationDate;
     }
 }

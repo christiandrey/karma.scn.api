@@ -11,7 +11,9 @@ import { Webinar } from "./Webinar";
 @Entity()
 export class Comment extends BaseEntity {
 
-    @ManyToOne(type => User)
+    @ManyToOne(type => User, {
+        eager: true
+    })
     author: User;
 
     @Column()

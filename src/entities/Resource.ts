@@ -12,6 +12,11 @@ export class Resource extends BaseEntity {
     @Column()
     isPublished: boolean;
 
+    @Column({
+        nullable: true
+    })
+    publicationDate: Date;
+
     @Column()
     @IsNotEmpty()
     title: string;
@@ -34,6 +39,7 @@ export class Resource extends BaseEntity {
         dto = dto || {} as Resource;
 
         this.user = dto.user ? new User(dto.user) : null;
+        this.publicationDate = dto.publicationDate;
         this.isPublished = dto.isPublished;
         this.title = dto.title;
         this.description = dto.description;

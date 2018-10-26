@@ -6,7 +6,7 @@ export class UsersController {
 
     private userRepository = getRepository(User);
 
-    async search(request: Request, response: Response, next: NextFunction) {
+    async search(req: Request, resp: Response, next: NextFunction) {
         return this.userRepository.find();
     }
 }

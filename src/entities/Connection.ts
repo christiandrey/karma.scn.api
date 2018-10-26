@@ -2,6 +2,7 @@ import { Entity, OneToOne, ManyToOne, JoinColumn, Column } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { ConnectionStatusEnum } from "../enums/ConnectionStatusEnum";
+import { IsNotEmpty } from "class-validator";
 
 @Entity()
 export class Connection extends BaseEntity {
@@ -13,6 +14,7 @@ export class Connection extends BaseEntity {
         eager: true,
     })
     @JoinColumn()
+    @IsNotEmpty()
     connectedTo: User;
 
     @Column()

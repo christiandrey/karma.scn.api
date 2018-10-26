@@ -30,6 +30,9 @@ export class User extends BaseEntity {
     @IsAlpha()
     lastName: string;
 
+    @Column()
+    dateOfBirth: Date;
+
     @OneToOne(type => Address, {
         eager: true
     })
@@ -175,6 +178,7 @@ export class User extends BaseEntity {
         this.type = dto.type;
         this.firstName = dto.firstName;
         this.lastName = dto.lastName;
+        this.dateOfBirth = dto.dateOfBirth;
         this.address = dto.address ? new Address(dto.address) : null;
         this.latestExperience = dto.latestExperience ? new Experience(dto.latestExperience) : null;
         this.urlToken = dto.urlToken;

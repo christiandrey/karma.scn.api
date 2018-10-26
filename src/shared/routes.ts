@@ -75,7 +75,7 @@ export const Routes = [{
     method: "get",
     route: "/articles",
     controller: ArticlesController,
-    action: "getAll"
+    action: "getAllAsync"
 }, {
     method: "get",
     route: "/articles/latest",
@@ -85,7 +85,7 @@ export const Routes = [{
     method: "get",
     route: "/articles/:urlToken",
     controller: ArticlesController,
-    action: "getByUrlToken"
+    action: "getByUrlTokenAsync"
 }, {
     method: "post",
     route: "/articles",
