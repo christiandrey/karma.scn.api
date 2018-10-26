@@ -1,7 +1,7 @@
 import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
-import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha } from "class-validator";
+import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha, IsNotEmpty } from "class-validator";
 import { Company } from "./Company";
 import { Media } from "./Media";
 import { View } from "./View";
@@ -30,7 +30,9 @@ export class User extends BaseEntity {
     @IsAlpha()
     lastName: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     dateOfBirth: Date;
 
     @OneToOne(type => Address, {
