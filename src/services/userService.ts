@@ -3,6 +3,7 @@ import { User } from "../entities/User";
 import { Constants } from "../shared/constants";
 import { Request } from "express";
 import { getRepository } from "typeorm";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
 
 export namespace UserService {
 
@@ -11,6 +12,13 @@ export namespace UserService {
     export function getAuthenticatedUserId(request: Request): string {
         const authenticatedUser = request.user as User;
         return authenticatedUser.id;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Get the Type of the authenticated User */
+    export function getAuthenticatedUserType(request: Request): UserTypeEnum {
+        const authenticatedUser = request.user as User;
+        return authenticatedUser.type;
     }
 
     // -------------------------------------------------------------------------------------------------

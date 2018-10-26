@@ -20,6 +20,11 @@ export class Job extends BaseEntity {
     @Column()
     isPublished: boolean;
 
+    @Column({
+        nullable: true
+    })
+    publicationDate: Date;
+
     @Column()
     @IsNotEmpty()
     title: string;
@@ -27,12 +32,19 @@ export class Job extends BaseEntity {
     @Column()
     type: JobTypeEnum;
 
-    @OneToOne(type => Address)
+    @OneToOne(type => Address, {
+        cascade: true
+    })
     @JoinColumn()
     address: Address;
 
     @Column()
     organizationName: string;
+
+    @Column({
+        nullable: true
+    })
+    organizationLogoUrl: string;
 
     @Column()
     @IsFQDN()
@@ -82,8 +94,10 @@ export class Job extends BaseEntity {
         this.title = dto.title;
         this.type = dto.type;
         this.isPublished = dto.isPublished;
+        this.publicationDate = dto.publicationDate;
         this.address = dto.address ? new Address(dto.address) : null;
         this.organizationName = dto.organizationName;
+        this.organizationLogoUrl = dto.organizationLogoUrl;
         this.applicationUrl = dto.applicationUrl;
         this.description = dto.description;
         this.roles = dto.roles;

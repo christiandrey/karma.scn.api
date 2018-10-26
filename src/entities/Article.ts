@@ -46,7 +46,9 @@ export class Article extends BaseEntity {
     @Column()
     isPublished: boolean;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     publicationDate: Date;
 
     @Column()

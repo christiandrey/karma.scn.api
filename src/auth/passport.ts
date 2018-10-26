@@ -62,6 +62,7 @@ passport.use("user-rule", new Strategy({
     if (!!user) {
         const authenticatedUser = new User();
         authenticatedUser.id = user.id;
+        authenticatedUser.type = user.type;
         return done(null, authenticatedUser);
     }
 
