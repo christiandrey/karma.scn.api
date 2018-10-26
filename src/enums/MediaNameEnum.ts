@@ -1,5 +1,6 @@
 export enum MediaNameEnum {
-    ProfilePhoto = 0,
-    CompanyDocument = 10,
-    MemberCertification = 20
+    Generic = 0,
+    ProfilePhoto = 10,
+    CompanyDocument = 20,
+    MemberCertification = 30
 }

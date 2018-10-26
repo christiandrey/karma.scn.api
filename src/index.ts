@@ -2,6 +2,7 @@
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import * as express from "express";
+import * as serveStatic from "serve-static";
 import * as bodyParser from "body-parser";
 import * as passport from "passport";
 import * as fileUpload from "express-fileupload";
@@ -20,6 +21,9 @@ createConnection().then(async connection => {
         safeFileNames: true,
         preserveExtension: 4,
         abortOnLimit: true
+    }));
+    app.use(serveStatic("/uploads/images", {
+        index: false
     }));
 
     Routes.forEach((route: IRoute) => {
