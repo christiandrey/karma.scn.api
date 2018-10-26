@@ -17,4 +17,11 @@ export namespace MapMedia {
             }) : null,
         } as Media;
     }
+
+    export function inMediaControllerDeleteAsync(media: Media): Media {
+        return {
+            id: media.id,
+            url: media.url
+        } as Media;
+    }
 }

@@ -103,4 +103,21 @@ export namespace Methods {
             await callback(list[index], index);
         }
     }
+
+    export function getMimeTypeFromExtension(extension: string): string {
+        switch (extension) {
+            case ".jpeg":
+                return "image/jpeg";
+            case ".jpg":
+                return "image/jpeg";
+            case ".bmp":
+                return "image/bmp";
+            case ".png":
+                return "image/png";
+            case "pdf":
+                return "application/pdf";
+            default:
+                return undefined;
+        }
+    }
 }

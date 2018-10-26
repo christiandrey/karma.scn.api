@@ -118,4 +118,16 @@ export const Routes = [{
     controller: MediaController,
     action: "uploadAsync",
     protected: true
+}, {
+    method: "get",
+    route: "/media/:name",
+    controller: MediaController,
+    action: "getMediaAsync",
+    protected: false
+}, {
+    method: "delete",
+    route: "/media/:id",
+    controller: MediaController,
+    action: "deleteAsync",
+    protected: true
 }];

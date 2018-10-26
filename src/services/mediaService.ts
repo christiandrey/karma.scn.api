@@ -7,46 +7,10 @@ import { Chance } from "chance";
 import { Media } from "../entities/Media";
 import { MediaNameEnum } from "../enums/MediaNameEnum";
 import { MediaTypeEnum } from "../enums/MediaTypeEnum";
+import { promisify } from 'util';
+import { unlink } from "fs";
 
 export namespace MediaService {
-
-    // -------------------------------------------------------------------------------------------------
-    /** Upload a file or group of files and returns a list of urls */
-    export async function uploadFiles(req: Request): Promise<Array<string>> {
-
-        if (!req.files) {
-            return new Array<string>();
-        } else {
-            const files = Object.keys(req.files);
-            const fileUrls = new Array<string>();
-            const chance = new Chance();
-
-            await Methods.forEachAsync(files, async (f) => {
-                const file = req.files[f] as fileUpload.UploadedFile;
-                const fileExtension = Methods.getExtension(file.name).toLowerCase();
-                const fileSaveName = `${chance.string({
-                    length: 15,
-                    pool: "abcdefghijklmnopqrstuvwxyz0123456789"
-                })}${fileExtension}`;
-
-                if (Constants.imageExtensions.some(e => e === fileExtension)) {
-                    const fileSavePath = `${Methods.getAppHostName(req)}${Constants.paths.imageUploadPath}${fileSaveName}`;
-                    const fileSaveRelativePath = `${Methods.getBaseFolder()}${Constants.paths.imageUploadPath}${fileSaveName}`;
-                    const optimiseImageResult = await optimiseImage(file.data, fileExtension, fileSaveRelativePath);
-                    if (optimiseImageResult) {
-                        fileUrls.push(fileSavePath);
-                    }
-                } else {
-                    const fileSavePath = `${Methods.getAppHostName(req)}${Constants.paths.documentUploadPath}${fileSaveName}`;
-                    const fileSaveRelativePath = `${Methods.getBaseFolder()}${Constants.paths.documentUploadPath}${fileSaveName}`;
-                    await file.mv(fileSaveRelativePath);
-                    fileUrls.push(fileSavePath);
-                }
-            });
-
-            return fileUrls;
-        }
-    }
 
     // -------------------------------------------------------------------------------------------------
     /** Upload a file or group of files asynchronously and returns a list of media */
@@ -70,7 +34,7 @@ export namespace MediaService {
 
                 if (Constants.imageExtensions.some(e => e === fileExtension)) {
                     const mediaType = MediaTypeEnum.Image;
-                    const fileSavePath = `${Methods.getAppHostName(req)}${Constants.paths.imageUploadPath}${fileSaveName}`;
+                    const fileSavePath = `${Methods.getAppHostName(req)}/media/${fileSaveName}`;
                     const fileSaveRelativePath = `${Methods.getBaseFolder()}${Constants.paths.imageUploadPath}${fileSaveName}`;
                     const optimiseImageResult = await optimiseImage(file.data, fileExtension, fileSaveRelativePath);
 
@@ -85,7 +49,7 @@ export namespace MediaService {
                     }
                 } else {
                     const mediaType = MediaTypeEnum.Document;
-                    const fileSavePath = `${Methods.getAppHostName(req)}${Constants.paths.documentUploadPath}${fileSaveName}`;
+                    const fileSavePath = `${Methods.getAppHostName(req)}/media/${fileSaveName}`;
                     const fileSaveRelativePath = `${Methods.getBaseFolder()}${Constants.paths.documentUploadPath}${fileSaveName}`;
                     await file.mv(fileSaveRelativePath);
 
@@ -100,6 +64,37 @@ export namespace MediaService {
             });
 
             return createdMedia;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Upload a file or group of files asynchronously and returns a list of media */
+    export async function deleteFileAsync(req, path: string): Promise<boolean> {
+        const name = path.replace(`${Methods.getAppHostName(req)}/media/`, "");
+        const extension = Methods.getExtension(name);
+
+        let uploadPath: string;
+        let deleteThumb = false;
+
+        if (Constants.imageExtensions.some(e => e === extension)) {
+            uploadPath = Constants.paths.imageUploadPath;
+            deleteThumb = true;
+        }
+
+        if (Constants.documentExtensions.some(e => e === extension)) {
+            uploadPath = Constants.paths.documentUploadPath;
+        }
+
+        const unlinkAsync = promisify(unlink);
+
+        try {
+            await unlinkAsync(`${Methods.getBaseFolder()}${uploadPath}${name}`);
+            if (deleteThumb) {
+                await unlinkAsync(`${Methods.getBaseFolder()}${uploadPath}${name.replace(extension, `_thumb${extension}`)}`);
+            }
+            return true;
+        } catch (error) {
+            return false
         }
     }
 

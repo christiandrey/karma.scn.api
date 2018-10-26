@@ -8,6 +8,9 @@ import { MediaNameEnum } from "../enums/MediaNameEnum";
 import { User } from "../entities/User";
 import { MapMedia } from "../mapping/mapMedia";
 import { Company } from "../entities/Company";
+import { Constants } from "../shared/constants";
+import { createReadStream, exists } from "fs";
+import { promisify } from "util";
 
 export class MediaController {
 
@@ -36,6 +39,49 @@ export class MediaController {
     }
 
     async getMediaAsync(req: Request, resp: Response, next: NextFunction) {
-        // const urlToken
+        const name = req.params.name.toLowerCase() as string;
+        const extension = Methods.getExtension(name);
+
+        if (![...Constants.documentExtensions, ...Constants.imageExtensions].some(e => e === extension)) {
+            Methods.sendErrorResponse(resp, 404, "Media was not found");
+        } else {
+            let uploadPath: string;
+
+            if (Constants.imageExtensions.some(e => e === extension)) {
+                uploadPath = Constants.paths.imageUploadPath;
+            }
+
+            if (Constants.documentExtensions.some(e => e === extension)) {
+                uploadPath = Constants.paths.documentUploadPath;
+            }
+
+            const filePath = `${Methods.getBaseFolder()}${uploadPath}${name}`;
+
+            const existsAsync = promisify(exists);
+
+            const fileExists = await existsAsync(filePath);
+
+            if (fileExists) {
+                resp.setHeader("Content-Type", Methods.getMimeTypeFromExtension(extension));
+                createReadStream(filePath).pipe(resp);
+            } else {
+                Methods.sendErrorResponse(resp, 404, "Media was not found");
+            }
+        }
+    }
+
+    async deleteAsync(req: Request, resp: Response, next: NextFunction) {
+        const mediaToDelete = await this.mediaRepository.findOne(req.params.id);
+
+        if (!!mediaToDelete) {
+            try {
+                await MediaService.deleteFileAsync(req, mediaToDelete.url);
+                const deletedMedia = await this.mediaRepository.remove(mediaToDelete);
+                return Methods.getJsonResponse(MapMedia.inMediaControllerDeleteAsync(deletedMedia), "Delete operation was successful");
+            } catch (error) {
+                return Methods.getJsonResponse({}, error.toString(), false);
+            }
+        }
+        Methods.sendErrorResponse(resp, 404, "Media was not found");
     }
 }

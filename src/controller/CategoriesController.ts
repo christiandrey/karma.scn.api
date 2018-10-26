@@ -93,6 +93,6 @@ export class CategoriesController {
                 return Methods.getJsonResponse({}, error.toString(), false);
             }
         }
-        return Methods.getJsonResponse({}, "Category was not found", false);
+        Methods.sendErrorResponse(resp, 404, "Category was not found");
     }
 }
