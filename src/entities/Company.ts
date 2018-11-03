@@ -1,6 +1,6 @@
 import { Entity, Column, OneToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
-import { IsEmail, IsFQDN, IsDate, IsNotEmpty, MaxLength, IsLowercase, Matches } from "class-validator";
+import { IsEmail, IsFQDN, IsDate, IsNotEmpty, MaxLength, IsLowercase, Matches, IsDateString, IsNumber } from "class-validator";
 import { BusinessRegistrationTypeEnum } from "../enums/BusinessRegistrationTypeEnum";
 import { Media } from "./Media";
 import { Category } from "./Category";
@@ -12,6 +12,7 @@ import { Address } from "./Address";
 export class Company extends BaseEntity {
 
     @Column()
+    @IsNotEmpty()
     name: string;
 
     @Column()
@@ -35,6 +36,7 @@ export class Company extends BaseEntity {
     address: Address;
 
     @Column()
+    @IsNotEmpty()
     phone: string;
 
     @Column({
@@ -47,7 +49,9 @@ export class Company extends BaseEntity {
     @IsEmail()
     email: string;
 
-    @Column()
+    @Column({
+        default: true
+    })
     backgroundCheck: boolean;
 
     @Column({
@@ -63,23 +67,27 @@ export class Company extends BaseEntity {
     registrationNumber: string;
 
     @Column()
-    @IsDate()
+    @IsDateString()
     registrationDate: Date;
 
     @Column({
         nullable: true
     })
+    @IsNumber()
     taxpayersIdentificationNumber: number;
 
     @Column({
         nullable: true
     })
+    @IsNumber()
     vatRegistrationNumber: number;
 
     @Column("double")
+    @IsNumber()
     averageAnnualContractValue: number;
 
     @Column("double")
+    @IsNumber()
     highestSingularContractValue: number;
 
     @Column({

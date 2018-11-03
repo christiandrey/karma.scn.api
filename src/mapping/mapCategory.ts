@@ -23,4 +23,11 @@ export namespace MapCategory {
         } as Category;
     }
 
+    export function inAllControllers(category: Category): Category {
+        return {
+            id: category.id,
+            name: category.name,
+            title: category.title
+        } as Category;
+    }
 }

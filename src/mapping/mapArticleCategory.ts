@@ -2,6 +2,13 @@ import { ArticleCategory } from "../entities/ArticleCategory";
 
 export namespace MapArticleCategory {
 
+    export function inArticleCategoriesControllerGetAllAsync(articleCategory: ArticleCategory): ArticleCategory {
+        return {
+            id: articleCategory.id,
+            title: articleCategory.title
+        } as ArticleCategory;
+    }
+
     export function inArticleCategoriesControllerCreateAsync(articleCategory: ArticleCategory): ArticleCategory {
         return {
             id: articleCategory.id,

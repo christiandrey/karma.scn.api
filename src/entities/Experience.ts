@@ -1,7 +1,7 @@
 import { Entity, ManyToOne, Column } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
-import { IsDate, MaxLength } from "class-validator";
+import { IsDate, MaxLength, IsNotEmpty, IsDateString } from "class-validator";
 
 @Entity()
 export class Experience extends BaseEntity {
@@ -10,17 +10,23 @@ export class Experience extends BaseEntity {
     user: User;
 
     @Column()
+    @IsNotEmpty()
     role: string;
 
-    @Column()
+    @Column({
+        length: 500
+    })
     @MaxLength(500)
+    @IsNotEmpty()
     description: string;
 
     @Column()
+    @IsNotEmpty()
     organization: string;
 
     @Column()
-    @IsDate()
+    @IsDateString()
+    @IsNotEmpty()
     startDate: Date;
 
     @Column({

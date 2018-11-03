@@ -8,8 +8,7 @@ export class View extends BaseEntity {
     @ManyToOne(type => User, user => user.views)
     user: User;
 
-    @OneToOne(type => User)
-    @JoinColumn()
+    @ManyToOne(type => User)
     viewedBy: User;
 
     constructor(dto?: View | any) {

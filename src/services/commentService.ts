@@ -16,7 +16,6 @@ import { Webinar } from "../entities/Webinar";
 import { Article } from "../entities/Article";
 
 export namespace CommentService {
-    const commentRepository = getRepository(Comment);
 
     export async function addCommentAsync(req: Request, comment: Comment): Promise<IJsonResponse<FormResponse<Comment>>> {
         const validationResult = await validate(comment);
@@ -24,12 +23,13 @@ export namespace CommentService {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse<Comment>({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
 
             return Methods.getJsonResponse(invalidResponse, "Comment data provided was not valid", false);
         }
 
+        const commentRepository = getRepository(Comment);
         const { content, parentComment, discussion, article, timelineUpdate, timelinePhoto, webinar } = comment;
 
         const commentToCreate = new Comment({

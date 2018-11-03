@@ -6,7 +6,9 @@ import { MaxLength, IsFQDN, IsNotEmpty } from "class-validator";
 @Entity()
 export class Resource extends BaseEntity {
 
-    @ManyToOne(type => User, user => user.resources)
+    @ManyToOne(type => User, user => user.resources, {
+        eager: true
+    })
     user: User;
 
     @Column()
@@ -29,7 +31,6 @@ export class Resource extends BaseEntity {
     description: string;
 
     @Column()
-    @IsFQDN()
     @IsNotEmpty()
     purchaseUrl: string;
 

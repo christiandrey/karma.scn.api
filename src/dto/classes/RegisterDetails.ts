@@ -1,5 +1,6 @@
-import { IsEmail, MinLength, IsAlpha, IsNotEmpty } from "class-validator";
+import { IsEmail, MinLength, IsAlpha, IsNotEmpty, IsDate, IsDateString } from "class-validator";
 import { UserTypeEnum } from "../../enums/UserTypeEnum";
+import { Address } from "../../entities/Address";
 
 export class RegisterDetails {
     @IsAlpha()
@@ -7,6 +8,12 @@ export class RegisterDetails {
 
     @IsAlpha()
     lastName: string;
+
+    @IsDateString()
+    dateOfBirth: string;
+
+    @IsNotEmpty()
+    address: Address;
 
     type: UserTypeEnum;
 
@@ -27,6 +34,8 @@ export class RegisterDetails {
 
         this.firstName = dto.firstName;
         this.lastName = dto.lastName;
+        this.dateOfBirth = dto.dateOfBirth;
+        this.address = !!dto.address ? new Address(dto.address) : null;
         this.type = dto.type;
         this.phone = dto.phone;
         this.email = dto.email;

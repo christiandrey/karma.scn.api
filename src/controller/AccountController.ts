@@ -11,6 +11,9 @@ import * as bcrypt from "bcrypt";
 import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
 import { EmailService } from "../services/emailService";
 import { UserService } from "../services/userService";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { Address } from "../entities/Address";
+import { Country } from "../entities/Country";
 
 export class AccountController {
 
@@ -56,10 +59,15 @@ export class AccountController {
         if (validationResult.length) {
             const response = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(x => x.toString())
+                errors: validationResult.map(x => x.constraints)
             });
 
             return Methods.getJsonResponse(response, "Invalid sign in details", false);
+        }
+
+        if (registerDetails.type === UserTypeEnum.Admin) {
+            Methods.sendErrorResponse(resp, 400, "Bad Request");
+            return;
         }
 
         const { email } = registerDetails;
@@ -73,15 +81,23 @@ export class AccountController {
 
             return Methods.getJsonResponse(response, "A user with this email already exists", false);
         } else {
-            const { firstName, lastName, email, password, type, phone } = registerDetails;
+            const { firstName, lastName, email, password, type, phone, address, dateOfBirth } = registerDetails;
             const user = new User({
-                firstName, lastName, type, phone,
+                firstName, lastName, type, phone, dateOfBirth,
+                verified: false,
+                address: new Address({
+                    city: address.city,
+                    state: address.state,
+                    country: new Country({ id: address.country.id })
+                } as Address),
                 email: email.toLowerCase()
             });
 
             user.password = await bcrypt.hash(password, 2);
 
             dbUser = await this.userRepository.save(user);
+
+            //TODO: Schedule birthday message using DOB
 
             // const sendEmailConfig = {
             //     to: user.email,

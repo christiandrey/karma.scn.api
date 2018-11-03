@@ -1,5 +1,6 @@
 import { Connection } from "../entities/Connection";
 import { User } from "../entities/User";
+import { MapUser } from "./mapUser";
 
 export namespace MapConnection {
 
@@ -44,6 +45,16 @@ export namespace MapConnection {
             connectedTo: new User({
                 id: connectedTo.id
             })
+        } as Connection;
+    }
+
+    export function inConnectionControllerGetConnectionsAsync(connection: Connection): Connection {
+        const { id, user, status, connectedTo } = connection;
+
+        return {
+            id, status,
+            user: MapUser.inAllControllers(user),
+            connectedTo: MapUser.inAllControllers(connectedTo)
         } as Connection;
     }
 }

@@ -1,9 +1,10 @@
-import { Entity, ManyToOne, Column, OneToMany, AfterLoad } from "typeorm";
+import { Entity, ManyToOne, Column, OneToMany, AfterLoad, OneToOne, JoinColumn } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { IsNotEmpty } from "class-validator";
 import { Comment } from "./Comment";
 import { Like } from "./Like";
+import { Media } from "./Media";
 
 @Entity()
 export class TimelinePhoto extends BaseEntity {
@@ -11,9 +12,13 @@ export class TimelinePhoto extends BaseEntity {
     @ManyToOne(type => User)
     author: User;
 
-    @Column()
+    @OneToOne(type => Media, {
+        eager: true,
+        cascade: true
+    })
+    @JoinColumn()
     @IsNotEmpty()
-    url: string;
+    media: Media;
 
     @Column()
     isDisabled: boolean;
@@ -40,12 +45,12 @@ export class TimelinePhoto extends BaseEntity {
 
     @AfterLoad()
     getCommentsCount() {
-        this.commentsCount = this.comments.length;
+        this.commentsCount = !!this.comments ? this.comments.length : 0;
     }
 
     @AfterLoad()
     getLikesCount() {
-        this.likesCount = this.likes.length;
+        this.likesCount = !!this.likes ? this.likes.length : 0;
     }
 
     constructor(dto?: TimelinePhoto | any) {
@@ -54,7 +59,7 @@ export class TimelinePhoto extends BaseEntity {
         dto = dto || {} as TimelinePhoto;
 
         this.author = dto.author ? new User(dto.author) : null;
-        this.url = dto.url;
+        this.media = dto.media ? new Media(dto.media) : null;
         this.isDisabled = dto.isDisabled;
         this.commentsCount = dto.commentsCount;
         this.likesCount = dto.likesCount;

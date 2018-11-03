@@ -23,9 +23,7 @@ export class Comment extends BaseEntity {
     @ManyToOne(type => Comment, comment => comment.childComments)
     parentComment: Comment;
 
-    @OneToMany(type => Comment, comment => comment.parentComment, {
-        eager: true
-    })
+    @OneToMany(type => Comment, comment => comment.parentComment)
     childComments: Array<Comment>;
 
     @ManyToOne(type => Article, article => article.comments)

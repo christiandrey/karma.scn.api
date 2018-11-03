@@ -4,6 +4,7 @@ import { Constants } from "../shared/constants";
 import { Request } from "express";
 import { getRepository } from "typeorm";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { SocketRecord } from "../entities/SocketRecord";
 
 export namespace UserService {
 
@@ -33,6 +34,17 @@ export namespace UserService {
         }
 
         return authenticatedUser;
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    /** Get the authenticated User's connected socket records */
+    export async function getAuthenticatedUserSocketRecordsAsync(request: Request): Promise<Array<SocketRecord>> {
+        const userRepository = getRepository(User);
+        const authenticatedUserId = getAuthenticatedUserId(request);
+        const user = await userRepository.findOne(authenticatedUserId, {
+            relations: ["socketRecords"]
+        });
+        return user.socketRecords;
     }
 
     // -------------------------------------------------------------------------------------------------

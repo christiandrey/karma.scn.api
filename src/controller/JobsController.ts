@@ -11,6 +11,8 @@ import { Country } from "../entities/Country";
 import { User } from "../entities/User";
 import { UserService } from "../services/userService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { Constants } from "../shared/constants";
+import { CacheService } from "../services/cacheService";
 
 export class JobsController {
 
@@ -52,7 +54,7 @@ export class JobsController {
         const urlToken = req.params.urlToken as string;
         const job = await this.jobRepository.findOne({ urlToken });
 
-        if (!!job || !job.isPublished) {
+        if (!job || !job.isPublished) {
             Methods.sendErrorResponse(resp, 404, "Job was not found");
         }
 
@@ -77,7 +79,7 @@ export class JobsController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Job data provided was not valid", false);
         }
@@ -91,10 +93,10 @@ export class JobsController {
         const jobToCreate = new Job({
             title, type, organizationName, organizationLogoUrl, applicationUrl, description, roles, requirements,
             address: new Address({
-                city: job.address.city,
-                state: job.address.state,
+                city: address.city,
+                state: address.state,
                 country: new Country({
-                    id: job.address.country.id
+                    id: address.country.id
                 })
             }),
             isPublished: false,
@@ -106,6 +108,7 @@ export class JobsController {
             isValid: true,
             target: MapJob.inJobsControllerCreateAsync(createdJob)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
@@ -117,12 +120,12 @@ export class JobsController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Job data provided was not valid", false);
         }
 
-        const dbJob = await this.jobRepository.findOne({ id: job.id });
+        let dbJob = await this.jobRepository.findOne({ id: job.id });
 
         if (!dbJob) {
             Methods.sendErrorResponse(resp, 404, "Job was not found");
@@ -136,25 +139,16 @@ export class JobsController {
             }
         }
 
-        const { title, organizationName, organizationLogoUrl, applicationUrl, type, description, requirements, roles, address } = job;
-
-        dbJob.title = title;
-        dbJob.organizationName = organizationName;
-        dbJob.organizationLogoUrl = organizationLogoUrl;
-        dbJob.applicationUrl = applicationUrl;
-        dbJob.type = type;
-        dbJob.description = description;
-        dbJob.requirements = requirements;
-        dbJob.roles = roles;
-        dbJob.address.city = address.city;
-        dbJob.address.state = address.state;
-        dbJob.address.country.id = address.country.id;
+        dbJob = Methods.remapIfChanged(dbJob, job,
+            "title", "organizationName", "organizationLogoUrl", "applicationUrl", "type", "description", "requirements", "roles",
+            "address.city", "address.state", "address.country.id");
 
         const updatedJob = await this.jobRepository.save(dbJob);
         const validResponse = new FormResponse<Job>({
             isValid: true,
             target: MapJob.inJobsControllerUpdateAsync(updatedJob)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
@@ -162,7 +156,7 @@ export class JobsController {
         const id = req.params.id as string;
         const job = await this.jobRepository.findOne(id);
 
-        if (!!job) {
+        if (!job) {
             Methods.sendErrorResponse(resp, 404, "Job was not found");
             return;
         }
@@ -178,6 +172,7 @@ export class JobsController {
         const publishedJob = await this.jobRepository.save(job);
         const response = MapJob.inJobsControllerPublishAsync(publishedJob);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Job was successfully published");
     }
 
@@ -185,7 +180,7 @@ export class JobsController {
         const id = req.params.id as string;
         const job = await this.jobRepository.findOne(id);
 
-        if (!!job) {
+        if (!job) {
             Methods.sendErrorResponse(resp, 404, "Job was not found");
             return;
         }
@@ -200,6 +195,7 @@ export class JobsController {
         const unpublishedJob = await this.jobRepository.save(job);
         const response = MapJob.inJobsControllerUnPublishAsync(unpublishedJob);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Job was successfully unpublished");
     }
 }

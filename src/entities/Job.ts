@@ -9,7 +9,9 @@ import { Chance } from "chance";
 @Entity()
 export class Job extends BaseEntity {
 
-    @ManyToOne(type => User)
+    @ManyToOne(type => User, {
+        eager: true
+    })
     author: User;
 
     @Column({
@@ -33,6 +35,7 @@ export class Job extends BaseEntity {
     type: JobTypeEnum;
 
     @OneToOne(type => Address, {
+        eager: true,
         cascade: true
     })
     @JoinColumn()
@@ -47,7 +50,6 @@ export class Job extends BaseEntity {
     organizationLogoUrl: string;
 
     @Column()
-    @IsFQDN()
     @IsNotEmpty()
     applicationUrl: string;
 

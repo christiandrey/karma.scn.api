@@ -9,6 +9,8 @@ import { UserService } from "../services/userService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { Resource } from "../entities/Resource";
 import { MapResource } from "../mapping/mapResource";
+import { CacheService } from "../services/cacheService";
+import { Constants } from "../shared/constants";
 
 export class ResourcesController {
 
@@ -40,7 +42,7 @@ export class ResourcesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Resource data provided was not valid", false);
         }
@@ -54,7 +56,7 @@ export class ResourcesController {
         const resourceToCreate = new Resource({
             title, description, purchaseUrl,
             isPublished: false,
-            author: new User({ id: UserService.getAuthenticatedUserId(req) })
+            user: new User({ id: UserService.getAuthenticatedUserId(req) })
         });
 
         const createdResource = await this.resourceRepository.save(resourceToCreate);
@@ -62,6 +64,7 @@ export class ResourcesController {
             isValid: true,
             target: MapResource.inResourcesControllerCreateAsync(createdResource)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
@@ -73,7 +76,7 @@ export class ResourcesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Resource data provided was not valid", false);
         }
@@ -103,6 +106,7 @@ export class ResourcesController {
             isValid: true,
             target: MapResource.inResourcesControllerUpdateAsync(updatedResource)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
@@ -110,7 +114,7 @@ export class ResourcesController {
         const id = req.params.id as string;
         const resource = await this.resourceRepository.findOne(id);
 
-        if (!!resource) {
+        if (!resource) {
             Methods.sendErrorResponse(resp, 404, "Resource was not found");
             return;
         }
@@ -126,6 +130,7 @@ export class ResourcesController {
         const publishedResource = await this.resourceRepository.save(resource);
         const response = MapResource.inResourcesControllerPublishAsync(publishedResource);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Resource was successfully published");
     }
 
@@ -133,7 +138,7 @@ export class ResourcesController {
         const id = req.params.id as string;
         const resource = await this.resourceRepository.findOne(id);
 
-        if (!!resource) {
+        if (!resource) {
             Methods.sendErrorResponse(resp, 404, "Resource was not found");
             return;
         }
@@ -148,6 +153,7 @@ export class ResourcesController {
         const unpublishedResource = await this.resourceRepository.save(resource);
         const response = MapResource.inResourcesControllerUnPublishAsync(unpublishedResource);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Resource was successfully unpublished");
     }
 }

@@ -9,7 +9,6 @@ import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { User } from "../entities/User";
 import { UserService } from "../services/userService";
 import { Comment } from "../entities/Comment";
-import { MapComment } from "../mapping/mapComment";
 import { CommentService } from "../services/commentService";
 
 export class DiscussionsController {
@@ -46,7 +45,7 @@ export class DiscussionsController {
         const urlToken = req.params.urlToken as string;
         const discussion = await this.discussionRepository.findOne({ urlToken });
 
-        if (!!discussion) {
+        if (!discussion) {
             Methods.sendErrorResponse(resp, 404, "Discussion was not found");
         }
 
@@ -66,7 +65,7 @@ export class DiscussionsController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Discussion data provided was not valid", false);
         }

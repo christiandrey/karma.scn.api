@@ -1,7 +1,8 @@
-import { Entity, OneToOne, ManyToOne, JoinColumn, Column, OneToMany } from "typeorm";
+import { Entity, OneToOne, ManyToOne, JoinColumn, Column, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { Contains, IsNotEmpty, Matches } from "class-validator";
+import { Methods } from "../shared/methods";
 
 @Entity()
 export class Skill extends BaseEntity {
@@ -15,6 +16,16 @@ export class Skill extends BaseEntity {
     @IsNotEmpty()
     @Matches(/^[a-zA-Z0-9\s&-]*$/)
     title: string;
+
+    @BeforeInsert()
+    createSkillName() {
+        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+    }
+
+    @BeforeUpdate()
+    updateSkillName() {
+        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+    }
 
     constructor(dto?: Skill | any) {
         super(dto);

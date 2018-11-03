@@ -1,6 +1,5 @@
 import { Job } from "../entities/Job";
-import { Address } from "../entities/Address";
-import { Country } from "../entities/Country";
+import { MapAddress } from "./mapAddress";
 
 export namespace MapJob {
 
@@ -19,18 +18,10 @@ export namespace MapJob {
     }
 
     export function inJobsControllerGetByUrlTokenAsync(job: Job): Job {
-        const { id, type, organizationName, organizationLogoUrl, title, urlToken, applicationUrl, roles, description, requirements } = job;
+        const { id, type, address, organizationName, organizationLogoUrl, title, urlToken, applicationUrl, roles, description, requirements } = job;
         return {
             id, type, organizationName, organizationLogoUrl, title, urlToken, applicationUrl, roles, description, requirements,
-            address: new Address({
-                id: job.address.id,
-                city: job.address.city,
-                state: job.address.state,
-                country: new Country({
-                    id: job.address.country.id,
-                    name: job.address.country.name
-                })
-            } as Address)
+            address: MapAddress.inAllControllers(address),
         } as Job;
     }
 

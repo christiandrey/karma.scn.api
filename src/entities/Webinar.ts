@@ -1,7 +1,7 @@
 import { Entity, OneToOne, ManyToOne, JoinColumn, Column, BeforeInsert, ManyToMany, JoinTable, OneToMany } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
-import { IsNotEmpty, IsLowercase, Length, Matches, IsDate } from "class-validator";
+import { IsNotEmpty, IsLowercase, Length, Matches, IsDate, IsDateString, MaxLength } from "class-validator";
 import { Chance } from "chance";
 import { Media } from "./Media";
 import { WebinarStatusEnum } from "../enums/WebinarStatusEnum";
@@ -13,11 +13,10 @@ export class Webinar extends BaseEntity {
     @ManyToOne(type => User)
     author: User;
 
-    @OneToOne(type => User, {
+    @ManyToOne(type => User, {
         eager: true,
     })
     @IsNotEmpty()
-    @JoinColumn()
     anchor: User;
 
     @Column("int", {
@@ -32,7 +31,7 @@ export class Webinar extends BaseEntity {
     @Column({
         length: 1000
     })
-    @Length(1000)
+    @MaxLength(1000)
     description: string;
 
     @Column({
@@ -45,7 +44,7 @@ export class Webinar extends BaseEntity {
     transcript: Media;
 
     @Column()
-    @IsDate()
+    @IsDateString()
     startDateTime: Date;
 
     @Column()

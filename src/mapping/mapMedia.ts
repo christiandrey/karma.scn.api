@@ -24,4 +24,11 @@ export namespace MapMedia {
             url: media.url
         } as Media;
     }
+
+    export function inAllControllers(media: Media): Media {
+        return {
+            id: media.id,
+            url: media.url
+        } as Media;
+    }
 }

@@ -11,6 +11,18 @@ export class CategoriesController {
 
     private categoryRepository = getRepository(Category);
 
+    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
+        const categories = await this.categoryRepository.find({
+            order: {
+                title: "ASC"
+            }
+        });
+
+        const response = categories.map(x => MapCategory.inAllControllers(x));
+
+        return Methods.getJsonResponse(response, `${categories.length} categories found`);
+    }
+
     async createAsync(req: Request, resp: Response, next: NextFunction) {
         const category = new Category(req.body);
 
@@ -21,7 +33,7 @@ export class CategoriesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }
@@ -60,7 +72,7 @@ export class CategoriesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }

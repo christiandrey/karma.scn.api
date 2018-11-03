@@ -23,7 +23,7 @@ export namespace MapComment {
                 } : null
             } as User,
             content: comment.content,
-            childComments: comment.childComments.map(c => inAllControllers(c))
+            childComments: !!comment.childComments ? comment.childComments.map(c => inAllControllers(c)) : new Array<Comment>()
         } as Comment;
     }
 }

@@ -1,3 +1,6 @@
+import { Request } from "express";
+import * as socketio from "socket.io";
+
 interface IGrouping<T> {
     key: string;
     group: Array<T>;
@@ -32,4 +35,12 @@ interface Number {
 interface Date {
     addHours(hour: number): Date;
     getHourDifference(date: Date): number;
+}
+
+declare global {
+    namespace Express {
+        interface Request {
+            io?: socketio.Server;
+        }
+    }
 }

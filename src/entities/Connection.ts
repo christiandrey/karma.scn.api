@@ -7,7 +7,9 @@ import { IsNotEmpty } from "class-validator";
 @Entity()
 export class Connection extends BaseEntity {
 
-    @ManyToOne(type => User, user => user.connections)
+    @ManyToOne(type => User, user => user.connections, {
+        eager: true
+    })
     user: User;
 
     @OneToOne(type => User, {

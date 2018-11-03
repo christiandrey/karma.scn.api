@@ -8,7 +8,9 @@ import { MaxLength } from "class-validator";
 @Entity()
 export class Discussion extends BaseEntity {
 
-    @ManyToOne(type => User)
+    @ManyToOne(type => User, {
+        eager: true
+    })
     author: User;
 
     @Column()

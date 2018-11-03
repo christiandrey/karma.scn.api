@@ -40,12 +40,12 @@ export class TimelineUpdate extends BaseEntity {
 
     @AfterLoad()
     getCommentsCount() {
-        this.commentsCount = this.comments.length;
+        this.commentsCount = !!this.comments ? this.comments.length : 0;
     }
 
     @AfterLoad()
     getLikesCount() {
-        this.likesCount = this.likes.length;
+        this.likesCount = !!this.likes ? this.likes.length : 0;
     }
 
     constructor(dto?: TimelineUpdate | any) {

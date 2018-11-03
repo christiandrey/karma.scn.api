@@ -8,6 +8,11 @@ import { validate } from "class-validator";
 import { FormResponse } from "../dto/classes/FormResponse";
 import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { UserService } from "../services/userService";
+import { Constants } from "../shared/constants";
+import { Notification } from "../entities/Notification";
+import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
+import { NotificationService } from "../services/notificationService";
+import { CacheService } from "../services/cacheService";
 
 export class AnnouncementsController {
 
@@ -39,9 +44,9 @@ export class AnnouncementsController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Annoucement data provided was not valid", false);
+            return Methods.getJsonResponse(invalidResponse, "Announcement data provided was not valid", false);
         }
 
         // ------------------------------------------------------------------------
@@ -68,7 +73,7 @@ export class AnnouncementsController {
         const id = req.params.id as string;
         const announcement = await this.announcementRepository.findOne(id);
 
-        if (!!announcement) {
+        if (!announcement) {
             Methods.sendErrorResponse(resp, 404, "Announcement was not found");
             return;
         }
@@ -84,6 +89,23 @@ export class AnnouncementsController {
         const publishedAnnouncement = await this.announcementRepository.save(announcement);
         const response = MapAnnouncement.inAnnouncementsControllerAllMethods(publishedAnnouncement);
 
+        // ------------------------------------------------------------------------
+        // Send Notifications
+        // ------------------------------------------------------------------------
+
+        if (!!publishedAnnouncement) {
+            const notification = new Notification({
+                content: publishedAnnouncement.content,
+                type: NotificationTypeEnum.WebinarStart,
+                hasBeenRead: false
+            } as Notification);
+
+            try {
+                await NotificationService.sendNotificationToAllAsync(req, notification);
+            } catch (error) { }
+        }
+
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Announcement was successfully published");
     }
 
@@ -91,7 +113,7 @@ export class AnnouncementsController {
         const id = req.params.id as string;
         const announcement = await this.announcementRepository.findOne(id);
 
-        if (!!announcement) {
+        if (!announcement) {
             Methods.sendErrorResponse(resp, 404, "Announcement was not found");
             return;
         }

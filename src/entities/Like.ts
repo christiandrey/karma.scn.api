@@ -1,4 +1,4 @@
-import { Entity, ManyToOne } from "typeorm";
+import { Entity, ManyToOne, OneToOne } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { TimelineUpdate } from "./TimelineUpdate";
@@ -7,7 +7,9 @@ import { TimelinePhoto } from "./TimelinePhoto";
 @Entity()
 export class Like extends BaseEntity {
 
-    @ManyToOne(type => User, user => user.views)
+    @OneToOne(type => User, {
+        eager: true
+    })
     user: User;
 
     @ManyToOne(type => TimelineUpdate, timelineUpdate => timelineUpdate.likes)

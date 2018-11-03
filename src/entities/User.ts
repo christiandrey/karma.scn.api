@@ -15,6 +15,7 @@ import { Notification } from "./Notification";
 import { Webinar } from "./Webinar";
 import { Address } from "./Address";
 import { Methods } from "../shared/methods";
+import { SocketRecord } from "./SocketRecord";
 
 @Entity()
 export class User extends BaseEntity {
@@ -35,9 +36,16 @@ export class User extends BaseEntity {
     })
     dateOfBirth: Date;
 
-    @OneToOne(type => Address, {
-        eager: true
+    @Column({
+        default: false
     })
+    verified: boolean;
+
+    @OneToOne(type => Address, {
+        eager: true,
+        cascade: true
+    })
+    @IsNotEmpty()
     @JoinColumn()
     address?: Address;
 
@@ -58,9 +66,6 @@ export class User extends BaseEntity {
     email: string;
 
     @Column()
-    @MinLength(3, {
-        message: "Password has to be a minimum of 3 characters"
-    })
     password: string;
 
     @OneToOne(type => Media, {
@@ -86,25 +91,21 @@ export class User extends BaseEntity {
     @Column({
         nullable: true
     })
-    @IsFQDN()
     facebookUrl: string;
 
     @Column({
         nullable: true
     })
-    @IsFQDN()
     linkedInUrl: string;
 
     @Column({
         nullable: true
     })
-    @IsFQDN()
     googlePlusUrl: string;
 
     @Column({
         nullable: true
     })
-    @IsFQDN()
     twitterUrl: string;
 
     @Column("int", {
@@ -123,12 +124,14 @@ export class User extends BaseEntity {
     description: string;
 
     @OneToMany(type => Experience, experience => experience.user, {
-        eager: true
+        eager: true,
+        cascade: true
     })
     experiences: Array<Experience>;
 
     @ManyToOne(type => Skill, {
-        eager: true
+        eager: true,
+        cascade: true
     })
     skills: Array<Skill>;
 
@@ -142,6 +145,9 @@ export class User extends BaseEntity {
         eager: true
     })
     views: Array<View>;
+
+    @OneToMany(type => SocketRecord, socketRecord => socketRecord.user)
+    socketRecords: Array<SocketRecord>;
 
     @OneToMany(type => Notification, notification => notification.user)
     notifications: Array<Notification>;
@@ -168,7 +174,10 @@ export class User extends BaseEntity {
         const experiences = this.experiences;
 
         if (!!experiences && experiences.length > 0) {
-            this.latestExperience = experiences[0];
+            const latestExperienceList = experiences.filter(x => x.current);
+            if (!!latestExperienceList && latestExperienceList.length > 0) {
+                this.latestExperience = latestExperienceList[0];
+            }
         }
     }
 
@@ -181,6 +190,7 @@ export class User extends BaseEntity {
         this.firstName = dto.firstName;
         this.lastName = dto.lastName;
         this.dateOfBirth = dto.dateOfBirth;
+        this.verified = dto.verified;
         this.address = dto.address ? new Address(dto.address) : null;
         this.latestExperience = dto.latestExperience ? new Experience(dto.latestExperience) : null;
         this.urlToken = dto.urlToken;

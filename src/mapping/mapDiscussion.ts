@@ -24,7 +24,7 @@ export namespace MapDiscussion {
         const { id, createdDate, topic, description, commentsCount, comments, author, urlToken } = discussion;
 
         return {
-            topic, description, commentsCount, urlToken,
+            id, createdDate, topic, description, commentsCount, urlToken,
             author: MapUser.inAllControllers(author),
             comments: comments.map(c => MapComment.inAllControllers(c))
         } as Discussion;

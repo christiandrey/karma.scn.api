@@ -14,22 +14,25 @@ import { ArticleStatusEnum } from "../enums/ArticleStatusEnum";
 import { UserService } from "../services/userService";
 import { CommentService } from "../services/commentService";
 import { Comment } from "../entities/Comment";
+import { Constants } from "../shared/constants";
+import { CacheService } from "../services/cacheService";
 
 export class ArticlesController {
 
     private articleRepository = getRepository(Article);
 
     async getLatestAsync(req: Request, resp: Response, next: NextFunction) {
-        const articles = await this.articleRepository.find({
-            where: {
-                isPublished: true
-            },
-            order: {
-                createdDate: "DESC"
-            },
-            skip: 0,
-            take: 4
-        });
+        const articles = await this.articleRepository.createQueryBuilder("article")
+            .where("article.isPublished = :isPublished", { isPublished: true })
+            .leftJoinAndSelect("article.author", "user")
+            .leftJoinAndSelect("article.featuredImage", "featuredImage")
+            .leftJoinAndSelect("article.category", "category")
+            .leftJoinAndSelect("article.comments", "comment")
+            .leftJoinAndSelect("comment.childComments", "childComment")
+            .orderBy("article.createdDate", "DESC")
+            .skip(0)
+            .take(4)
+            .getMany();
 
         const response = articles.map(a => MapArticle.inArticlesControllerGetLatestAsync(a));
 
@@ -37,14 +40,15 @@ export class ArticlesController {
     }
 
     async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-        const articles = await this.articleRepository.find({
-            where: {
-                isPublished: true
-            },
-            order: {
-                createdDate: "DESC"
-            }
-        });
+        const articles = await this.articleRepository.createQueryBuilder("article")
+            .where("article.isPublished = :isPublished", { isPublished: true })
+            .leftJoinAndSelect("article.author", "user")
+            .leftJoinAndSelect("article.featuredImage", "featuredImage")
+            .leftJoinAndSelect("article.category", "category")
+            .leftJoinAndSelect("article.comments", "comment")
+            .leftJoinAndSelect("comment.childComments", "childComment")
+            .orderBy("article.createdDate", "DESC")
+            .getMany();
 
         const response = articles.map(a => MapArticle.inArticlesControllerGetAll(a));
 
@@ -53,10 +57,20 @@ export class ArticlesController {
 
     async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
         const urlToken = req.params.urlToken as string;
-        const article = await this.articleRepository.findOne({ urlToken });
 
-        if (!!article || !article.isPublished) {
+        const article = await this.articleRepository.createQueryBuilder("article")
+            .where("article.urlToken = :urlToken", { urlToken })
+            .leftJoinAndSelect("article.author", "user")
+            .leftJoinAndSelect("article.featuredImage", "featuredImage")
+            .leftJoinAndSelect("article.category", "category")
+            .leftJoinAndSelect("article.comments", "comment")
+            .leftJoinAndSelect("comment.author", "author")
+            .leftJoinAndSelect("comment.childComments", "childComment")
+            .getOne();
+
+        if (!article || !article.isPublished) {
             Methods.sendErrorResponse(resp, 404, "Article was not found");
+            return;
         }
 
         const response = MapArticle.inArticlesControllerGetByUrlToken(article);
@@ -75,7 +89,7 @@ export class ArticlesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Article data provided was not valid", false);
         }
@@ -105,31 +119,32 @@ export class ArticlesController {
             isPublished: false,
             status: ArticleStatusEnum.Pending,
             featuredImage: new Media({ id: article.featuredImage.id }),
-            articleCategory: new ArticleCategory({ id: article.category.id }),
+            category: new ArticleCategory({ id: article.category.id }),
             author: new User({ id: UserService.getAuthenticatedUserId(req) })
-        });
+        } as Article);
 
         const createdArticle = await this.articleRepository.save(articleToCreate);
         const validResponse = new FormResponse<Article>({
             isValid: true,
             target: MapArticle.inArticlesControllerCreateAsync(createdArticle)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
     async updateAsync(req: Request, resp: Response, next: NextFunction) {
         const article = new Article(req.body);
-        const authenticatedUser = await UserService.getAuthenticatedUserAsync(req);
         const validationResult = await validate(article);
 
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.toString())
+                errors: validationResult.map(e => e.constraints)
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Article data provided was not valid", false);
         }
 
+        const authenticatedUser = await UserService.getAuthenticatedUserAsync(req);
         const dbArticle = await this.articleRepository.findOne({ id: article.id });
 
         if (!dbArticle) {
@@ -157,6 +172,7 @@ export class ArticlesController {
             isValid: true,
             target: MapArticle.inArticlesControllerUpdateAsync(updatedArticle)
         });
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(validResponse);
     }
 
@@ -164,7 +180,7 @@ export class ArticlesController {
         const id = req.params.id as string;
         const article = await this.articleRepository.findOne(id);
 
-        if (!!article) {
+        if (!article) {
             Methods.sendErrorResponse(resp, 404, "Article was not found");
             return;
         }
@@ -180,6 +196,7 @@ export class ArticlesController {
         const publishedArticle = await this.articleRepository.save(article);
         const response = MapArticle.inArticlesControllerPublishAsync(publishedArticle);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Article was successfully published");
     }
 
@@ -187,7 +204,7 @@ export class ArticlesController {
         const id = req.params.id as string;
         const article = await this.articleRepository.findOne(id);
 
-        if (!!article) {
+        if (!article) {
             Methods.sendErrorResponse(resp, 404, "Article was not found");
             return;
         }
@@ -202,6 +219,7 @@ export class ArticlesController {
         const unpublishedArticle = await this.articleRepository.save(article);
         const response = MapArticle.inArticlesControllerPublishAsync(unpublishedArticle);
 
+        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
         return Methods.getJsonResponse(response, "Article was successfully unpublished");
     }
 
@@ -213,9 +231,19 @@ export class ArticlesController {
             return;
         }
 
+        if (!article.isPublished) {
+            Methods.sendErrorResponse(resp, 400);
+            return;
+        }
+
         const comment = new Comment(req.body);
         comment.article = new Article({ id: article.id });
 
-        return await CommentService.addCommentAsync(req, comment);
+        const response = await CommentService.addCommentAsync(req, comment);
+
+        if (response.status) {
+            CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
+        }
+        return response;
     }
 }

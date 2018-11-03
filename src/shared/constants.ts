@@ -20,4 +20,8 @@ export namespace Constants {
 
         documentUploadPath: "/uploads/documents/"
     }
+
+    export const sortedTimelinePosts = "sortedTimelinePosts";
+
+    export const redisTTL = 3600;
 }

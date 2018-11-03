@@ -1,7 +1,7 @@
 import { Entity, OneToOne, ManyToOne, JoinColumn, Column } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
-import { IsAlphanumeric, IsFQDN } from "class-validator";
+import { IsAlphanumeric, IsFQDN, IsNotEmpty } from "class-validator";
 import { Media } from "./Media";
 
 @Entity()
@@ -11,13 +11,16 @@ export class Certificate extends BaseEntity {
     user: User;
 
     @Column()
+    @IsNotEmpty()
     issuer: string;
 
     @Column()
     @IsAlphanumeric()
+    @IsNotEmpty()
     certificateNumber: string;
 
     @Column()
+    @IsNotEmpty()
     dateOfIssue: Date;
 
     @OneToOne(type => Media)
@@ -27,7 +30,6 @@ export class Certificate extends BaseEntity {
     @Column({
         nullable: true
     })
-    @IsFQDN()
     issuerLogoUrl: string;
 
     constructor(dto?: Certificate | any) {
