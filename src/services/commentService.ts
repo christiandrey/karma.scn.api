@@ -23,7 +23,7 @@ export namespace CommentService {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse<Comment>({
                 isValid: false,
-                errors: validationResult.map(e => e.constraints)
+                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
             } as IFormResponse);
 
             return Methods.getJsonResponse(invalidResponse, "Comment data provided was not valid", false);

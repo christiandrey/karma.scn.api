@@ -16,104 +16,109 @@ import { Address } from "../entities/Address";
 import { Country } from "../entities/Country";
 
 export class AccountController {
+	private userRepository = getRepository(User);
+	private countryRepository = getRepository(Country);
 
-    private userRepository = getRepository(User);
+	async login(req: Request, resp: Response, next: NextFunction) {
+		passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
+			if (!user) {
+				const { message } = info;
+				const response = new FormResponse({
+					isValid: false,
+					errors: [message]
+				});
 
-    async login(req: Request, resp: Response, next: NextFunction) {
-        passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
-            if (!user) {
-                const { message } = info;
-                const response = new FormResponse({
-                    isValid: false,
-                    errors: [message]
-                });
+				return resp.json(Methods.getJsonResponse(response, message, false));
+			}
 
-                return resp.json(Methods.getJsonResponse(response, message, false));
-            }
+			req.login(user, { session: false }, error => {
+				if (!!error) {
+					const response = new FormResponse({
+						isValid: false,
+						errors: [error.toString()]
+					});
 
-            req.login(user, { session: false }, (error) => {
-                if (!!error) {
-                    const response = new FormResponse({
-                        isValid: false,
-                        errors: [error.toString()]
-                    });
+					return resp.json(Methods.getJsonResponse(response, error.toString(), false));
+				}
 
-                    return resp.json(Methods.getJsonResponse(response, error.toString(), false));
-                }
+				const token = UserService.getUserToken(user);
+				const response = new FormResponse<string>({
+					isValid: true,
+					target: token
+				});
 
-                const token = UserService.getUserToken(user);
-                const response = new FormResponse<string>({
-                    isValid: true,
-                    target: token
-                });
+				return resp.json(Methods.getJsonResponse(response, "Logged in successfully"));
+			});
+		})(req, resp);
+	}
 
-                return resp.json(Methods.getJsonResponse(response, "Logged in successfully"));
-            });
-        })(req, resp);
-    }
+	async register(req: Request, resp: Response, next: NextFunction) {
+		const registerDetails = new RegisterDetails(req.body);
+		const validationResult = await validate(registerDetails);
 
-    async register(req: Request, resp: Response, next: NextFunction) {
-        const registerDetails = new RegisterDetails(req.body);
-        const validationResult = await validate(registerDetails);
+		if (validationResult.length) {
+			const response = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			});
 
-        if (validationResult.length) {
-            const response = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(x => x.constraints)
-            });
+			return Methods.getJsonResponse(response, "Invalid sign in details", false);
+		}
 
-            return Methods.getJsonResponse(response, "Invalid sign in details", false);
-        }
+		if (registerDetails.type === UserTypeEnum.Admin) {
+			Methods.sendErrorResponse(resp, 400, "Bad Request");
+			return;
+		}
 
-        if (registerDetails.type === UserTypeEnum.Admin) {
-            Methods.sendErrorResponse(resp, 400, "Bad Request");
-            return;
-        }
+		const { email } = registerDetails;
+		let dbUser = await this.userRepository.findOne({ email });
 
-        const { email } = registerDetails;
-        let dbUser = await this.userRepository.findOne({ email });
+		if (!!dbUser) {
+			const response = new FormResponse({
+				isValid: false,
+				errors: ["A user with this email already exists"]
+			});
 
-        if (!!dbUser) {
-            const response = new FormResponse({
-                isValid: false,
-                errors: ["A user with this email already exists"]
-            });
+			return Methods.getJsonResponse(response, "A user with this email already exists", false);
+		} else {
+			const { firstName, lastName, email, password, type, phone, address, dateOfBirth } = registerDetails;
+			const user = new User({
+				firstName,
+				lastName,
+				type,
+				phone,
+				dateOfBirth,
+				verified: false,
+				address: new Address({
+					city: Methods.toSentenceCase(address.city),
+					state: Methods.toSentenceCase(address.state)
+				} as Address),
+				email: email.toLowerCase()
+			});
 
-            return Methods.getJsonResponse(response, "A user with this email already exists", false);
-        } else {
-            const { firstName, lastName, email, password, type, phone, address, dateOfBirth } = registerDetails;
-            const user = new User({
-                firstName, lastName, type, phone, dateOfBirth,
-                verified: false,
-                address: new Address({
-                    city: address.city,
-                    state: address.state,
-                    country: new Country({ id: address.country.id })
-                } as Address),
-                email: email.toLowerCase()
-            });
+			const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
+			user.address.country = new Country({ id: defaultCountry.id });
+			user.password = await bcrypt.hash(password, 2);
 
-            user.password = await bcrypt.hash(password, 2);
+			dbUser = await this.userRepository.save(user);
 
-            dbUser = await this.userRepository.save(user);
+			//TODO: Schedule birthday message using DOB
 
-            //TODO: Schedule birthday message using DOB
+			// const sendEmailConfig = {
+			//     to: user.email,
+			//     subject: "Welcome to SCN",
+			//     text: "Welcome to the Supply Chain Network"
+			// } as SendEmailConfig;
 
-            // const sendEmailConfig = {
-            //     to: user.email,
-            //     subject: "Welcome to SCN",
-            //     text: "Welcome to the Supply Chain Network"
-            // } as SendEmailConfig;
+			// const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
 
-            // const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
+			const token = UserService.getUserToken(user);
+			const response = new FormResponse<string>({
+				isValid: true,
+				target: token
+			});
 
-            const token = UserService.getUserToken(user);
-            const response = new FormResponse<string>({
-                isValid: true,
-                target: token
-            });
-
-            return Methods.getJsonResponse(response, "New user was created successfully");
-        }
-    }
+			return Methods.getJsonResponse(response, "New user was created successfully");
+		}
+	}
 }

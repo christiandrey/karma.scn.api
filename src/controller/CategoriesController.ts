@@ -33,7 +33,7 @@ export class CategoriesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.constraints)
+                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }
@@ -72,7 +72,7 @@ export class CategoriesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.constraints)
+                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
         }

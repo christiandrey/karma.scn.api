@@ -89,7 +89,7 @@ export class ArticlesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.constraints)
+                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Article data provided was not valid", false);
         }
@@ -139,7 +139,7 @@ export class ArticlesController {
         if (validationResult.length > 0) {
             const invalidResponse = new FormResponse({
                 isValid: false,
-                errors: validationResult.map(e => e.constraints)
+                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
             } as IFormResponse);
             return Methods.getJsonResponse(invalidResponse, "Article data provided was not valid", false);
         }
