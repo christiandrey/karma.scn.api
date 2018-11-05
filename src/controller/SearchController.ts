@@ -17,14 +17,9 @@ export class SearchController {
 
 	async getLocationsAsync(req: Request, resp: Response, next: NextFunction) {
 		const addresses = await this.addressRepository.find();
-		const response = addresses
-			.map(x => `${x.state}, ${x.country.name}`)
-			.filter((x, i, s) => s.indexOf(x) === i);
+		const response = addresses.map(x => `${x.state}, ${x.country.name}`).filter((x, i, s) => s.indexOf(x) === i);
 
-		return Methods.getJsonResponse(
-			response,
-			`${response.length} location(s) found`
-		);
+		return Methods.getJsonResponse(response, `${response.length} location(s) found`);
 	}
 
 	async searchAsync(req: Request, resp: Response, next: NextFunction) {
@@ -42,25 +37,14 @@ export class SearchController {
 				}
 			});
 
-			if (
-				dbUsers.length > 0 &&
-				location !== Constants.locationEverywhere
-			) {
+			if (dbUsers.length > 0 && location !== Constants.locationEverywhere) {
 				const state = location.split(",")[0];
 				const countryName = location.split(",")[1];
 				dbUsers = dbUsers.filter(
 					u =>
 						!!u.address &&
-						Methods.includesSubstring(
-							u.address.state,
-							state,
-							true
-						) &&
-						Methods.includesSubstring(
-							u.address.country.name,
-							countryName,
-							true
-						)
+						Methods.includesSubstring(u.address.state, state, true) &&
+						Methods.includesSubstring(u.address.country.name, countryName, true)
 				);
 			}
 
@@ -71,14 +55,10 @@ export class SearchController {
 			let dbCompanies = await this.companyRepository.find();
 
 			if (dbCompanies.length > 0 && category !== Constants.categoryAll) {
-				dbCompanies = dbCompanies.filter(
-					c => c.category.name === category
-				);
+				dbCompanies = dbCompanies.filter(c => c.category.name === category);
 			}
 
-			companies = dbCompanies.map(c =>
-				MapCompany.inSearchControllerSearchAsync(c)
-			);
+			companies = dbCompanies.map(c => MapCompany.inSearchControllerSearchAsync(c));
 		}
 
 		const response = {
@@ -86,9 +66,6 @@ export class SearchController {
 			companies
 		} as ISearchResults;
 
-		return Methods.getJsonResponse(
-			response,
-			`${users.length} member(s) and ${companies.length} vendor(s) found`
-		);
+		return Methods.getJsonResponse(response, `${users.length} member(s) and ${companies.length} vendor(s) found`);
 	}
 }

@@ -549,6 +549,12 @@ export const Routes = [
 	},
 	{
 		method: "get",
+		route: "/webinars/total-points",
+		controller: WebinarsController,
+		action: "getTotalCpdPoints"
+	},
+	{
+		method: "get",
 		route: "/webinars/:urlToken",
 		controller: WebinarsController,
 		action: "getByUrlTokenAsync",

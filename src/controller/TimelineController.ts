@@ -39,95 +39,61 @@ export class TimelineController {
 		const page = +req.params.page;
 		const pageSize = 25;
 
-		const sortedTimelinePosts = await CacheService.getCacheItemValue(
-			Constants.sortedTimelinePosts,
-			async () => {
-				const resources = await this.resourcesRepository.find({
-					isPublished: true
-				});
-				const jobs = await this.jobRepository.find({
-					isPublished: true
-				});
-				const announcements = await this.announcementRepository.find({
-					isPublished: true
-				});
-				const articles = await this.articleRepository.find({
-					isPublished: true
-				});
-				const timelinePhotos = await this.timelinePhotoRepository
-					.createQueryBuilder("timelinePhoto")
-					.leftJoinAndSelect("timelinePhoto.media", "media")
-					.leftJoinAndSelect("timelinePhoto.comments", "comment")
-					.leftJoinAndSelect("comment.author", "author")
-					.leftJoinAndSelect("comment.childComments", "childComment")
-					.leftJoinAndSelect(
-						"childComment.author",
-						"childCommentAuthor"
-					)
-					.leftJoinAndSelect("timelinePhoto.likes", "like")
-					.getMany();
-				const timelineUpdates = await this.timelineUpdateRepository
-					.createQueryBuilder("timelineUpdate")
-					.leftJoinAndSelect("timelineUpdate.comments", "comment")
-					.leftJoinAndSelect("comment.author", "author")
-					.leftJoinAndSelect("comment.childComments", "childComment")
-					.leftJoinAndSelect(
-						"childComment.author",
-						"childCommentAuthor"
-					)
-					.leftJoinAndSelect("timelineUpdate.likes", "like")
-					.getMany();
-				const webinars = await this.webinarRepository.find();
+		const sortedTimelinePosts = await CacheService.getCacheItemValue(Constants.sortedTimelinePosts, async () => {
+			const resources = await this.resourcesRepository.find({
+				isPublished: true
+			});
+			const jobs = await this.jobRepository.find({
+				isPublished: true
+			});
+			const announcements = await this.announcementRepository.find({
+				isPublished: true
+			});
+			const articles = await this.articleRepository.find({
+				isPublished: true
+			});
+			const timelinePhotos = await this.timelinePhotoRepository
+				.createQueryBuilder("timelinePhoto")
+				.leftJoinAndSelect("timelinePhoto.media", "media")
+				.leftJoinAndSelect("timelinePhoto.comments", "comment")
+				.leftJoinAndSelect("comment.author", "author")
+				.leftJoinAndSelect("comment.childComments", "childComment")
+				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
+				.leftJoinAndSelect("timelinePhoto.likes", "like")
+				.getMany();
+			const timelineUpdates = await this.timelineUpdateRepository
+				.createQueryBuilder("timelineUpdate")
+				.leftJoinAndSelect("timelineUpdate.comments", "comment")
+				.leftJoinAndSelect("comment.author", "author")
+				.leftJoinAndSelect("comment.childComments", "childComment")
+				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
+				.leftJoinAndSelect("timelineUpdate.likes", "like")
+				.getMany();
+			const webinars = await this.webinarRepository.find();
 
-				const mappedResources = resources.map(x =>
-					Methods.getTimelinePostFrom(
-						x,
-						TimelinePostTypeEnum.Resource
-					)
-				);
-				const mappedJobs = jobs.map(x =>
-					Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job)
-				);
-				const mappedAnnouncements = announcements.map(x =>
-					Methods.getTimelinePostFrom(
-						x,
-						TimelinePostTypeEnum.Announcement
-					)
-				);
-				const mappedArticles = articles.map(x =>
-					Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Article)
-				);
-				const mappedTimelinePhotos = timelinePhotos.map(x =>
-					Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Photo)
-				);
-				const mappedTimelineUpdates = timelineUpdates.map(x =>
-					Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Default)
-				);
-				const mappedWebinars = webinars.map(x =>
-					Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Webinar)
-				);
+			const mappedResources = resources.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Resource));
+			const mappedJobs = jobs.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job));
+			const mappedAnnouncements = announcements.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Announcement));
+			const mappedArticles = articles.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Article));
+			const mappedTimelinePhotos = timelinePhotos.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Photo));
+			const mappedTimelineUpdates = timelineUpdates.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Default));
+			const mappedWebinars = webinars.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Webinar));
 
-				const timelinePosts = [
-					...mappedResources,
-					...mappedJobs,
-					...mappedAnnouncements,
-					...mappedArticles,
-					...mappedTimelinePhotos,
-					...mappedTimelineUpdates,
-					...mappedWebinars
-				];
-				return Methods.sortByDate(timelinePosts);
-			}
-		);
+			const timelinePosts = [
+				...mappedResources,
+				...mappedJobs,
+				...mappedAnnouncements,
+				...mappedArticles,
+				...mappedTimelinePhotos,
+				...mappedTimelineUpdates,
+				...mappedWebinars
+			];
+			return Methods.sortByDate(timelinePosts);
+		});
 
-		const dto = Methods.getPaginatedItems(
-			sortedTimelinePosts,
-			pageSize,
-			page
-		).map(x => MapTimelinePost.inTimelineControllerGetLatestAsync(x));
+		const dto = Methods.getPaginatedItems(sortedTimelinePosts, pageSize, page).map(x => MapTimelinePost.inTimelineControllerGetLatestAsync(x));
 		const totalItems = sortedTimelinePosts.length;
-		const totalPages =
-			totalItems >= pageSize ? (totalItems + pageSize) / pageSize : 1;
+		const totalPages = totalItems >= pageSize ? (totalItems + pageSize) / pageSize : 1;
 		const response = {
 			page,
 			pageSize,
@@ -136,17 +102,10 @@ export class TimelineController {
 			items: dto
 		} as IPaginatedList<TimelinePost>;
 
-		return Methods.getJsonResponse(
-			response,
-			`${dto.length} items returned`
-		);
+		return Methods.getJsonResponse(response, `${dto.length} items returned`);
 	}
 
-	async createTimelineUpdateAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async createTimelineUpdateAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelineUpdate = new TimelineUpdate(req.body);
 
 		// ------------------------------------------------------------------------
@@ -160,11 +119,7 @@ export class TimelineController {
 				isValid: false,
 				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
 			} as IFormResponse);
-			return Methods.getJsonResponse(
-				invalidResponse,
-				"Timeline update data provided was not valid",
-				false
-			);
+			return Methods.getJsonResponse(invalidResponse, "Timeline update data provided was not valid", false);
 		}
 
 		// ------------------------------------------------------------------------
@@ -177,26 +132,17 @@ export class TimelineController {
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		});
 
-		const createdTimelineUpdate = await this.timelineUpdateRepository.save(
-			timelineUpdateToCreate
-		);
+		const createdTimelineUpdate = await this.timelineUpdateRepository.save(timelineUpdateToCreate);
 		const validResponse = new FormResponse<TimelinePost>({
 			isValid: true,
-			target: Methods.getTimelinePostFrom(
-				createdTimelineUpdate,
-				TimelinePostTypeEnum.Default
-			)
+			target: Methods.getTimelinePostFrom(createdTimelineUpdate, TimelinePostTypeEnum.Default)
 		});
 
 		CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
 		return Methods.getJsonResponse(validResponse);
 	}
 
-	async createTimelinePhotoAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async createTimelinePhotoAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelinePhoto = new TimelinePhoto(req.body);
 
 		// ------------------------------------------------------------------------
@@ -210,11 +156,7 @@ export class TimelineController {
 				isValid: false,
 				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
 			} as IFormResponse);
-			return Methods.getJsonResponse(
-				invalidResponse,
-				"Timeline photo data provided was not valid",
-				false
-			);
+			return Methods.getJsonResponse(invalidResponse, "Timeline photo data provided was not valid", false);
 		}
 
 		// ------------------------------------------------------------------------
@@ -227,36 +169,23 @@ export class TimelineController {
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		});
 
-		const createdMediaUpdate = await this.timelinePhotoRepository.save(
-			timelineMediaToCreate
-		);
+		const createdMediaUpdate = await this.timelinePhotoRepository.save(timelineMediaToCreate);
 		const validResponse = new FormResponse<TimelinePost>({
 			isValid: true,
-			target: Methods.getTimelinePostFrom(
-				createdMediaUpdate,
-				TimelinePostTypeEnum.Photo
-			)
+			target: Methods.getTimelinePostFrom(createdMediaUpdate, TimelinePostTypeEnum.Photo)
 		});
 
 		CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
 		return Methods.getJsonResponse(validResponse);
 	}
 
-	async addTimelineUpdateCommentAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async addTimelineUpdateCommentAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelineUpdate = await this.timelineUpdateRepository.findOne({
 			id: req.params.id
 		});
 
 		if (!timelineUpdate) {
-			Methods.sendErrorResponse(
-				resp,
-				404,
-				"Timeline Update was not found"
-			);
+			Methods.sendErrorResponse(resp, 404, "Timeline Update was not found");
 			return;
 		}
 
@@ -271,21 +200,13 @@ export class TimelineController {
 		return result;
 	}
 
-	async addTimelinePhotoCommentAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async addTimelinePhotoCommentAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelinePhoto = await this.timelinePhotoRepository.findOne({
 			id: req.params.id
 		});
 
 		if (!timelinePhoto) {
-			Methods.sendErrorResponse(
-				resp,
-				404,
-				"Timeline Photo was not found"
-			);
+			Methods.sendErrorResponse(resp, 404, "Timeline Photo was not found");
 			return;
 		}
 
@@ -300,21 +221,13 @@ export class TimelineController {
 		return result;
 	}
 
-	async likeTimelineUpdateAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async likeTimelineUpdateAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelineUpdate = await this.timelineUpdateRepository.findOne({
 			id: req.params.id
 		});
 
 		if (!timelineUpdate) {
-			Methods.sendErrorResponse(
-				resp,
-				404,
-				"Timeline Update was not found"
-			);
+			Methods.sendErrorResponse(resp, 404, "Timeline Update was not found");
 			return;
 		}
 
@@ -330,21 +243,13 @@ export class TimelineController {
 		}
 	}
 
-	async likeTimelinePhotoAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async likeTimelinePhotoAsync(req: Request, resp: Response, next: NextFunction) {
 		const timelinePhoto = await this.timelinePhotoRepository.findOne({
 			id: req.params.id
 		});
 
 		if (!timelinePhoto) {
-			Methods.sendErrorResponse(
-				resp,
-				404,
-				"Timeline Photo was not found"
-			);
+			Methods.sendErrorResponse(resp, 404, "Timeline Photo was not found");
 			return;
 		}
 
@@ -360,11 +265,7 @@ export class TimelineController {
 		}
 	}
 
-	async unLikeTimelinePostAsync(
-		req: Request,
-		resp: Response,
-		next: NextFunction
-	) {
+	async unLikeTimelinePostAsync(req: Request, resp: Response, next: NextFunction) {
 		const id = req.params.id;
 		const like = await this.likeRepository.findOne(id);
 

@@ -20,276 +20,298 @@ import { CommentService } from "../services/commentService";
 import { Comment } from "../entities/Comment";
 
 export class WebinarsController {
+	private webinarRepository = getRepository(Webinar);
+	private userRepository = getRepository(User);
 
-    private webinarRepository = getRepository(Webinar);
-    private userRepository = getRepository(User);
+	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
+		const webinars = await this.webinarRepository.find({
+			order: {
+				createdDate: "DESC"
+			}
+		});
 
-    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-        const webinars = await this.webinarRepository.find({
-            order: {
-                createdDate: "DESC"
-            }
-        });
+		const response = webinars.map(x => MapWebinar.inWebinarControllersGetAllAsync(x));
 
-        const response = webinars.map(x => MapWebinar.inWebinarControllersGetAllAsync(x));
+		return Methods.getJsonResponse(response, `${webinars.length} webinars found`);
+	}
 
-        return Methods.getJsonResponse(response, `${webinars.length} webinars found`);
-    }
+	async getTotalCpdPoints(req: Request, resp: Response, next: NextFunction) {
+		const webinars = await this.webinarRepository.find({
+			where: {
+				status: WebinarStatusEnum.Finished
+			}
+		});
 
-    async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
-        const urlToken = req.params.urlToken as string;
-        const webinar = await this.webinarRepository.findOne({ urlToken });
+		let points = 0;
 
-        if (!webinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-        }
+		if (!!webinars && webinars.length > 0) {
+			points = webinars.map(x => x.cpdPoints).reduce((a, b) => a + b, 0);
+		}
 
-        const response = MapWebinar.inWebinarControllersGetByUrlTokenAsync(webinar);
+		return Methods.getJsonResponse({ points });
+	}
 
-        return Methods.getJsonResponse(response);
-    }
+	async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
+		const urlToken = req.params.urlToken as string;
+		const webinar = await this.webinarRepository.findOne({ urlToken });
 
-    async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const webinar = new Webinar(req.body);
+		if (!webinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+		}
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
+		const response = MapWebinar.inWebinarControllersGetByUrlTokenAsync(webinar);
 
-        const validationResult = await validate(webinar);
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Webinar data provided was not valid", false);
-        }
+		return Methods.getJsonResponse(response);
+	}
 
-        // ------------------------------------------------------------------------
-        // Create New Entity
-        // ------------------------------------------------------------------------
+	async createAsync(req: Request, resp: Response, next: NextFunction) {
+		const webinar = new Webinar(req.body);
 
-        let { anchor, cpdPoints, topic, description, startDateTime, createAnnouncement } = webinar;
-        const authUserId = UserService.getAuthenticatedUserId(req);
-        const webinarToCreate = new Webinar({
-            cpdPoints, topic, description, startDateTime, createAnnouncement,
-            status: WebinarStatusEnum.Created,
-            anchor: new User({ id: anchor.id }),
-            author: new User({ id: authUserId })
-        });
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
 
-        const createdWebinar = await this.webinarRepository.save(webinarToCreate);
+		const validationResult = await validate(webinar);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Webinar data provided was not valid", false);
+		}
 
-        // ------------------------------------------------------------------------
-        // Send Notifications
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Create New Entity
+		// ------------------------------------------------------------------------
 
+		let { anchor, cpdPoints, topic, description, startDateTime, createAnnouncement } = webinar;
+		const authUserId = UserService.getAuthenticatedUserId(req);
+		const webinarToCreate = new Webinar({
+			cpdPoints,
+			topic,
+			description,
+			startDateTime,
+			createAnnouncement,
+			status: WebinarStatusEnum.Created,
+			anchor: new User({ id: anchor.id }),
+			author: new User({ id: authUserId })
+		});
 
-        if (!!createdWebinar) {
-            anchor = await this.userRepository.findOne({ id: createdWebinar.anchor.id });
-            const notification = new Notification({
-                content: `A webinar has been scheduled for ${moment(createdWebinar.startDateTime).calendar()}. The topic is ${createdWebinar.topic} and it will be anchored by ${anchor.firstName} ${anchor.lastName}. We'll send you a reminder 1 hour to the start time.`,
-                type: NotificationTypeEnum.WebinarStart,
-                data: JSON.stringify({
-                    urlToken: createdWebinar.urlToken
-                }),
-                hasBeenRead: false
-            } as Notification);
+		const createdWebinar = await this.webinarRepository.save(webinarToCreate);
 
-            try {
-                await NotificationService.sendNotificationToAllAsync(req, notification);
-            } catch (error) { }
-        }
+		// ------------------------------------------------------------------------
+		// Send Notifications
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Create announcement if specified
-        // ------------------------------------------------------------------------
+		if (!!createdWebinar) {
+			anchor = await this.userRepository.findOne({ id: createdWebinar.anchor.id });
+			const notification = new Notification({
+				content: `A webinar has been scheduled for ${moment(createdWebinar.startDateTime).calendar()}. The topic is ${createdWebinar.topic} and it will be anchored by ${
+					anchor.firstName
+				} ${anchor.lastName}. We'll send you a reminder 1 hour to the start time.`,
+				type: NotificationTypeEnum.WebinarStart,
+				data: JSON.stringify({
+					urlToken: createdWebinar.urlToken
+				}),
+				hasBeenRead: false
+			} as Notification);
 
-        if (createAnnouncement) {
-            const announcementRepository = getRepository(Announcement);
-            const announcementToCreate = new Announcement({
-                content: `A webinar has been scheduled for ${moment(createdWebinar.startDateTime).calendar()}. The topic is ${createdWebinar.topic} and it will be anchored by ${anchor.firstName} ${anchor.lastName}. We'll send you a reminder 1 hour to the start time.`,
-                isPublished: true,
-                publicationDate: new Date(),
-                author: new User({ id: authUserId })
-            } as Announcement);
-            try {
-                await announcementRepository.save(announcementToCreate);
-            } catch (error) { }
-        }
+			try {
+				await NotificationService.sendNotificationToAllAsync(req, notification);
+			} catch (error) {}
+		}
 
-        const validResponse = new FormResponse<Webinar>({
-            isValid: true,
-            target: MapWebinar.inWebinarControllersCreateAsync(createdWebinar)
-        });
+		// ------------------------------------------------------------------------
+		// Create announcement if specified
+		// ------------------------------------------------------------------------
 
-        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
-        return Methods.getJsonResponse(validResponse);
-    }
+		if (createAnnouncement) {
+			const announcementRepository = getRepository(Announcement);
+			const announcementToCreate = new Announcement({
+				content: `A webinar has been scheduled for ${moment(createdWebinar.startDateTime).calendar()}. The topic is ${createdWebinar.topic} and it will be anchored by ${
+					anchor.firstName
+				} ${anchor.lastName}. We'll send you a reminder 1 hour to the start time.`,
+				isPublished: true,
+				publicationDate: new Date(),
+				author: new User({ id: authUserId })
+			} as Announcement);
+			try {
+				await announcementRepository.save(announcementToCreate);
+			} catch (error) {}
+		}
 
-    async updateAsync(req: Request, resp: Response, next: NextFunction) {
-        const webinar = new Webinar(req.body);
-        const validationResult = await validate(webinar);
+		const validResponse = new FormResponse<Webinar>({
+			isValid: true,
+			target: MapWebinar.inWebinarControllersCreateAsync(createdWebinar)
+		});
 
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Webinar data provided was not valid", false);
-        }
+		CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        const dbWebinar = await this.webinarRepository.findOne({ id: webinar.id });
+	async updateAsync(req: Request, resp: Response, next: NextFunction) {
+		const webinar = new Webinar(req.body);
+		const validationResult = await validate(webinar);
 
-        if (!dbWebinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-            return;
-        }
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Webinar data provided was not valid", false);
+		}
 
-        if (dbWebinar.status === WebinarStatusEnum.Started || dbWebinar.status === WebinarStatusEnum.Finished || dbWebinar.status === WebinarStatusEnum.Archived) {
-            Methods.sendErrorResponse(resp, 400, "A webinar can only be edited before it has started");
-            return;
-        }
+		const dbWebinar = await this.webinarRepository.findOne({ id: webinar.id });
 
-        const { anchor, cpdPoints, topic, description } = webinar;
-        dbWebinar.topic = topic;
-        dbWebinar.description = description;
-        dbWebinar.cpdPoints = cpdPoints;
-        dbWebinar.anchor = new User({ id: anchor.id });
+		if (!dbWebinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+			return;
+		}
 
-        const updatedWebinar = await this.webinarRepository.save(dbWebinar);
-        const validResponse = new FormResponse<Webinar>({
-            isValid: true,
-            target: MapWebinar.inWebinarControllersUpdateAsync(updatedWebinar)
-        });
-        return Methods.getJsonResponse(validResponse);
-    }
+		if (dbWebinar.status === WebinarStatusEnum.Started || dbWebinar.status === WebinarStatusEnum.Finished || dbWebinar.status === WebinarStatusEnum.Archived) {
+			Methods.sendErrorResponse(resp, 400, "A webinar can only be edited before it has started");
+			return;
+		}
 
-    async joinAsync(req: Request, resp: Response, next: NextFunction) {
-        const dbWebinar = await this.webinarRepository.findOne(req.params.id);
+		const { anchor, cpdPoints, topic, description } = webinar;
+		dbWebinar.topic = topic;
+		dbWebinar.description = description;
+		dbWebinar.cpdPoints = cpdPoints;
+		dbWebinar.anchor = new User({ id: anchor.id });
 
-        if (!dbWebinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-            return;
-        }
+		const updatedWebinar = await this.webinarRepository.save(dbWebinar);
+		const validResponse = new FormResponse<Webinar>({
+			isValid: true,
+			target: MapWebinar.inWebinarControllersUpdateAsync(updatedWebinar)
+		});
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        if (dbWebinar.status !== WebinarStatusEnum.Started) {
-            Methods.sendErrorResponse(resp, 400, "Only an ongoing webinar can be joined");
-            return;
-        }
+	async joinAsync(req: Request, resp: Response, next: NextFunction) {
+		const dbWebinar = await this.webinarRepository.findOne(req.params.id);
 
-        const authUserId = UserService.getAuthenticatedUserId(req);
-        dbWebinar.participants.push(new User({ id: authUserId }));
+		if (!dbWebinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+			return;
+		}
 
-        const updatedWebinar = await this.webinarRepository.save(dbWebinar);
-        if (!!updatedWebinar) {
-            const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(updatedWebinar);
-            return Methods.getJsonResponse(response, "Webinar was successfully joined");
-        } else {
-            Methods.sendErrorResponse(resp, 500);
-            return;
-        }
-    }
+		if (dbWebinar.status !== WebinarStatusEnum.Started) {
+			Methods.sendErrorResponse(resp, 400, "Only an ongoing webinar can be joined");
+			return;
+		}
 
-    async startAsync(req: Request, resp: Response, next: NextFunction) {
-        const dbWebinar = await this.webinarRepository.findOne(req.params.id);
+		const authUserId = UserService.getAuthenticatedUserId(req);
+		dbWebinar.participants.push(new User({ id: authUserId }));
 
-        if (!dbWebinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-            return;
-        }
+		const updatedWebinar = await this.webinarRepository.save(dbWebinar);
+		if (!!updatedWebinar) {
+			const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(updatedWebinar);
+			return Methods.getJsonResponse(response, "Webinar was successfully joined");
+		} else {
+			Methods.sendErrorResponse(resp, 500);
+			return;
+		}
+	}
 
-        if (dbWebinar.status === WebinarStatusEnum.Finished || dbWebinar.status === WebinarStatusEnum.Archived) {
-            Methods.sendErrorResponse(resp, 400, "Only an unstarted webinar can be started");
-            return;
-        }
+	async startAsync(req: Request, resp: Response, next: NextFunction) {
+		const dbWebinar = await this.webinarRepository.findOne(req.params.id);
 
-        const authUserId = UserService.getAuthenticatedUserId(req);
-        if (dbWebinar.anchor.id !== authUserId) {
-            Methods.sendErrorResponse(resp, 401);
-            return;
-        }
+		if (!dbWebinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+			return;
+		}
 
-        dbWebinar.status = WebinarStatusEnum.Started;
-        const startedWebinar = await this.webinarRepository.save(dbWebinar);
+		if (dbWebinar.status === WebinarStatusEnum.Finished || dbWebinar.status === WebinarStatusEnum.Archived) {
+			Methods.sendErrorResponse(resp, 400, "Only an unstarted webinar can be started");
+			return;
+		}
 
-        // ------------------------------------------------------------------------
-        // Send Notifications
-        // ------------------------------------------------------------------------
+		const authUserId = UserService.getAuthenticatedUserId(req);
+		if (dbWebinar.anchor.id !== authUserId) {
+			Methods.sendErrorResponse(resp, 401);
+			return;
+		}
 
-        const notification = new Notification({
-            content: `The webinar, ${dbWebinar.topic} was just started. Join in now!`,
-            type: NotificationTypeEnum.WebinarStart,
-            data: JSON.stringify({
-                urlToken: dbWebinar.urlToken
-            }),
-            hasBeenRead: false
-        } as Notification);
+		dbWebinar.status = WebinarStatusEnum.Started;
+		const startedWebinar = await this.webinarRepository.save(dbWebinar);
 
-        try {
-            await NotificationService.sendNotificationToAllAsync(req, notification);
-        } catch (error) { }
+		// ------------------------------------------------------------------------
+		// Send Notifications
+		// ------------------------------------------------------------------------
 
-        const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(startedWebinar);
+		const notification = new Notification({
+			content: `The webinar, ${dbWebinar.topic} was just started. Join in now!`,
+			type: NotificationTypeEnum.WebinarStart,
+			data: JSON.stringify({
+				urlToken: dbWebinar.urlToken
+			}),
+			hasBeenRead: false
+		} as Notification);
 
-        return Methods.getJsonResponse(response, "Webinar was successfully started");
-    }
+		try {
+			await NotificationService.sendNotificationToAllAsync(req, notification);
+		} catch (error) {}
 
-    async finishAsync(req: Request, resp: Response, next: NextFunction) {
-        const dbWebinar = await this.webinarRepository.findOne(req.params.id);
+		const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(startedWebinar);
 
-        if (!dbWebinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-            return;
-        }
+		return Methods.getJsonResponse(response, "Webinar was successfully started");
+	}
 
-        if (dbWebinar.status !== WebinarStatusEnum.Started) {
-            Methods.sendErrorResponse(resp, 400, "Only an already started webinar can be ended");
-            return;
-        }
+	async finishAsync(req: Request, resp: Response, next: NextFunction) {
+		const dbWebinar = await this.webinarRepository.findOne(req.params.id);
 
-        const authUserId = UserService.getAuthenticatedUserId(req);
-        if (dbWebinar.anchor.id !== authUserId) {
-            Methods.sendErrorResponse(resp, 401);
-            return;
-        }
+		if (!dbWebinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+			return;
+		}
 
-        dbWebinar.status = WebinarStatusEnum.Finished;
-        const finishedWebinar = await this.webinarRepository.save(dbWebinar);
+		if (dbWebinar.status !== WebinarStatusEnum.Started) {
+			Methods.sendErrorResponse(resp, 400, "Only an already started webinar can be ended");
+			return;
+		}
 
-        // ------------------------------------------------------------------------
-        // Allocate cpdPoints to participants
-        // ------------------------------------------------------------------------
+		const authUserId = UserService.getAuthenticatedUserId(req);
+		if (dbWebinar.anchor.id !== authUserId) {
+			Methods.sendErrorResponse(resp, 401);
+			return;
+		}
 
-        const participants = dbWebinar.participants;
+		dbWebinar.status = WebinarStatusEnum.Finished;
+		const finishedWebinar = await this.webinarRepository.save(dbWebinar);
 
-        participants.forEach(x => {
-            x.cpdPoints += dbWebinar.cpdPoints;
-        });
+		// ------------------------------------------------------------------------
+		// Allocate cpdPoints to participants
+		// ------------------------------------------------------------------------
 
-        await this.userRepository.save(participants);
+		const participants = dbWebinar.participants;
 
-        const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(finishedWebinar);
+		participants.forEach(x => {
+			x.cpdPoints += dbWebinar.cpdPoints;
+		});
 
-        return Methods.getJsonResponse(response, "Webinar was successfully ended");
-    }
+		await this.userRepository.save(participants);
 
-    async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
-        const webinar = await this.webinarRepository.findOne({ id: req.params.id });
+		const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(finishedWebinar);
 
-        if (!webinar) {
-            Methods.sendErrorResponse(resp, 404, "Webinar was not found");
-            return;
-        }
+		return Methods.getJsonResponse(response, "Webinar was successfully ended");
+	}
 
-        if (webinar.status === WebinarStatusEnum.Default || webinar.status === WebinarStatusEnum.Created) {
-            Methods.sendErrorResponse(resp, 400);
-            return;
-        }
+	async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
+		const webinar = await this.webinarRepository.findOne({ id: req.params.id });
 
-        const comment = new Comment(req.body);
-        comment.webinar = new Webinar({ id: webinar.id });
+		if (!webinar) {
+			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
+			return;
+		}
 
-        return await CommentService.addCommentAsync(req, comment);
-    }
+		if (webinar.status === WebinarStatusEnum.Default || webinar.status === WebinarStatusEnum.Created) {
+			Methods.sendErrorResponse(resp, 400);
+			return;
+		}
+
+		const comment = new Comment(req.body);
+		comment.webinar = new Webinar({ id: webinar.id });
+
+		return await CommentService.addCommentAsync(req, comment);
+	}
 }
