@@ -153,7 +153,21 @@ export class UsersController {
 		const authUserId = UserService.getAuthenticatedUserId(req);
 		const dbUser = await this.userRepository.findOne({ id: authUserId });
 
-		const { firstName, lastName, address, phone, profilePhoto, certifications, facebookUrl, linkedInUrl, googlePlusUrl, twitterUrl, description, experiences, skills } = user;
+		const {
+			firstName,
+			lastName,
+			address,
+			phone,
+			profilePhoto,
+			certifications,
+			facebookUrl,
+			linkedInUrl,
+			googlePlusUrl,
+			twitterUrl,
+			description,
+			experiences,
+			skills
+		} = user;
 
 		dbUser.firstName = firstName;
 		dbUser.lastName = lastName;

@@ -12,201 +12,231 @@ import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
 
 export class ConnectionsController {
+	private connectionRepository = getRepository(Connection);
 
-    private connectionRepository = getRepository(Connection);
+	async getConnectionsCountAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = UserService.getAuthenticatedUserId(req);
 
-    async getConnectionsCountAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = UserService.getAuthenticatedUserId(req);
+		const connectionCount = await this.connectionRepository
+			.createQueryBuilder("connection")
+			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
+			.where("user.id = :userId", { userId: id })
+			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
+			.getCount();
 
-        const connectionCount = await this.connectionRepository.createQueryBuilder("connection")
-            .leftJoinAndSelect("connection.user", "user")
-            .leftJoinAndSelect("connection.connectedTo", "connectedTo")
-            .where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
-            .where("user.id = :userId", { userId: id })
-            .orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
-            .getCount();
+		return Methods.getJsonResponse({ count: connectionCount }, `${connectionCount} connections found`);
+	}
 
-        return Methods.getJsonResponse({ count: connectionCount }, `${connectionCount} connections found`);
-    }
+	async getConnectionsAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = UserService.getAuthenticatedUserId(req);
 
-    async getConnectionsAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = UserService.getAuthenticatedUserId(req);
+		const connections = await this.connectionRepository
+			.createQueryBuilder("connection")
+			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("user.profilePhoto", "userProfilePhoto")
+			.leftJoinAndSelect("user.experiences", "userExperiences")
+			.leftJoinAndSelect("user.address", "userAddress")
+			.leftJoinAndSelect("userAddress.country", "userAddressCountry")
+			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.leftJoinAndSelect("connectedTo.profilePhoto", "connectedToProfilePhoto")
+			.leftJoinAndSelect("connectedTo.experiences", "connectedToExperiences")
+			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
+			.leftJoinAndSelect("connectedToAddress.country", "connectedToAddressCountry")
+			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
+			.where("user.id = :userId", { userId: id })
+			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
+			.orderBy("connection.createdDate", "DESC")
+			.getMany();
 
-        const connections = await this.connectionRepository.createQueryBuilder("connection")
-            .leftJoinAndSelect("connection.user", "user")
-            .leftJoinAndSelect("connection.connectedTo", "connectedTo")
-            .where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
-            .where("user.id = :userId", { userId: id })
-            .orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
-            .orderBy("connection.createdDate", "DESC")
-            .getMany();
+		const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
+		return Methods.getJsonResponse(response, `${connections.length} connections found`);
+	}
 
-        const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
-        return Methods.getJsonResponse(response, `${connections.length} connections found`);
-    }
+	async getConnectionsByUserUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
+		const urlToken = req.params.urlToken as string;
+		const userRepository = getRepository(User);
 
-    async getConnectionsByUserUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
-        const urlToken = req.params.urlToken as string;
-        const userRepository = getRepository(User);
+		const user = await userRepository.findOne({ urlToken });
 
-        const user = await userRepository.findOne({ urlToken });
+		if (!user) {
+			Methods.sendErrorResponse(resp, 404, "User was not found");
+		}
+		const id = user.id;
+		const connections = await this.connectionRepository
+			.createQueryBuilder("connection")
+			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("user.profilePhoto", "userProfilePhoto")
+			.leftJoinAndSelect("user.experiences", "userExperiences")
+			.leftJoinAndSelect("user.address", "userAddress")
+			.leftJoinAndSelect("userAddress.country", "userAddressCountry")
+			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.leftJoinAndSelect("connectedTo.profilePhoto", "connectedToProfilePhoto")
+			.leftJoinAndSelect("connectedTo.experiences", "connectedToExperiences")
+			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
+			.leftJoinAndSelect("connectedToAddress.country", "connectedToAddressCountry")
+			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
+			.where("user.id = :userId", { userId: id })
+			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
+			.orderBy("connection.createdDate", "DESC")
+			.getMany();
 
-        if (!user) {
-            Methods.sendErrorResponse(resp, 404, "User was not found");
-        }
-        const id = user.id;
-        const connections = await this.connectionRepository.createQueryBuilder("connection")
-            .leftJoinAndSelect("connection.user", "user")
-            .leftJoinAndSelect("connection.connectedTo", "connectedTo")
-            .where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
-            .where("user.id = :userId", { userId: id })
-            .orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
-            .orderBy("connection.createdDate", "DESC")
-            .getMany();
+		const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
+		return Methods.getJsonResponse(response, `${connections.length} connections found`);
+	}
 
-        const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
-        return Methods.getJsonResponse(response, `${connections.length} connections found`);
-    }
+	async getConnectionRequestsAsync(req: Request, resp: Response, next: NextFunction) {
+		const authUserId = UserService.getAuthenticatedUserId(req);
 
-    async getConnectionRequestsAsync(req: Request, resp: Response, next: NextFunction) {
-        const authUserId = UserService.getAuthenticatedUserId(req);
+		const connections = await this.connectionRepository
+			.createQueryBuilder("connection")
+			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("user.profilePhoto", "userProfilePhoto")
+			.leftJoinAndSelect("user.experiences", "userExperiences")
+			.leftJoinAndSelect("user.address", "userAddress")
+			.leftJoinAndSelect("userAddress.country", "userAddressCountry")
+			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.leftJoinAndSelect("connectedTo.profilePhoto", "connectedToProfilePhoto")
+			.leftJoinAndSelect("connectedTo.experiences", "connectedToExperiences")
+			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
+			.leftJoinAndSelect("connectedToAddress.country", "connectedToAddressCountry")
+			.where("connectedTo.id = :id", { id: authUserId })
+			.andWhere("connection.status = :status", { status: ConnectionStatusEnum.Pending })
+			.getMany();
 
-        const connections = await this.connectionRepository.createQueryBuilder("connection")
-            .leftJoinAndSelect("connection.connectedTo", "connectedTo")
-            .leftJoinAndSelect("connection.user", "user")
-            .where("connectedTo.id = :id", { id: authUserId })
-            .andWhere("connection.status = :status", { status: ConnectionStatusEnum.Pending })
-            .getMany();
+		const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
+		return Methods.getJsonResponse(response, `${connections.length} requests found`);
+	}
 
-        const response = connections.map(x => MapConnection.inConnectionControllerGetConnectionsAsync(x));
-        return Methods.getJsonResponse(response, `${connections.length} requests found`);
-    }
+	async connectAsync(req: Request, resp: Response, next: NextFunction) {
+		const connection = new Connection(req.body);
 
-    async connectAsync(req: Request, resp: Response, next: NextFunction) {
-        const connection = new Connection(req.body);
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
+		const validationResult = await validate(connection);
+		if (validationResult.length > 0) {
+			Methods.sendErrorResponse(resp, 400);
+		}
 
-        const validationResult = await validate(connection);
-        if (validationResult.length > 0) {
-            Methods.sendErrorResponse(resp, 400);
-        }
+		const authUser = await UserService.getAuthenticatedUserAsync(req);
+		const dbConnection = await this.connectionRepository
+			.createQueryBuilder("connection")
+			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.where("user.id = :userId", { userId: authUser.id })
+			.andWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: connection.connectedTo.id })
+			.orWhere("user.id = :userId", { userId: connection.connectedTo.id })
+			.andWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: authUser.id })
+			.getOne();
 
-        const authUser = await UserService.getAuthenticatedUserAsync(req);
-        const dbConnection = await this.connectionRepository.createQueryBuilder("connection")
-            .leftJoinAndSelect("connection.user", "user")
-            .leftJoinAndSelect("connection.connectedTo", "connectedTo")
-            .where("user.id = :userId", { userId: authUser.id })
-            .andWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: connection.connectedTo.id })
-            .getOne();
+		if (!!dbConnection) {
+			Methods.sendErrorResponse(resp, 400, "A connection already exists");
+		}
 
-        if (!!dbConnection) {
-            Methods.sendErrorResponse(resp, 400, "A connection already exists");
-        }
+		const connectionToCreate = new Connection({
+			connectedTo: new User({ id: connection.connectedTo.id }),
+			user: new User({ id: authUser.id }),
+			status: ConnectionStatusEnum.Pending
+		});
 
-        const connectionToCreate = new Connection({
-            connectedTo: new User({ id: connection.connectedTo.id }),
-            user: new User({ id: authUser.id }),
-            status: ConnectionStatusEnum.Pending
-        });
+		const createdConnection = await this.connectionRepository.save(connectionToCreate);
 
-        const createdConnection = await this.connectionRepository.save(connectionToCreate);
+		// ------------------------------------------------------------------------
+		// Send notification to connectedTo user
+		// ------------------------------------------------------------------------
+		const notification = new Notification({
+			user: new User({ id: createdConnection.connectedTo.id }),
+			content: `${authUser.firstName} ${authUser.lastName} has just requested to connect with you.`,
+			type: NotificationTypeEnum.ConnectionRequest,
+			data: JSON.stringify({
+				id: createdConnection.id
+			}),
+			hasBeenRead: false
+		} as Notification);
 
-        // ------------------------------------------------------------------------
-        // Send notification to connectedTo user
-        // ------------------------------------------------------------------------
-        const notification = new Notification({
-            user: new User({ id: createdConnection.connectedTo.id }),
-            content: `${authUser.firstName} ${authUser.lastName} has just requested to connect with you.`,
-            type: NotificationTypeEnum.ConnectionRequest,
-            data: JSON.stringify({
-                id: createdConnection.id
-            }),
-            hasBeenRead: false
-        } as Notification);
+		try {
+			await NotificationService.sendNotificationAsync(req, notification);
+		} catch (error) {}
 
-        try {
-            await NotificationService.sendNotificationAsync(req, notification);
-        } catch (error) { }
+		const response = MapConnection.inConnectionControllerConnectAsync(createdConnection);
 
-        const response = MapConnection.inConnectionControllerConnectAsync(createdConnection);
+		return Methods.getJsonResponse(response, "Connection request has been sent");
+	}
 
-        return Methods.getJsonResponse(response, "Connection request has been sent");
-    }
+	async acceptConnectionRequestAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = req.params.id as string;
+		const connection = await this.connectionRepository.findOne(id);
+		const authUserId = UserService.getAuthenticatedUserId(req);
 
-    async acceptConnectionRequestAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = req.params.id as string;
-        const connection = await this.connectionRepository.findOne(id);
-        const authUserId = UserService.getAuthenticatedUserId(req);
+		if (!connection) {
+			Methods.sendErrorResponse(resp, 404, "Connection request was not found");
+			return;
+		}
 
-        if (!connection) {
-            Methods.sendErrorResponse(resp, 404, "Connection request was not found");
-            return;
-        }
+		if (connection.status !== ConnectionStatusEnum.Pending) {
+			Methods.sendErrorResponse(resp, 400, "Connection request has already been attended to");
+			return;
+		}
 
-        if (connection.status !== ConnectionStatusEnum.Pending) {
-            Methods.sendErrorResponse(resp, 400, "Connection request has already been attended to");
-            return;
-        }
+		if (connection.connectedTo.id !== authUserId) {
+			Methods.sendErrorResponse(resp, 400);
+			return;
+		}
 
-        if (connection.connectedTo.id !== authUserId) {
-            Methods.sendErrorResponse(resp, 400);
-            return;
-        }
+		connection.status = ConnectionStatusEnum.Accepted;
 
-        connection.status = ConnectionStatusEnum.Accepted;
+		const acceptedConnection = await this.connectionRepository.save(connection);
 
-        const acceptedConnection = await this.connectionRepository.save(connection);
+		// ------------------------------------------------------------------------
+		// Send notification to connectedTo user
+		// ------------------------------------------------------------------------
+		const notification = new Notification({
+			user: new User({ id: acceptedConnection.user.id }),
+			content: `${acceptedConnection.connectedTo.firstName} ${acceptedConnection.connectedTo.lastName} has accepted your connection request!`,
+			type: NotificationTypeEnum.ConnectionResult,
+			data: JSON.stringify({
+				id: acceptedConnection.connectedTo.id
+			}),
+			hasBeenRead: false
+		} as Notification);
 
-        // ------------------------------------------------------------------------
-        // Send notification to connectedTo user
-        // ------------------------------------------------------------------------
-        const notification = new Notification({
-            user: new User({ id: acceptedConnection.user.id }),
-            content: `${acceptedConnection.connectedTo.firstName} ${acceptedConnection.connectedTo.lastName} has accepted your connection request!`,
-            type: NotificationTypeEnum.ConnectionResult,
-            data: JSON.stringify({
-                id: acceptedConnection.connectedTo.id
-            }),
-            hasBeenRead: false
-        } as Notification);
+		try {
+			await NotificationService.sendNotificationAsync(req, notification);
+		} catch (error) {}
 
-        try {
-            await NotificationService.sendNotificationAsync(req, notification);
-        } catch (error) { }
+		const response = MapConnection.inConnectionControllerAcceptConnectionRequestAsync(acceptedConnection);
 
-        const response = MapConnection.inConnectionControllerAcceptConnectionRequestAsync(acceptedConnection);
+		return Methods.getJsonResponse(response, "Connection request was successfully accepted");
+	}
 
-        return Methods.getJsonResponse(response, "Connection request was successfully accepted");
-    }
+	async declineConnectionRequestAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = req.params.id as string;
+		const connection = await this.connectionRepository.findOne(id);
+		const authUserId = UserService.getAuthenticatedUserId(req);
 
-    async declineConnectionRequestAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = req.params.id as string;
-        const connection = await this.connectionRepository.findOne(id);
-        const authUserId = UserService.getAuthenticatedUserId(req);
+		if (!connection) {
+			Methods.sendErrorResponse(resp, 404, "Connection request was not found");
+			return;
+		}
 
-        if (!connection) {
-            Methods.sendErrorResponse(resp, 404, "Connection request was not found");
-            return;
-        }
+		if (connection.status !== ConnectionStatusEnum.Pending) {
+			Methods.sendErrorResponse(resp, 400, "Connection request has already been attended to");
+			return;
+		}
 
-        if (connection.status !== ConnectionStatusEnum.Pending) {
-            Methods.sendErrorResponse(resp, 400, "Connection request has already been attended to");
-            return;
-        }
+		if (connection.connectedTo.id !== authUserId) {
+			Methods.sendErrorResponse(resp, 400);
+			return;
+		}
 
-        if (connection.connectedTo.id !== authUserId) {
-            Methods.sendErrorResponse(resp, 400);
-            return;
-        }
+		connection.status = ConnectionStatusEnum.Declined;
 
-        connection.status = ConnectionStatusEnum.Declined;
+		const declinedConnection = await this.connectionRepository.save(connection);
+		const response = MapConnection.inConnectionControllerAcceptConnectionRequestAsync(declinedConnection);
 
-        const declinedConnection = await this.connectionRepository.save(connection);
-        const response = MapConnection.inConnectionControllerAcceptConnectionRequestAsync(declinedConnection);
-
-        return Methods.getJsonResponse(response, "Connection request has been declined");
-    }
+		return Methods.getJsonResponse(response, "Connection request has been declined");
+	}
 }

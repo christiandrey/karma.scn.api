@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad, BeforeInsert, BeforeUpdate } from "typeorm";
+import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad, BeforeInsert, BeforeUpdate, JoinTable } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha, IsNotEmpty } from "class-validator";
@@ -131,10 +131,11 @@ export class User extends BaseEntity {
 	})
 	experiences: Array<Experience>;
 
-	@ManyToOne(type => Skill, {
+	@ManyToMany(type => Skill, {
 		eager: true,
 		cascade: false
 	})
+	@JoinTable()
 	skills: Array<Skill>;
 
 	@OneToMany(type => Article, article => article.author)
