@@ -75,7 +75,7 @@ export class UsersController {
 					type: UserTypeEnum.Member
 				}
 			});
-			similarUsers = similarUsers.filter(x => x.address.state === authUser.address.state);
+			similarUsers = similarUsers.filter(x => x.id !== authUser.id && x.address.state === authUser.address.state);
 
 			let response = Methods.randomlySelectFrom(similarUsers, 3).map(x => MapUser.inAllControllers(x));
 			return Methods.getJsonResponse(response, `${similarUsers.length} members found`);
@@ -122,17 +122,20 @@ export class UsersController {
 	async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
 		const urlToken = req.params.urlToken as string;
 		const user = await this.userRepository.findOne({ urlToken });
+		const authUserId = UserService.getAuthenticatedUserId(req);
 
 		if (!user) {
 			Methods.sendErrorResponse(resp, 404, "User was not found");
 		}
 
-		const viewRepository = getRepository(View);
-		const viewToCreate = new View({
-			user: new User({ id: user.id }),
-			viewedBy: new User({ id: UserService.getAuthenticatedUserId(req) })
-		});
-		await viewRepository.save(viewToCreate);
+		if (user.id !== authUserId) {
+			const viewRepository = getRepository(View);
+			const viewToCreate = new View({
+				user: new User({ id: user.id }),
+				viewedBy: new User({ id: UserService.getAuthenticatedUserId(req) })
+			});
+			await viewRepository.save(viewToCreate);
+		}
 
 		const response = MapUser.inUsersControllerGetByUrlTokenAsync(user);
 		return Methods.getJsonResponse(response);

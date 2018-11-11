@@ -197,11 +197,12 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Webinar) {
 			const toTransform = item as Webinar;
-			const { author, urlToken, topic, description } = toTransform;
+			const { author, urlToken, topic, description, startDateTime } = toTransform;
 			timelinePost.content = topic;
 			timelinePost.extraContent = description;
 			timelinePost.urlToken = urlToken;
 			timelinePost.author = author;
+			timelinePost.extraDate = startDateTime;
 		}
 
 		if (type === TimelinePostTypeEnum.Resource) {
@@ -229,11 +230,13 @@ export namespace Methods {
 	// -------------------------------------------------------------------------------------------------
 	/** Sort a given set of items by createdDate */
 	export function sortByDate<T>(list: Array<T>, direction: "asc" | "desc" = "desc"): Array<T> {
-		let sortedList = list.sort((a, b) => a["createdDate"].getTime() - b["createdDate"].getTime());
 		if (direction === "asc") {
-			sortedList.reverse();
+			let sortedList = list.sort((a, b) => a["createdDate"].getTime() - b["createdDate"].getTime());
+			return sortedList;
+		} else {
+			let sortedList = list.sort((a, b) => b["createdDate"].getTime() - a["createdDate"].getTime());
+			return sortedList;
 		}
-		return sortedList;
 	}
 
 	// -------------------------------------------------------------------------------------------------
