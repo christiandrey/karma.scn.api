@@ -147,6 +147,20 @@ export const Routes = [
 	},
 	{
 		method: "post",
+		route: "/articles/:id/like",
+		controller: ArticlesController,
+		action: "likeArticleAsync",
+		protected: true
+	},
+	{
+		method: "post",
+		route: "/articles/:id/unlike",
+		controller: ArticlesController,
+		action: "unlikeArticleAsync",
+		protected: true
+	},
+	{
+		method: "post",
 		route: "/media",
 		controller: MediaController,
 		action: "uploadAsync",

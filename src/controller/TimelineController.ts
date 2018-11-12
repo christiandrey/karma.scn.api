@@ -24,6 +24,7 @@ import { CommentService } from "../services/commentService";
 import { LikeService } from "../services/likeService";
 import { Webinar } from "../entities/Webinar";
 import { CacheService } from "../services/cacheService";
+import { WebinarStatusEnum } from "../enums/WebinarStatusEnum";
 
 export class TimelineController {
 	private timelinePhotoRepository = getRepository(TimelinePhoto);
@@ -52,6 +53,15 @@ export class TimelineController {
 			const articles = await this.articleRepository.find({
 				isPublished: true
 			});
+			// const articles = await this.articleRepository
+			// 	.createQueryBuilder("article")
+			// 	.leftJoinAndSelect("article.featuredImage", "featuredImage")
+			// 	.leftJoinAndSelect("article.comments", "comment")
+			// 	.leftJoinAndSelect("article.likes", "like")
+			// 	.leftJoinAndSelect("like.user", "user")
+			// 	.leftJoinAndSelect("article.category", "category")
+			// 	.leftJoinAndSelect("article.author", "author")
+			// 	.getMany();
 			const timelinePhotos = await this.timelinePhotoRepository
 				.createQueryBuilder("timelinePhoto")
 				.leftJoinAndSelect("timelinePhoto.media", "media")
@@ -60,6 +70,7 @@ export class TimelineController {
 				.leftJoinAndSelect("comment.childComments", "childComment")
 				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelinePhoto.likes", "like")
+				.leftJoinAndSelect("like.user", "user")
 				.getMany();
 			const timelineUpdates = await this.timelineUpdateRepository
 				.createQueryBuilder("timelineUpdate")
@@ -68,8 +79,11 @@ export class TimelineController {
 				.leftJoinAndSelect("comment.childComments", "childComment")
 				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelineUpdate.likes", "like")
+				.leftJoinAndSelect("like.user", "user")
 				.getMany();
-			const webinars = await this.webinarRepository.find();
+			const webinars = await this.webinarRepository.find({
+				status: WebinarStatusEnum.Finished
+			});
 
 			const mappedResources = resources.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Resource));
 			const mappedJobs = jobs.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job));

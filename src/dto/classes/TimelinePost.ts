@@ -1,6 +1,7 @@
 import { User } from "../../entities/User";
 import { TimelinePostTypeEnum } from "../../enums/TimelinePostTypeEnum";
 import { Comment } from "../../entities/Comment";
+import { Like } from "../../entities/Like";
 
 export class TimelinePost {
 	id: string;
@@ -12,7 +13,7 @@ export class TimelinePost {
 	type: TimelinePostTypeEnum;
 	content: string;
 	extraContent: string;
-	likesCount: number;
+	likes: Array<Like>;
 	comments: Array<Comment>;
 
 	constructor(dto?: TimelinePost | any) {
@@ -27,7 +28,7 @@ export class TimelinePost {
 		this.type = dto.type;
 		this.content = dto.content;
 		this.extraContent = dto.extraContent;
-		this.likesCount = dto.likesCount;
+		this.likes = dto.likes ? dto.likes.map(l => new Like(l)) : null;
 		this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
 	}
 }

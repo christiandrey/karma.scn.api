@@ -164,7 +164,7 @@ export namespace Methods {
 			id: item["id"],
 			createdDate: item["createdDate"],
 			comments: !!item["comments"] ? item["comments"] : new Array<Comment>(),
-			likesCount: !!item["likes"] ? item["likes"].length : 0,
+			likes: !!item["likes"] ? item["likes"] : new Array<Like>(),
 			type
 		});
 

@@ -1,14 +1,5 @@
 import * as readingTime from "reading-time";
-import {
-	Entity,
-	OneToOne,
-	ManyToOne,
-	JoinColumn,
-	Column,
-	OneToMany,
-	BeforeInsert,
-	BeforeUpdate
-} from "typeorm";
+import { Entity, OneToOne, ManyToOne, JoinColumn, Column, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { MaxLength, IsNotEmpty } from "class-validator";
@@ -16,6 +7,7 @@ import { Media } from "./Media";
 import { ArticleCategory } from "./ArticleCategory";
 import { ArticleStatusEnum } from "../enums/ArticleStatusEnum";
 import { Comment } from "./Comment";
+import { Like } from "./Like";
 
 @Entity()
 export class Article extends BaseEntity {
@@ -56,13 +48,9 @@ export class Article extends BaseEntity {
 	})
 	readingTime: string;
 
-	@ManyToOne(
-		type => ArticleCategory,
-		articleCategory => articleCategory.articles,
-		{
-			eager: true
-		}
-	)
+	@ManyToOne(type => ArticleCategory, articleCategory => articleCategory.articles, {
+		eager: true
+	})
 	category: ArticleCategory;
 
 	@Column()
@@ -75,6 +63,11 @@ export class Article extends BaseEntity {
 
 	@Column()
 	status: ArticleStatusEnum;
+
+	@OneToMany(type => Like, like => like.article, {
+		eager: true
+	})
+	likes: Array<Like>;
 
 	@OneToMany(type => Comment, comment => comment.article, {
 		eager: true
@@ -109,9 +102,7 @@ export class Article extends BaseEntity {
 		this.author = dto.author ? new User(dto.author) : null;
 		this.title = dto.title;
 		this.urlToken = dto.urlToken;
-		this.featuredImage = dto.featuredImage
-			? new Media(dto.featuredImage)
-			: null;
+		this.featuredImage = dto.featuredImage ? new Media(dto.featuredImage) : null;
 		this.synopsis = dto.synopsis;
 		this.body = dto.body;
 		this.readingTime = dto.readingTime;
@@ -119,8 +110,7 @@ export class Article extends BaseEntity {
 		this.isPublished = dto.isPublished;
 		this.publicationDate = dto.publicationDate;
 		this.status = dto.status;
-		this.comments = dto.comments
-			? dto.comments.map(c => new Comment(c))
-			: null;
+		this.likes = dto.likes ? dto.likes.map(l => new Like(l)) : null;
+		this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
 	}
 }
