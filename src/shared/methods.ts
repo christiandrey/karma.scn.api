@@ -181,7 +181,8 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Photo) {
 			const toTransform = item as TimelinePhoto;
-			const { author, media } = toTransform;
+			const { author, media, caption } = toTransform;
+			timelinePost.content = caption;
 			timelinePost.imageUrl = media.url;
 			timelinePost.author = author;
 		}

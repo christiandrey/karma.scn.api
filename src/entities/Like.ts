@@ -7,7 +7,7 @@ import { Article } from "./Article";
 
 @Entity()
 export class Like extends BaseEntity {
-	@OneToOne(type => User, {
+	@ManyToOne(type => User, {
 		eager: true
 	})
 	@JoinColumn()

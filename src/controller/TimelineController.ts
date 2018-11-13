@@ -50,23 +50,24 @@ export class TimelineController {
 			const announcements = await this.announcementRepository.find({
 				isPublished: true
 			});
-			const articles = await this.articleRepository.find({
-				isPublished: true
-			});
-			// const articles = await this.articleRepository
-			// 	.createQueryBuilder("article")
-			// 	.leftJoinAndSelect("article.featuredImage", "featuredImage")
-			// 	.leftJoinAndSelect("article.comments", "comment")
-			// 	.leftJoinAndSelect("article.likes", "like")
-			// 	.leftJoinAndSelect("like.user", "user")
-			// 	.leftJoinAndSelect("article.category", "category")
-			// 	.leftJoinAndSelect("article.author", "author")
-			// 	.getMany();
+			const articles = await this.articleRepository
+				.createQueryBuilder("article")
+				.leftJoinAndSelect("article.featuredImage", "featuredImage")
+				.leftJoinAndSelect("article.comments", "comment")
+				.leftJoinAndSelect("comment.author", "commentAuthor")
+				.leftJoinAndSelect("comment.childComments", "childComment")
+				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
+				.leftJoinAndSelect("article.likes", "like")
+				.leftJoinAndSelect("like.user", "user")
+				.leftJoinAndSelect("article.author", "author")
+				.leftJoinAndSelect("author.address", "authorAddress")
+				.leftJoinAndSelect("authorAddress.country", "authorCountry")
+				.getMany();
 			const timelinePhotos = await this.timelinePhotoRepository
 				.createQueryBuilder("timelinePhoto")
 				.leftJoinAndSelect("timelinePhoto.media", "media")
 				.leftJoinAndSelect("timelinePhoto.comments", "comment")
-				.leftJoinAndSelect("comment.author", "author")
+				.leftJoinAndSelect("comment.author", "commentAuthor")
 				.leftJoinAndSelect("comment.childComments", "childComment")
 				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelinePhoto.likes", "like")
@@ -75,7 +76,7 @@ export class TimelineController {
 			const timelineUpdates = await this.timelineUpdateRepository
 				.createQueryBuilder("timelineUpdate")
 				.leftJoinAndSelect("timelineUpdate.comments", "comment")
-				.leftJoinAndSelect("comment.author", "author")
+				.leftJoinAndSelect("comment.author", "commentAuthor")
 				.leftJoinAndSelect("comment.childComments", "childComment")
 				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelineUpdate.likes", "like")
@@ -177,8 +178,9 @@ export class TimelineController {
 		// Create New Entity
 		// ------------------------------------------------------------------------
 
-		const { media } = timelinePhoto;
+		const { media, caption } = timelinePhoto;
 		const timelineMediaToCreate = new TimelinePhoto({
+			caption,
 			media: new Media({ id: media.id }),
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		});
@@ -194,9 +196,10 @@ export class TimelineController {
 	}
 
 	async addTimelineUpdateCommentAsync(req: Request, resp: Response, next: NextFunction) {
-		const timelineUpdate = await this.timelineUpdateRepository.findOne({
-			id: req.params.id
-		});
+		const timelineUpdate = await this.timelineUpdateRepository
+			.createQueryBuilder("timelineUpdate")
+			.where("id = :timelineUpdateId", { timelineUpdateId: req.params.id })
+			.getOne();
 
 		if (!timelineUpdate) {
 			Methods.sendErrorResponse(resp, 404, "Timeline Update was not found");
@@ -215,9 +218,10 @@ export class TimelineController {
 	}
 
 	async addTimelinePhotoCommentAsync(req: Request, resp: Response, next: NextFunction) {
-		const timelinePhoto = await this.timelinePhotoRepository.findOne({
-			id: req.params.id
-		});
+		const timelinePhoto = await this.timelinePhotoRepository
+			.createQueryBuilder("timelinePhoto")
+			.where("id = :timelinePhotoId", { timelinePhotoId: req.params.id })
+			.getOne();
 
 		if (!timelinePhoto) {
 			Methods.sendErrorResponse(resp, 404, "Timeline Photo was not found");
@@ -236,9 +240,10 @@ export class TimelineController {
 	}
 
 	async likeTimelineUpdateAsync(req: Request, resp: Response, next: NextFunction) {
-		const timelineUpdate = await this.timelineUpdateRepository.findOne({
-			id: req.params.id
-		});
+		const timelineUpdate = await this.timelineUpdateRepository
+			.createQueryBuilder("timelineUpdate")
+			.where("id = :timelineUpdateId", { timelineUpdateId: req.params.id })
+			.getOne();
 
 		if (!timelineUpdate) {
 			Methods.sendErrorResponse(resp, 404, "Timeline Update was not found");
@@ -258,9 +263,10 @@ export class TimelineController {
 	}
 
 	async likeTimelinePhotoAsync(req: Request, resp: Response, next: NextFunction) {
-		const timelinePhoto = await this.timelinePhotoRepository.findOne({
-			id: req.params.id
-		});
+		const timelinePhoto = await this.timelinePhotoRepository
+			.createQueryBuilder("timelinePhoto")
+			.where("id = :timelinePhotoId", { timelinePhotoId: req.params.id })
+			.getOne();
 
 		if (!timelinePhoto) {
 			Methods.sendErrorResponse(resp, 404, "Timeline Photo was not found");

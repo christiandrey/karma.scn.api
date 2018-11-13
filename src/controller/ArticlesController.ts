@@ -235,7 +235,10 @@ export class ArticlesController {
 	}
 
 	async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
-		const article = await this.articleRepository.findOne({ id: req.params.id });
+		const article = await this.articleRepository
+			.createQueryBuilder("article")
+			.where("id = :articleId", { articleId: req.params.id })
+			.getOne();
 
 		if (!article) {
 			Methods.sendErrorResponse(resp, 404, "Article was not found");
@@ -259,9 +262,10 @@ export class ArticlesController {
 	}
 
 	async likeArticleAsync(req: Request, resp: Response, next: NextFunction) {
-		const article = await this.articleRepository.findOne({
-			id: req.params.id
-		});
+		const article = await this.articleRepository
+			.createQueryBuilder("article")
+			.where("id = :articleId", { articleId: req.params.id })
+			.getOne();
 
 		if (!article) {
 			Methods.sendErrorResponse(resp, 404, "Article was not found");

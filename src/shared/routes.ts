@@ -641,14 +641,14 @@ export const Routes = [
 	},
 	{
 		method: "post",
-		route: "/timeline/update/comment",
+		route: "/timeline/update/:id/comment",
 		controller: TimelineController,
 		action: "addTimelineUpdateCommentAsync",
 		protected: true
 	},
 	{
 		method: "post",
-		route: "/timeline/photo/comment",
+		route: "/timeline/photo/:id/comment",
 		controller: TimelineController,
 		action: "addTimelinePhotoCommentAsync",
 		protected: true
