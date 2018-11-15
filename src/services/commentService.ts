@@ -1,4 +1,4 @@
-import { getRepository } from "typeorm";
+import { getRepository, getTreeRepository, TreeRepository } from "typeorm";
 import { Comment } from "../entities/Comment";
 import { IJsonResponse } from "../interfaces/IJsonResponse";
 import { validate } from "class-validator";
@@ -28,19 +28,22 @@ export namespace CommentService {
 			return Methods.getJsonResponse(invalidResponse, "Comment data provided was not valid", false);
 		}
 
-		const commentRepository = getRepository(Comment);
+		const commentRepository = getTreeRepository(Comment);
 		const { content, parentComment, discussion, article, timelineUpdate, timelinePhoto, webinar } = comment;
+
+		const isRootComment = !comment.parentComment;
 
 		const commentToCreate = new Comment({
 			content,
-			article: !!article ? new Article({ id: article.id }) : null,
-			discussion: !!discussion ? new Discussion({ id: discussion.id }) : null,
-			timelineUpdate: !!timelineUpdate ? new TimelineUpdate({ id: timelineUpdate.id }) : null,
-			timelinePhoto: !!timelinePhoto ? new TimelinePhoto({ id: timelinePhoto.id }) : null,
-			webinar: !!webinar ? new Webinar({ id: webinar.id }) : null,
+			article: !!article && isRootComment ? new Article({ id: article.id }) : null,
+			discussion: !!discussion && isRootComment ? new Discussion({ id: discussion.id }) : null,
+			timelineUpdate: !!timelineUpdate && isRootComment ? new TimelineUpdate({ id: timelineUpdate.id }) : null,
+			timelinePhoto: !!timelinePhoto && isRootComment ? new TimelinePhoto({ id: timelinePhoto.id }) : null,
+			webinar: !!webinar && isRootComment ? new Webinar({ id: webinar.id }) : null,
 			parentComment: !!parentComment ? new Comment({ id: parentComment.id }) : null,
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		} as Comment);
+		if (!!commentToCreate.parentComment) commentToCreate.article = null;
 		if (!!commentToCreate.parentComment) commentToCreate.article = null;
 
 		const createdComment = await commentRepository.save(commentToCreate);
@@ -50,5 +53,70 @@ export namespace CommentService {
 		});
 
 		return Methods.getJsonResponse(validResponse);
+	}
+
+	export async function findRoots(commentTreeRepository: TreeRepository<Comment>): Promise<Array<Comment>> {
+		const escapeAlias = (alias: string) => commentTreeRepository.manager.connection.driver.escape(alias);
+		const escapeColumn = (column: string) => commentTreeRepository.manager.connection.driver.escape(column);
+		const parentPropertyName = commentTreeRepository.manager.connection.namingStrategy.joinColumnName(
+			commentTreeRepository.metadata.treeParentRelation!.propertyName,
+			"id"
+		);
+
+		return commentTreeRepository
+			.createQueryBuilder("treeEntity")
+			.where(`${escapeAlias("treeEntity")}.${escapeColumn(parentPropertyName)} IS NULL`)
+			.leftJoinAndSelect("treeEntity.author", "author")
+			.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+			.leftJoinAndSelect("treeEntity.article", "article")
+			.leftJoinAndSelect("treeEntity.discussion", "discussion")
+			.leftJoinAndSelect("treeEntity.timelineUpdate", "timelineUpdate")
+			.leftJoinAndSelect("treeEntity.timelinePhoto", "timelinePhoto")
+			.leftJoinAndSelect("treeEntity.webinar", "webinar")
+			.orderBy("treeEntity.createdDate", "DESC")
+			.getMany();
+	}
+
+	export async function findTrees() {
+		const commentTreeRepository = getTreeRepository(Comment);
+		const roots = await findRoots(commentTreeRepository);
+		await Promise.all(roots.map(root => findDescendantsTree(commentTreeRepository, root)));
+		return roots;
+	}
+
+	async function findDescendantsTree(commentTreeRepository: TreeRepository<Comment>, entity: Comment): Promise<Comment> {
+		return commentTreeRepository
+			.createDescendantsQueryBuilder("treeEntity", "treeClosure", entity)
+			.leftJoinAndSelect("treeEntity.author", "author")
+			.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+			.orderBy("treeEntity.createdDate", "DESC")
+			.getRawAndEntities()
+			.then(entitiesAndScalars => {
+				const relationMaps = createRelationMaps(commentTreeRepository, "treeEntity", entitiesAndScalars.raw);
+				buildChildrenEntityTree(commentTreeRepository, entity, entitiesAndScalars.entities, relationMaps);
+				return entity;
+			});
+	}
+
+	function createRelationMaps(commentTreeRepository: TreeRepository<Comment>, alias: string, rawResults: any[]): { id: any; parentId: any }[] {
+		return rawResults.map(rawResult => {
+			const joinColumn = commentTreeRepository.metadata.treeParentRelation!.joinColumns[0];
+			const joinColumnName = joinColumn.givenDatabaseName || joinColumn.databaseName;
+			return {
+				id: rawResult[alias + "_" + commentTreeRepository.metadata.primaryColumns[0].databaseName],
+				parentId: rawResult[alias + "_" + joinColumnName]
+			};
+		});
+	}
+
+	function buildChildrenEntityTree(commentTreeRepository: TreeRepository<Comment>, entity: any, entities: any[], relationMaps: { id: any; parentId: any }[]): void {
+		const childProperty = commentTreeRepository.metadata.treeChildrenRelation!.propertyName;
+		const parentEntityId = commentTreeRepository.metadata.primaryColumns[0].getEntityValue(entity);
+		const childRelationMaps = relationMaps.filter(relationMap => relationMap.parentId === parentEntityId);
+		const childIds = childRelationMaps.map(relationMap => relationMap.id);
+		entity[childProperty] = entities.filter(entity => childIds.indexOf(entity.id) !== -1);
+		entity[childProperty].forEach((childEntity: any) => {
+			buildChildrenEntityTree(commentTreeRepository, childEntity, entities, relationMaps);
+		});
 	}
 }

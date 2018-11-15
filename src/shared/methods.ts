@@ -159,11 +159,11 @@ export namespace Methods {
 
 	// -------------------------------------------------------------------------------------------------
 	/** Create a generic timeline post from given item */
-	export function getTimelinePostFrom(item: any, type: TimelinePostTypeEnum): TimelinePost {
+	export function getTimelinePostFrom(item: any, type: TimelinePostTypeEnum, comments: Array<Comment> = new Array<Comment>()): TimelinePost {
 		const timelinePost = new TimelinePost({
 			id: item["id"],
 			createdDate: item["createdDate"],
-			comments: !!item["comments"] ? item["comments"] : new Array<Comment>(),
+			comments: new Array<Comment>(),
 			likes: !!item["likes"] ? item["likes"] : new Array<Like>(),
 			type
 		});
@@ -172,7 +172,14 @@ export namespace Methods {
 			timelinePost.createdDate = item["publicationDate"];
 		}
 
-		if (type === TimelinePostTypeEnum.Default || type === TimelinePostTypeEnum.Announcement) {
+		if (type === TimelinePostTypeEnum.Default) {
+			const toTransform = item as TimelineUpdate;
+			const { id, author, content } = toTransform;
+			(timelinePost.comments = [...comments.filter(x => !!x.timelineUpdate && x.timelineUpdate.id === id)]), (timelinePost.author = author);
+			timelinePost.content = content;
+		}
+
+		if (type === TimelinePostTypeEnum.Announcement) {
 			const toTransform = item as TimelineUpdate;
 			const { author, content } = toTransform;
 			timelinePost.author = author;
@@ -181,8 +188,8 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Photo) {
 			const toTransform = item as TimelinePhoto;
-			const { author, media, caption } = toTransform;
-			timelinePost.content = caption;
+			const { author, media, caption, id } = toTransform;
+			(timelinePost.comments = [...comments.filter(x => !!x.timelinePhoto && x.timelinePhoto.id === id)]), (timelinePost.content = caption);
 			timelinePost.imageUrl = media.url;
 			timelinePost.author = author;
 		}
@@ -198,8 +205,8 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Webinar) {
 			const toTransform = item as Webinar;
-			const { author, urlToken, topic, description, startDateTime } = toTransform;
-			timelinePost.content = topic;
+			const { id, author, urlToken, topic, description, startDateTime } = toTransform;
+			(timelinePost.comments = [...comments.filter(x => !!x.webinar && x.webinar.id === id)]), (timelinePost.content = topic);
 			timelinePost.extraContent = description;
 			timelinePost.urlToken = urlToken;
 			timelinePost.author = author;
@@ -217,8 +224,8 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Article) {
 			const toTransform = item as Article;
-			const { author, title, synopsis, featuredImage, urlToken } = toTransform;
-			timelinePost.content = title;
+			const { id, author, title, synopsis, featuredImage, urlToken } = toTransform;
+			(timelinePost.comments = [...comments.filter(x => !!x.article && x.article.id === id)]), (timelinePost.content = title);
 			timelinePost.extraContent = synopsis;
 			timelinePost.author = author;
 			timelinePost.urlToken = urlToken;

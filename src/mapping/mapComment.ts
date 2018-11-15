@@ -15,7 +15,7 @@ export namespace MapComment {
 				profilePhoto: !!comment.author.profilePhoto
 					? ({
 							id: comment.author.profilePhoto.id,
-							url: comment.author.profilePhoto.id
+							url: comment.author.profilePhoto.url
 					  } as Media)
 					: null,
 				latestExperience:

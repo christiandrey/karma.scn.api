@@ -61,7 +61,23 @@ export namespace MapUser {
 	}
 
 	export function inUsersControllerGetProfileLiteAsync(user: User): User {
-		const { id, type, firstName, lastName, urlToken, verified, profilePhoto, twitterUrl, facebookUrl, linkedInUrl, googlePlusUrl, company, views } = user;
+		const {
+			id,
+			type,
+			firstName,
+			lastName,
+			urlToken,
+			verified,
+			profilePhoto,
+			twitterUrl,
+			facebookUrl,
+			linkedInUrl,
+			googlePlusUrl,
+			company,
+			latestExperience,
+			address,
+			views
+		} = user;
 		return {
 			id,
 			type,
@@ -73,6 +89,7 @@ export namespace MapUser {
 			facebookUrl,
 			linkedInUrl,
 			googlePlusUrl,
+			address: !!user.address ? MapAddress.inAllControllers(user.address) : null,
 			profilePhoto: !!profilePhoto
 				? {
 						id: profilePhoto.id,
@@ -89,6 +106,14 @@ export namespace MapUser {
 						email: company.email
 				  } as Company)
 				: null,
+			latestExperience:
+				!!user.latestExperience && user.latestExperience.current
+					? {
+							id: user.latestExperience.id,
+							role: user.latestExperience.role,
+							organization: user.latestExperience.organization
+					  }
+					: null,
 			views: !!views ? views.map(x => new View({ id: x.id })) : new Array<View>()
 		} as User;
 	}
@@ -167,6 +192,7 @@ export namespace MapUser {
 			phone,
 			cpdPoints,
 			description,
+			profilePhoto,
 			experiences,
 			certifications,
 			skills
@@ -186,6 +212,12 @@ export namespace MapUser {
 			phone,
 			cpdPoints,
 			description,
+			profilePhoto: !!profilePhoto
+				? {
+						id: profilePhoto.id,
+						url: profilePhoto.url
+				  }
+				: null,
 			latestExperience:
 				!!user.latestExperience && user.latestExperience.current
 					? {

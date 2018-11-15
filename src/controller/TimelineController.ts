@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getRepository } from "typeorm";
+import { getRepository, getTreeRepository } from "typeorm";
 import { Constants } from "../shared/constants";
 import { Methods } from "../shared/methods";
 import { TimelinePhoto } from "../entities/TimelinePhoto";
@@ -41,58 +41,75 @@ export class TimelineController {
 		const pageSize = 25;
 
 		const sortedTimelinePosts = await CacheService.getCacheItemValue(Constants.sortedTimelinePosts, async () => {
-			const resources = await this.resourcesRepository.find({
-				isPublished: true
-			});
-			const jobs = await this.jobRepository.find({
-				isPublished: true
-			});
-			const announcements = await this.announcementRepository.find({
-				isPublished: true
-			});
+			const resources = await this.resourcesRepository
+				.createQueryBuilder("resource")
+				.where("isPublished = :isPublished", { isPublished: true })
+				.leftJoinAndSelect("resource.user", "user")
+				.leftJoinAndSelect("user.profilePhoto", "profilePhoto")
+				.leftJoinAndSelect("user.experiences", "experience")
+				.leftJoinAndSelect("user.address", "address")
+				.leftJoinAndSelect("address.country", "country")
+				.getMany();
+
+			const jobs = await this.jobRepository
+				.createQueryBuilder("job")
+				.where("isPublished = :isPublished", { isPublished: true })
+				.getMany();
+
+			const announcements = await this.announcementRepository
+				.createQueryBuilder("announcement")
+				.where("isPublished = :isPublished", { isPublished: true })
+				.getMany();
+
 			const articles = await this.articleRepository
 				.createQueryBuilder("article")
 				.leftJoinAndSelect("article.featuredImage", "featuredImage")
-				.leftJoinAndSelect("article.comments", "comment")
-				.leftJoinAndSelect("comment.author", "commentAuthor")
-				.leftJoinAndSelect("comment.childComments", "childComment")
-				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("article.likes", "like")
 				.leftJoinAndSelect("like.user", "user")
 				.leftJoinAndSelect("article.author", "author")
-				.leftJoinAndSelect("author.address", "authorAddress")
-				.leftJoinAndSelect("authorAddress.country", "authorCountry")
+				.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+				.leftJoinAndSelect("author.experiences", "experience")
+				.leftJoinAndSelect("author.address", "address")
+				.leftJoinAndSelect("address.country", "country")
 				.getMany();
+
 			const timelinePhotos = await this.timelinePhotoRepository
 				.createQueryBuilder("timelinePhoto")
 				.leftJoinAndSelect("timelinePhoto.media", "media")
-				.leftJoinAndSelect("timelinePhoto.comments", "comment")
-				.leftJoinAndSelect("comment.author", "commentAuthor")
-				.leftJoinAndSelect("comment.childComments", "childComment")
-				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelinePhoto.likes", "like")
 				.leftJoinAndSelect("like.user", "user")
+				.leftJoinAndSelect("timelinePhoto.author", "author")
+				.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+				.leftJoinAndSelect("author.experiences", "experience")
+				.leftJoinAndSelect("author.address", "address")
+				.leftJoinAndSelect("address.country", "country")
 				.getMany();
+
 			const timelineUpdates = await this.timelineUpdateRepository
 				.createQueryBuilder("timelineUpdate")
-				.leftJoinAndSelect("timelineUpdate.comments", "comment")
-				.leftJoinAndSelect("comment.author", "commentAuthor")
-				.leftJoinAndSelect("comment.childComments", "childComment")
-				.leftJoinAndSelect("childComment.author", "childCommentAuthor")
 				.leftJoinAndSelect("timelineUpdate.likes", "like")
 				.leftJoinAndSelect("like.user", "user")
+				.leftJoinAndSelect("timelineUpdate.author", "author")
+				.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+				.leftJoinAndSelect("author.experiences", "experience")
+				.leftJoinAndSelect("author.address", "address")
+				.leftJoinAndSelect("address.country", "country")
 				.getMany();
-			const webinars = await this.webinarRepository.find({
-				status: WebinarStatusEnum.Finished
-			});
 
-			const mappedResources = resources.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Resource));
-			const mappedJobs = jobs.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job));
-			const mappedAnnouncements = announcements.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Announcement));
-			const mappedArticles = articles.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Article));
-			const mappedTimelinePhotos = timelinePhotos.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Photo));
-			const mappedTimelineUpdates = timelineUpdates.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Default));
-			const mappedWebinars = webinars.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Webinar));
+			const webinars = await this.webinarRepository
+				.createQueryBuilder("webinar")
+				.where("status = :status", { status: WebinarStatusEnum.Finished })
+				.getMany();
+
+			const comments = await CommentService.findTrees();
+
+			const mappedResources = resources.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Resource, comments));
+			const mappedJobs = jobs.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job, comments));
+			const mappedAnnouncements = announcements.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Announcement, comments));
+			const mappedArticles = articles.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Article, comments));
+			const mappedTimelinePhotos = timelinePhotos.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Photo, comments));
+			const mappedTimelineUpdates = timelineUpdates.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Default, comments));
+			const mappedWebinars = webinars.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Webinar, comments));
 
 			const timelinePosts = [
 				...mappedResources,

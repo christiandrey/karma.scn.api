@@ -19,10 +19,14 @@ export class TimelinePhoto extends BaseEntity {
 	@IsNotEmpty()
 	media: Media;
 
-	@Column()
+	@Column({
+		type: "longtext"
+	})
 	caption: string;
 
-	@Column()
+	@Column({
+		default: false
+	})
 	isDisabled: boolean;
 
 	@Column("int", {

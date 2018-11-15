@@ -655,21 +655,21 @@ export const Routes = [
 	},
 	{
 		method: "post",
-		route: "/timeline/update/like",
+		route: "/timeline/update/:id/like",
 		controller: TimelineController,
 		action: "likeTimelineUpdateAsync",
 		protected: true
 	},
 	{
 		method: "post",
-		route: "/timeline/photo/like",
+		route: "/timeline/photo/:id/like",
 		controller: TimelineController,
 		action: "likeTimelinePhotoAsync",
 		protected: true
 	},
 	{
 		method: "delete",
-		route: "/timeline/post/unlike",
+		route: "/timeline/post/:id/unlike",
 		controller: TimelineController,
 		action: "unLikeTimelinePostAsync",
 		protected: true
