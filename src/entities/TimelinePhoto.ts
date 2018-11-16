@@ -20,7 +20,8 @@ export class TimelinePhoto extends BaseEntity {
 	media: Media;
 
 	@Column({
-		type: "longtext"
+		type: "longtext",
+		nullable: true
 	})
 	caption: string;
 

@@ -7,6 +7,7 @@ import { TimelinePhoto } from "./TimelinePhoto";
 import { Article } from "./Article";
 import { Discussion } from "./Discussion";
 import { Webinar } from "./Webinar";
+import { IsNotWhitespace } from "../shared/decorators";
 
 @Entity()
 @Tree("closure-table")
@@ -20,6 +21,7 @@ export class Comment extends BaseEntity {
 		type: "longtext"
 	})
 	@IsNotEmpty()
+	@IsNotWhitespace()
 	content: string;
 
 	@TreeParent()

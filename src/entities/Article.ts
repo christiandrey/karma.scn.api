@@ -35,6 +35,7 @@ export class Article extends BaseEntity {
 		length: 200
 	})
 	@MaxLength(200)
+	@IsNotEmpty()
 	synopsis: string;
 
 	@Column({
@@ -69,13 +70,11 @@ export class Article extends BaseEntity {
 	})
 	likes: Array<Like>;
 
-	@OneToMany(type => Comment, comment => comment.article, {
-		eager: true
-	})
+	@OneToMany(type => Comment, comment => comment.article)
 	comments: Array<Comment>;
 
 	@BeforeInsert()
-	createUrlTokenAndSetReadingTime() {
+	beforeInsertMethods() {
 		this.urlToken = this.title
 			.toLowerCase()
 			.replace(/[^a-z0-9-\s+]/g, "")
@@ -85,7 +84,7 @@ export class Article extends BaseEntity {
 	}
 
 	@BeforeUpdate()
-	updateUrlTokenAndReadingTime() {
+	beforeUpdateMethods() {
 		this.urlToken = this.title
 			.toLowerCase()
 			.replace(/[^a-z0-9-\s+]/g, "")

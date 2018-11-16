@@ -30,9 +30,7 @@ export class Discussion extends BaseEntity {
 	})
 	commentsCount: number;
 
-	@OneToMany(type => Comment, comment => comment.discussion, {
-		eager: true
-	})
+	@OneToMany(type => Comment, comment => comment.discussion)
 	comments: Array<Comment>;
 
 	@BeforeInsert()

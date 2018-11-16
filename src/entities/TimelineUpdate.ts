@@ -4,6 +4,7 @@ import { User } from "./User";
 import { IsNotEmpty } from "class-validator";
 import { Comment } from "./Comment";
 import { Like } from "./Like";
+import { IsNotWhitespace } from "../shared/decorators";
 
 @Entity()
 export class TimelineUpdate extends BaseEntity {
@@ -14,6 +15,9 @@ export class TimelineUpdate extends BaseEntity {
 		type: "longtext"
 	})
 	@IsNotEmpty()
+	@IsNotWhitespace({
+		message: "content cannot be empty"
+	})
 	content: string;
 
 	@Column({

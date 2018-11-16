@@ -59,6 +59,10 @@ export class WebinarsController {
 			Methods.sendErrorResponse(resp, 404, "Webinar was not found");
 		}
 
+		const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
+
+		webinar.comments = comments.filter(x => !!x.webinar && x.webinar.id === webinar.id);
+
 		const response = MapWebinar.inWebinarControllersGetByUrlTokenAsync(webinar);
 
 		return Methods.getJsonResponse(response);

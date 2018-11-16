@@ -63,6 +63,7 @@ export class TimelineController {
 
 			const articles = await this.articleRepository
 				.createQueryBuilder("article")
+				.where("isPublished = :isPublished", { isPublished: true })
 				.leftJoinAndSelect("article.featuredImage", "featuredImage")
 				.leftJoinAndSelect("article.likes", "like")
 				.leftJoinAndSelect("like.user", "user")
@@ -101,7 +102,7 @@ export class TimelineController {
 				.where("status = :status", { status: WebinarStatusEnum.Finished })
 				.getMany();
 
-			const comments = await CommentService.findTrees();
+			const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
 
 			const mappedResources = resources.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Resource, comments));
 			const mappedJobs = jobs.map(x => Methods.getTimelinePostFrom(x, TimelinePostTypeEnum.Job, comments));
@@ -160,7 +161,7 @@ export class TimelineController {
 
 		const { content } = timelineUpdate;
 		const timelineUpdateToCreate = new TimelineUpdate({
-			content,
+			content: content.trim(),
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		});
 
@@ -197,8 +198,8 @@ export class TimelineController {
 
 		const { media, caption } = timelinePhoto;
 		const timelineMediaToCreate = new TimelinePhoto({
-			caption,
-			media: new Media({ id: media.id }),
+			caption: !caption || caption.replace(/\s|\s+|\n/gm, "").length === 0 ? null : caption.trim(),
+			media: new Media({ id: media.id, url: media.url }),
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		});
 

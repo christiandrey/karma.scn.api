@@ -14,6 +14,8 @@ import { TimelineUpdate } from "../entities/TimelineUpdate";
 import { TimelinePhoto } from "../entities/TimelinePhoto";
 import { Webinar } from "../entities/Webinar";
 import { Article } from "../entities/Article";
+import { CacheService } from "./cacheService";
+import { Constants } from "../shared/constants";
 
 export namespace CommentService {
 	export async function addCommentAsync(req: Request, comment: Comment): Promise<IJsonResponse<FormResponse<Comment>>> {
@@ -29,12 +31,13 @@ export namespace CommentService {
 		}
 
 		const commentRepository = getTreeRepository(Comment);
+
 		const { content, parentComment, discussion, article, timelineUpdate, timelinePhoto, webinar } = comment;
 
 		const isRootComment = !comment.parentComment;
 
 		const commentToCreate = new Comment({
-			content,
+			content: content.trim(),
 			article: !!article && isRootComment ? new Article({ id: article.id }) : null,
 			discussion: !!discussion && isRootComment ? new Discussion({ id: discussion.id }) : null,
 			timelineUpdate: !!timelineUpdate && isRootComment ? new TimelineUpdate({ id: timelineUpdate.id }) : null,
@@ -43,14 +46,15 @@ export namespace CommentService {
 			parentComment: !!parentComment ? new Comment({ id: parentComment.id }) : null,
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		} as Comment);
-		if (!!commentToCreate.parentComment) commentToCreate.article = null;
-		if (!!commentToCreate.parentComment) commentToCreate.article = null;
 
 		const createdComment = await commentRepository.save(commentToCreate);
+
 		const validResponse = new FormResponse<Comment>({
 			isValid: true,
 			target: MapComment.inAllControllers(createdComment)
 		});
+
+		CacheService.invalidateCacheItem(Constants.commentsTree);
 
 		return Methods.getJsonResponse(validResponse);
 	}

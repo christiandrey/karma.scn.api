@@ -10,97 +10,103 @@ import { User } from "../entities/User";
 import { UserService } from "../services/userService";
 import { Comment } from "../entities/Comment";
 import { CommentService } from "../services/commentService";
+import { CacheService } from "../services/cacheService";
+import { Constants } from "../shared/constants";
 
 export class DiscussionsController {
+	private discussionRepository = getRepository(Discussion);
 
-    private discussionRepository = getRepository(Discussion);
+	async getLatestAsync(req: Request, resp: Response, next: NextFunction) {
+		const discussions = await this.discussionRepository.find({
+			order: {
+				createdDate: "DESC"
+			},
+			skip: 0,
+			take: 3
+		});
 
-    async getLatestAsync(req: Request, resp: Response, next: NextFunction) {
-        const discussions = await this.discussionRepository.find({
-            order: {
-                createdDate: "DESC"
-            },
-            skip: 0,
-            take: 3
-        });
+		const response = discussions.map(d => MapDiscussion.inDiscussionsControllerGetLatestAsync(d));
 
-        const response = discussions.map(d => MapDiscussion.inDiscussionsControllerGetLatestAsync(d));
+		return Methods.getJsonResponse(response);
+	}
 
-        return Methods.getJsonResponse(response);
-    }
+	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
+		const discussions = await this.discussionRepository.find({
+			order: {
+				createdDate: "DESC"
+			}
+		});
 
-    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-        const discussions = await this.discussionRepository.find({
-            order: {
-                createdDate: "DESC"
-            }
-        });
+		const response = discussions.map(d => MapDiscussion.inDiscussionsControllerGetAllAsync(d));
 
-        const response = discussions.map(d => MapDiscussion.inDiscussionsControllerGetAllAsync(d));
+		return Methods.getJsonResponse(response, `${discussions.length} discussions found`);
+	}
 
-        return Methods.getJsonResponse(response, `${discussions.length} discussions found`);
-    }
+	async getByUrlToken(req: Request, resp: Response, next: NextFunction) {
+		const urlToken = req.params.urlToken as string;
+		const discussion = await this.discussionRepository.findOne({ urlToken });
 
-    async getByUrlToken(req: Request, resp: Response, next: NextFunction) {
-        const urlToken = req.params.urlToken as string;
-        const discussion = await this.discussionRepository.findOne({ urlToken });
+		if (!discussion) {
+			Methods.sendErrorResponse(resp, 404, "Discussion was not found");
+		}
 
-        if (!discussion) {
-            Methods.sendErrorResponse(resp, 404, "Discussion was not found");
-        }
+		const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
 
-        const response = MapDiscussion.inDiscussionsControllerGetByUrlToken(discussion);
+		discussion.comments = comments.filter(x => !!x.discussion && x.discussion.id === discussion.id);
 
-        return Methods.getJsonResponse(response);
-    }
+		const response = MapDiscussion.inDiscussionsControllerGetByUrlToken(discussion);
 
-    async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const discussion = new Discussion(req.body);
+		return Methods.getJsonResponse(response);
+	}
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
+	async createAsync(req: Request, resp: Response, next: NextFunction) {
+		const discussion = new Discussion(req.body);
 
-        const validationResult = await validate(discussion);
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Discussion data provided was not valid", false);
-        }
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Create New Entity
-        // ------------------------------------------------------------------------
+		const validationResult = await validate(discussion);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Discussion data provided was not valid", false);
+		}
 
-        const { topic, description } = discussion;
+		// ------------------------------------------------------------------------
+		// Create New Entity
+		// ------------------------------------------------------------------------
 
-        const discussionToCreate = new Discussion({
-            topic, description,
-            author: new User({ id: UserService.getAuthenticatedUserId(req) })
-        });
+		const { topic, description } = discussion;
 
-        const createdDiscussion = await this.discussionRepository.save(discussionToCreate);
-        const validResponse = new FormResponse<Discussion>({
-            isValid: true,
-            target: MapDiscussion.inDiscussionsControllerCreateAsync(createdDiscussion)
-        });
+		const discussionToCreate = new Discussion({
+			topic,
+			description,
+			author: new User({ id: UserService.getAuthenticatedUserId(req) })
+		});
 
-        return Methods.getJsonResponse(validResponse);
-    }
+		const createdDiscussion = await this.discussionRepository.save(discussionToCreate);
+		const validResponse = new FormResponse<Discussion>({
+			isValid: true,
+			target: MapDiscussion.inDiscussionsControllerCreateAsync(createdDiscussion)
+		});
 
-    async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
-        const discussion = await this.discussionRepository.findOne({ id: req.params.id });
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        if (!discussion) {
-            Methods.sendErrorResponse(resp, 404, "Discussion was not found");
-            return;
-        }
+	async addCommentAsync(req: Request, resp: Response, next: NextFunction) {
+		const discussion = await this.discussionRepository.findOne({ id: req.params.id });
 
-        const comment = new Comment(req.body);
-        comment.discussion = new Discussion({ id: discussion.id });
+		if (!discussion) {
+			Methods.sendErrorResponse(resp, 404, "Discussion was not found");
+			return;
+		}
 
-        return await CommentService.addCommentAsync(req, comment);
-    }
+		const comment = new Comment(req.body);
+		comment.discussion = new Discussion({ id: discussion.id });
+
+		return await CommentService.addCommentAsync(req, comment);
+	}
 }

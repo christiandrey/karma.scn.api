@@ -64,8 +64,7 @@ export const Routes = [
 		method: "get",
 		route: "/article-categories",
 		controller: ArticleCategoriesController,
-		action: "getAllAsync",
-		protected: true
+		action: "getAllAsync"
 	},
 	{
 		method: "post",

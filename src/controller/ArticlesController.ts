@@ -30,8 +30,6 @@ export class ArticlesController {
 			.leftJoinAndSelect("article.author", "user")
 			.leftJoinAndSelect("article.featuredImage", "featuredImage")
 			.leftJoinAndSelect("article.category", "category")
-			.leftJoinAndSelect("article.comments", "comment")
-			.leftJoinAndSelect("comment.childComments", "childComment")
 			.orderBy("article.createdDate", "DESC")
 			.skip(0)
 			.take(4)
@@ -49,8 +47,6 @@ export class ArticlesController {
 			.leftJoinAndSelect("article.author", "user")
 			.leftJoinAndSelect("article.featuredImage", "featuredImage")
 			.leftJoinAndSelect("article.category", "category")
-			.leftJoinAndSelect("article.comments", "comment")
-			.leftJoinAndSelect("comment.childComments", "childComment")
 			.orderBy("article.createdDate", "DESC")
 			.getMany();
 
@@ -68,15 +64,16 @@ export class ArticlesController {
 			.leftJoinAndSelect("article.author", "user")
 			.leftJoinAndSelect("article.featuredImage", "featuredImage")
 			.leftJoinAndSelect("article.category", "category")
-			.leftJoinAndSelect("article.comments", "comment")
-			.leftJoinAndSelect("comment.author", "author")
-			.leftJoinAndSelect("comment.childComments", "childComment")
 			.getOne();
 
 		if (!article || !article.isPublished) {
 			Methods.sendErrorResponse(resp, 404, "Article was not found");
 			return;
 		}
+
+		const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
+
+		article.comments = comments.filter(x => !!x.article && x.article.id === article.id);
 
 		const response = MapArticle.inArticlesControllerGetByUrlToken(article);
 
@@ -129,7 +126,7 @@ export class ArticlesController {
 			body,
 			isPublished: false,
 			status: ArticleStatusEnum.Pending,
-			featuredImage: new Media({ id: article.featuredImage.id }),
+			featuredImage: new Media({ id: article.featuredImage.id, url: article.featuredImage.url }),
 			category: new ArticleCategory({ id: article.category.id }),
 			author: new User({ id: UserService.getAuthenticatedUserId(req) })
 		} as Article);

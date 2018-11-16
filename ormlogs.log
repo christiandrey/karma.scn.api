@@ -76,3 +76,14 @@
 [2018-11-15T04:35:59.292Z][QUERY]: INSERT INTO `karmascn`.`migrations`(`timestamp`, `name`) VALUES (?, ?) -- PARAMETERS: [1542256531480,"CommentAndPostsContentLengthToMax1542256531480"]
 [2018-11-15T04:35:59.293Z]Migration CommentAndPostsContentLengthToMax1542256531480 has been executed successfully.
 [2018-11-15T04:35:59.294Z][QUERY]: COMMIT
+[2018-11-15T07:51:31.293Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascn' AND `TABLE_NAME` = 'migrations'
+[2018-11-15T07:51:31.300Z][QUERY]: SELECT * FROM `karmascn`.`migrations` `migrations`
+[2018-11-15T07:51:31.304Z]21 migrations are already loaded in the database.
+[2018-11-15T07:51:31.305Z]22 migrations were found in the source code.
+[2018-11-15T07:51:31.305Z]CommentAndPostsContentLengthToMax1542256531480 is the last executed migration. It was executed on Thu Nov 15 2018 05:35:31 GMT+0100 (WAT).
+[2018-11-15T07:51:31.305Z]1 migrations are new migrations that needs to be executed.
+[2018-11-15T07:51:31.306Z][QUERY]: START TRANSACTION
+[2018-11-15T07:51:31.307Z][QUERY]: ALTER TABLE `timeline_photo` CHANGE `caption` `caption` longtext NULL
+[2018-11-15T07:51:31.550Z][QUERY]: INSERT INTO `karmascn`.`migrations`(`timestamp`, `name`) VALUES (?, ?) -- PARAMETERS: [1542268274038,"NullableTimelinePhotoContent1542268274038"]
+[2018-11-15T07:51:31.552Z]Migration NullableTimelinePhotoContent1542268274038 has been executed successfully.
+[2018-11-15T07:51:31.552Z][QUERY]: COMMIT
