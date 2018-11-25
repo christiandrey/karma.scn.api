@@ -49,6 +49,9 @@ export class TimelineController {
 				.leftJoinAndSelect("user.experiences", "experience")
 				.leftJoinAndSelect("user.address", "address")
 				.leftJoinAndSelect("address.country", "country")
+				.leftJoinAndSelect("user.company", "company")
+				.leftJoinAndSelect("company.address", "companyAddress")
+				.leftJoinAndSelect("companyAddress.country", "companyAddressCountry")
 				.getMany();
 
 			const jobs = await this.jobRepository
@@ -72,6 +75,9 @@ export class TimelineController {
 				.leftJoinAndSelect("author.experiences", "experience")
 				.leftJoinAndSelect("author.address", "address")
 				.leftJoinAndSelect("address.country", "country")
+				.leftJoinAndSelect("author.company", "company")
+				.leftJoinAndSelect("company.address", "companyAddress")
+				.leftJoinAndSelect("companyAddress.country", "companyAddressCountry")
 				.getMany();
 
 			const timelinePhotos = await this.timelinePhotoRepository
@@ -84,6 +90,9 @@ export class TimelineController {
 				.leftJoinAndSelect("author.experiences", "experience")
 				.leftJoinAndSelect("author.address", "address")
 				.leftJoinAndSelect("address.country", "country")
+				.leftJoinAndSelect("author.company", "company")
+				.leftJoinAndSelect("company.address", "companyAddress")
+				.leftJoinAndSelect("companyAddress.country", "companyAddressCountry")
 				.getMany();
 
 			const timelineUpdates = await this.timelineUpdateRepository
@@ -95,6 +104,9 @@ export class TimelineController {
 				.leftJoinAndSelect("author.experiences", "experience")
 				.leftJoinAndSelect("author.address", "address")
 				.leftJoinAndSelect("address.country", "country")
+				.leftJoinAndSelect("author.company", "company")
+				.leftJoinAndSelect("company.address", "companyAddress")
+				.leftJoinAndSelect("companyAddress.country", "companyAddressCountry")
 				.getMany();
 
 			const webinars = await this.webinarRepository

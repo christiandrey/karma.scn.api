@@ -16,6 +16,7 @@ import { Certificate } from "../entities/Certificate";
 import { Experience } from "../entities/Experience";
 import { Skill } from "../entities/Skill";
 import { View } from "../entities/View";
+import { Company } from "../entities/Company";
 
 export class UsersController {
 	private userRepository = getRepository(User);
@@ -80,14 +81,21 @@ export class UsersController {
 			let response = Methods.randomlySelectFrom(similarUsers, 3).map(x => MapUser.inAllControllers(x));
 			return Methods.getJsonResponse(response, `${similarUsers.length} members found`);
 		} else {
-			const similarCompanies = await this.userRepository
-				.createQueryBuilder("user")
-				.leftJoinAndSelect("user.company", "company")
-				.leftJoinAndSelect("company.category", "category")
-				.where("category.id = :id", { id: authUser.company.category.id })
-				.getMany();
+			let similarCompanies = new Array<User>();
+			if (!!authUser.company) {
+				similarCompanies = await this.userRepository
+					.createQueryBuilder("user")
+					.where("user.id <> :authUserId", { authUserId: authUser.id })
+					.where("user.company <> NULL")
+					.leftJoinAndSelect("user.company", "company")
+					.leftJoinAndSelect("company.category", "category")
+					.leftJoinAndSelect("company.address", "address")
+					.leftJoinAndSelect("address.country", "country")
+					.where("category.id = :id", { id: authUser.company.category.id })
+					.getMany();
+			}
 
-			let similarCompaniesUsers = Methods.randomlySelectFrom(similarCompanies, 3).map(x => {
+			let similarCompaniesUsers = Methods.randomlySelectFrom(similarCompanies.filter(x => x.id !== authUser.id), 3).map(x => {
 				return {
 					id: x.id,
 					type: x.type,
@@ -105,10 +113,11 @@ export class UsersController {
 			const response = MapUser.inUsersControllerGetProfileAsync(authUser);
 			return Methods.getJsonResponse(response);
 		} else {
-			const { id, type, firstName, lastName, email, phone, company } = authUser;
+			const { id, type, firstName, lastName, email, phone, company, cpdPoints } = authUser;
 			const response = new User({
 				id,
 				type,
+				cpdPoints,
 				firstName,
 				lastName,
 				email,
@@ -174,7 +183,6 @@ export class UsersController {
 
 		dbUser.firstName = firstName;
 		dbUser.lastName = lastName;
-		dbUser.address = new Address(address);
 		dbUser.phone = phone;
 		dbUser.profilePhoto = !!profilePhoto ? new Media({ id: profilePhoto.id }) : null;
 		dbUser.certifications = !!certifications ? certifications.map(x => new Certificate({ id: x.id })) : null;
@@ -182,7 +190,12 @@ export class UsersController {
 		dbUser.twitterUrl = twitterUrl;
 		dbUser.googlePlusUrl = googlePlusUrl;
 		dbUser.linkedInUrl = linkedInUrl;
-		dbUser.description = description;
+
+		if (dbUser.type === UserTypeEnum.Member) {
+			dbUser.description = description;
+			dbUser.address = new Address(address);
+		}
+
 		dbUser.experiences = !!experiences ? experiences.map(x => new Experience({ id: x.id })) : null;
 		dbUser.skills = !!skills ? skills.map(x => new Skill({ id: x.id })) : null;
 

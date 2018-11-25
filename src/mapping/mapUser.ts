@@ -48,6 +48,18 @@ export namespace MapUser {
 						url: user.profilePhoto.url
 				  }
 				: null,
+			company: !!user.company
+				? new Company({
+						id: user.company.id,
+						address: !!user.company.address ? MapAddress.inAllControllers(user.company.address) : null,
+						name: user.company.name,
+						logoUrl: user.company.logoUrl,
+						urlToken: user.company.urlToken,
+						phone: user.company.phone,
+						website: user.company.website,
+						email: user.company.email
+				  } as Company)
+				: null,
 			latestExperience:
 				!!user.latestExperience && user.latestExperience.current
 					? {
@@ -99,6 +111,8 @@ export namespace MapUser {
 			company: !!company
 				? new Company({
 						id: company.id,
+						address: !!company.address ? MapAddress.inAllControllers(company.address) : null,
+						name: company.name,
 						logoUrl: company.logoUrl,
 						urlToken: company.urlToken,
 						phone: company.phone,

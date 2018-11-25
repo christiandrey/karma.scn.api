@@ -25,6 +25,10 @@ export class DiscussionsController {
 			take: 3
 		});
 
+		const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
+
+		discussions.forEach(discussion => (discussion.commentsCount = comments.filter(x => !!x.discussion && x.discussion.id === discussion.id).length));
+
 		const response = discussions.map(d => MapDiscussion.inDiscussionsControllerGetLatestAsync(d));
 
 		return Methods.getJsonResponse(response);
@@ -107,6 +111,15 @@ export class DiscussionsController {
 		const comment = new Comment(req.body);
 		comment.discussion = new Discussion({ id: discussion.id });
 
-		return await CommentService.addCommentAsync(req, comment);
+		const response = await CommentService.addCommentAsync(req, comment);
+
+		if (!comment.parentComment) {
+			req.io.emit("discussionComment", response.data.target);
+		}
+
+		if (response.status) {
+			CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
+		}
+		return response;
 	}
 }

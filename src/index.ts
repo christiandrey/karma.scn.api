@@ -11,7 +11,10 @@ import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
 import { SocketService } from "./services/socketService";
 import { Comment } from "./entities/Comment";
-import { appendFile } from "graceful-fs";
+import { Constants } from "./shared/constants";
+import { User } from "./entities/User";
+import { VerifiedCallback } from "passport-jwt";
+import { CacheService } from "./services/cacheService";
 
 createConnection()
 	.then(async connection => {
@@ -40,6 +43,8 @@ createConnection()
 		// var whitelist = [
 		// 	"http://localhost:1313",
 		// 	"http://localhost:1810",
+		// 	"http://192.168.4.208:1810",
+		// 	"192.168.4.208:1810",
 		// 	"192.168.8.106:1313/viz",
 		// 	"http://192.168.8.106:1313/viz"
 		// ];
@@ -61,64 +66,53 @@ createConnection()
 		// ----------------------------------------------------------------------
 		const server = require("http").createServer(app);
 		let io = require("socket.io")(server) as socketio.Server;
+		var jwtAuth = require("socketio-jwt-auth");
+
+		// ----------------------------------------------------------------------
+		// Authenticate request
+		// ----------------------------------------------------------------------
+
+		io.use(
+			jwtAuth.authenticate(
+				{
+					secret: Constants.cipherKey,
+					algorithm: "HS256"
+				},
+				async (payload: any, done: VerifiedCallback) => {
+					const user = await connection.manager.findOne(User, payload.id);
+					if (!!user) {
+						const authenticatedUser = new User();
+						authenticatedUser.id = user.id;
+						authenticatedUser.type = user.type;
+						return done(null, authenticatedUser);
+					}
+					return done(null, null);
+				}
+			)
+		);
 
 		io.on("connection", async socket => {
-			// var wstream = createWriteStream('myBinaryFile.webm', {
-			//     flags: "a"
-			// });
 			await SocketService.createSocketRecord(socket.request, socket.id);
 
-			socket.on(
-				"webinarComment",
-				async (comment: Comment, urlToken: string) => {
-					const createdComment = await SocketService.addWebinarComment(
-						socket.request,
-						comment,
-						urlToken
-					);
+			socket.on("webinarComment", async (comment: Comment, id: string) => {
+				const createdComment = await SocketService.addWebinarComment(socket.request, comment, id);
 
-					if (!!createdComment) {
-						socket.broadcast.emit("webinarComment", createdComment);
-					}
+				if (!!createdComment) {
+					socket.broadcast.emit("webinarComment", createdComment);
 				}
-			);
-
-			socket.on(
-				"discussionComment",
-				async (comment: Comment, urlToken: string) => {
-					const createdComment = await SocketService.addDiscussionComment(
-						socket.request,
-						comment,
-						urlToken
-					);
-
-					if (!!createdComment) {
-						socket.broadcast.emit(
-							"discussionComment",
-							createdComment
-						);
-					}
-				}
-			);
-
-			socket.on("disconnect", async () => {
-				// wstream.end();
-				await SocketService.deleteSocketRecord(socket.id);
 			});
 
-			// socket.on("streamWebinar", video => {
-			//     // console.log(video);
-			//     socket.broadcast.emit("streamWebinar", video);
-			//     try {
-			//         // wstream.write(video);
-			//         appendFile(`myVideo.webm`, video, () => {
-			//             console.log(video);
-			//         });
-			//     } catch (error) {
-			//         console.log(error);
-			//     }
-			//     //TODO: STream to file
+			// socket.on("discussionComment", async (comment: Comment, id: string) => {
+			// 	const createdComment = await SocketService.addDiscussionComment(socket.request, comment, id);
+
+			// 	if (!!createdComment) {
+			// 		socket.broadcast.emit("discussionComment", createdComment);
+			// 	}
 			// });
+
+			socket.on("disconnect", async () => {
+				await SocketService.deleteSocketRecord(socket.id);
+			});
 		});
 
 		app.use((req: Request, res, next) => {
@@ -133,51 +127,28 @@ createConnection()
 		Routes.forEach((route: IRoute) => {
 			if (!!route.protected) {
 				const strategyName = !!route.admin ? "admin-rule" : "user-rule";
-				(app as any)[route.method](
-					route.route,
-					passport.authenticate(strategyName, { session: false }),
-					(req: Request, res: Response, next: Function) => {
-						const result = new (route.controller as any)()[
-							route.action
-						](req, res, next);
-						if (result instanceof Promise) {
-							result.then(
-								result =>
-									result !== null && result !== undefined
-										? res.send(result)
-										: undefined
-							);
-						} else if (result !== null && result !== undefined) {
-							res.json(result);
-						}
+				(app as any)[route.method](route.route, passport.authenticate(strategyName, { session: false }), (req: Request, res: Response, next: Function) => {
+					const result = new (route.controller as any)()[route.action](req, res, next);
+					if (result instanceof Promise) {
+						result.then(result => (result !== null && result !== undefined ? res.send(result) : undefined));
+					} else if (result !== null && result !== undefined) {
+						res.json(result);
 					}
-				);
+				});
 			} else {
-				(app as any)[route.method](
-					route.route,
-					(req: Request, res: Response, next: Function) => {
-						const result = new (route.controller as any)()[
-							route.action
-						](req, res, next);
-						if (result instanceof Promise) {
-							result.then(
-								result =>
-									result !== null && result !== undefined
-										? res.send(result)
-										: undefined
-							);
-						} else if (result !== null && result !== undefined) {
-							res.json(result);
-						}
+				(app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {
+					const result = new (route.controller as any)()[route.action](req, res, next);
+					if (result instanceof Promise) {
+						result.then(result => (result !== null && result !== undefined ? res.send(result) : undefined));
+					} else if (result !== null && result !== undefined) {
+						res.json(result);
 					}
-				);
+				});
 			}
 		});
 
 		server.listen(1811);
 
-		console.log(
-			"Express server has started on port 1811. Open http://localhost:1811/users to see results"
-		);
+		console.log("Express server has started on port 1811. Open http://localhost:1811/users to see results");
 	})
 	.catch(error => console.log(error));

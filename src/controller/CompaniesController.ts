@@ -19,180 +19,227 @@ import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
 
 export class CompaniesController {
+	private companyRepository = getRepository(Company);
+	private countryRepository = getRepository(Country);
+	private mediaRepository = getRepository(Media);
 
-    private companyRepository = getRepository(Company);
+	async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
+		const urlToken = req.params.urlToken as string;
+		const company = await this.companyRepository
+			.createQueryBuilder("company")
+			.leftJoinAndSelect("company.user", "user")
+			.leftJoinAndSelect("company.address", "address")
+			.leftJoinAndSelect("address.country", "country")
+			.leftJoinAndSelect("company.category", "category")
+			.leftJoinAndSelect("company.products", "product")
+			.where("company.urlToken = :urlToken", { urlToken })
+			.getOne();
 
-    async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
-        const urlToken = req.params.urlToken as string;
-        const company = await this.companyRepository.createQueryBuilder("company")
-            .leftJoinAndSelect("company.user", "user")
-            .leftJoinAndSelect("company.address", "address")
-            .leftJoinAndSelect("address.country", "country")
-            .leftJoinAndSelect("company.category", "category")
-            .leftJoinAndSelect("company.products", "product")
-            .where("company.urlToken = :urlToken", { urlToken })
-            .getOne();
+		if (!company) {
+			Methods.sendErrorResponse(resp, 404, "Vendor was not found");
+			return;
+		}
 
-        if (!company) {
-            Methods.sendErrorResponse(resp, 404, "Vendor was not found");
-            return;
-        }
+		const viewRepository = getRepository(View);
+		const viewToCreate = new View({
+			user: new User({ id: company.user.id }),
+			viewedBy: new User({ id: UserService.getAuthenticatedUserId(req) })
+		});
+		await viewRepository.save(viewToCreate);
 
-        const viewRepository = getRepository(View);
-        const viewToCreate = new View({
-            user: new User({ id: company.user.id }),
-            viewedBy: new User({ id: UserService.getAuthenticatedUserId(req) })
-        });
-        await viewRepository.save(viewToCreate);
+		const response = MapCompany.inCompaniesControllerGetByUrlTokenAsync(company);
+		return Methods.getJsonResponse(response);
+	}
 
-        const response = MapCompany.inCompaniesControllerGetByUrlTokenAsync(company);
-        return Methods.getJsonResponse(response);
-    }
+	async createAsync(req: Request, resp: Response, next: NextFunction) {
+		const company = new Company(req.body);
 
-    async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const company = new Company(req.body);
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
+		const validationResult = await validate(company);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
+		}
 
-        const validationResult = await validate(company);
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
-        }
+		// ------------------------------------------------------------------------
+		// Check for existing Entity
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Check for existing Entity
-        // ------------------------------------------------------------------------
+		const urlToken = company.name.toLowerCase().replace(/[^a-z]/g, "");
+		const dbCompany = await this.companyRepository.findOne({ urlToken });
+		if (!!dbCompany) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: ["A vendor with the same name already exists"]
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "A vendor with the same name already exists", false);
+		}
 
-        const urlToken = company.name.toLowerCase().replace(/[^a-z]/g, "");
-        const dbCompany = await this.companyRepository.findOne({ urlToken });
-        if (!!dbCompany) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: ["A vendor with the same name already exists"]
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "A vendor with the same name already exists", false);
-        }
+		// ------------------------------------------------------------------------
+		// Create New Entity
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Create New Entity
-        // ------------------------------------------------------------------------
+		const {
+			name,
+			logoUrl,
+			postalBox,
+			address,
+			phone,
+			website,
+			email,
+			backgroundCheck,
+			noBackgroundCheckReason,
+			registrationType,
+			registrationDate,
+			registrationNumber,
+			vatRegistrationNumber,
+			taxpayersIdentificationNumber,
+			averageAnnualContractValue,
+			highestSingularContractValue,
+			productsDescription,
+			category,
+			products,
+			documents
+		} = company;
+		const authUserId = UserService.getAuthenticatedUserId(req);
 
-        const { name, logoUrl, postalBox, address, phone, website, email, backgroundCheck, noBackgroundCheckReason, registrationType, registrationDate, registrationNumber, vatRegistrationNumber, taxpayersIdentificationNumber, averageAnnualContractValue, highestSingularContractValue, productsDescription, category, products, documents } = company;
-        const authUserId = UserService.getAuthenticatedUserId(req);
+		const companyToCreate = new Company({
+			name,
+			logoUrl,
+			postalBox,
+			phone,
+			website,
+			email,
+			backgroundCheck,
+			noBackgroundCheckReason,
+			registrationType,
+			registrationDate,
+			registrationNumber,
+			vatRegistrationNumber,
+			taxpayersIdentificationNumber,
+			averageAnnualContractValue,
+			highestSingularContractValue,
+			productsDescription,
+			verified: false,
+			address: new Address({
+				addressLine1: address.addressLine1,
+				city: address.city,
+				state: address.state
+				// country: new Country({ id: address.country.id })
+			}),
+			user: new User({ id: authUserId }),
+			category: new Category({ id: category.id }),
+			products: products.map(x => new Product({ id: x.id }))
+			// documents: !!documents ? documents.map(x => new Media({ id: x.id })) : null
+		});
 
-        const companyToCreate = new Company({
-            name, logoUrl, postalBox, phone, website, email, backgroundCheck, noBackgroundCheckReason, registrationType, registrationDate, registrationNumber, vatRegistrationNumber, taxpayersIdentificationNumber, averageAnnualContractValue, highestSingularContractValue, productsDescription,
-            verified: false,
-            address: new Address({
-                addressLine1: address.addressLine1,
-                city: address.city,
-                state: address.state,
-                country: new Country({ id: address.country.id })
-            }),
-            user: new User({ id: authUserId }),
-            category: new Category({ id: category.id }),
-            products: products.map(x => new Product({ id: x.id })),
-            documents: !!documents ? documents.map(x => new Media({ id: x.id })) : null
-        });
+		const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
+		companyToCreate.address.country = new Country({ id: defaultCountry.id });
 
-        const createdCompany = await this.companyRepository.save(companyToCreate);
-        const validResponse = new FormResponse<Company>({
-            isValid: true,
-            target: MapCompany.inUsersControllerCreateAsync(createdCompany)
-        });
-        return Methods.getJsonResponse(validResponse);
-    }
+		const createdCompany = await this.companyRepository.save(companyToCreate);
 
-    async updateAsync(req: Request, resp: Response, next: NextFunction) {
-        const company = new Company(req.body);
-        const validationResult = await validate(company);
+		if (!!documents) {
+			const mediaToUpdate = documents.map(x => new Media({ id: x.id, company: new Company({ id: createdCompany.id }) } as Media));
+			await this.mediaRepository.save(mediaToUpdate);
+		}
 
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
-        }
+		const validResponse = new FormResponse<Company>({
+			isValid: true,
+			target: MapCompany.inUsersControllerCreateAsync(createdCompany)
+		});
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        const authUserId = UserService.getAuthenticatedUserId(req);
-        if (company.user.id !== authUserId) {
-            Methods.sendErrorResponse(resp, 400);
-            return;
-        }
-        const dbCompany = await this.companyRepository.findOne({ id: company.id });
+	async updateAsync(req: Request, resp: Response, next: NextFunction) {
+		const company = new Company(req.body);
+		const validationResult = await validate(company);
 
-        if (!dbCompany) {
-            Methods.sendErrorResponse(resp, 404, "Vendor was not found");
-        }
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
+		}
 
-        const { name, logoUrl, postalBox, address, phone, website, email, registrationDate, registrationNumber, registrationType, productsDescription, category, products } = company;
+		const authUser = await UserService.getAuthenticatedUserAsync(req);
+		const dbCompany = await this.companyRepository.findOne({ id: company.id });
 
-        dbCompany.name = name;
-        dbCompany.logoUrl = logoUrl;
-        dbCompany.postalBox = postalBox;
-        dbCompany.address = new Address({ id: address.id });
-        dbCompany.phone = phone;
-        dbCompany.website = website;
-        dbCompany.email = email;
-        dbCompany.registrationDate = registrationDate;
-        dbCompany.registrationNumber = registrationNumber;
-        dbCompany.registrationType = registrationType;
-        dbCompany.productsDescription = productsDescription;
-        dbCompany.category = new Category({ id: category.id });
-        dbCompany.products = products.map(x => new Product({ id: x }));
+		if (!dbCompany) {
+			Methods.sendErrorResponse(resp, 404, "Vendor was not found");
+		}
 
-        const updatedCompany = await this.companyRepository.save(dbCompany);
-        const validResponse = new FormResponse<Company>({
-            isValid: true,
-            target: MapCompany.inUsersControllerUpdateAsync(updatedCompany)
-        });
-        return Methods.getJsonResponse(validResponse);
-    }
+		if (authUser.company.id !== dbCompany.id) {
+			Methods.sendErrorResponse(resp, 400);
+			return;
+		}
 
-    async verifyAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = req.params.id as string;
-        // const company = await this.companyRepository.findOne(id);
-        const company = await this.companyRepository.createQueryBuilder("company")
-            .leftJoinAndSelect("company.user", "user")
-            .leftJoinAndSelect("company.address", "address")
-            .leftJoinAndSelect("company.category", "category")
-            .leftJoinAndSelect("company.products", "product")
-            .where("company.id = :id", { id })
-            .getOne();
+		const { name, logoUrl, postalBox, address, phone, website, email, registrationDate, registrationNumber, registrationType, productsDescription } = company;
 
-        if (!company) {
-            Methods.sendErrorResponse(resp, 404, "Vendor was not found");
-            return;
-        }
+		dbCompany.name = name;
+		dbCompany.logoUrl = logoUrl;
+		dbCompany.postalBox = postalBox;
+		dbCompany.address = new Address({ id: address.id, country: new Country({ id: address.country.id }) });
+		dbCompany.phone = phone;
+		dbCompany.website = website;
+		dbCompany.email = email;
+		dbCompany.registrationDate = registrationDate;
+		dbCompany.registrationNumber = registrationNumber;
+		dbCompany.registrationType = registrationType;
+		dbCompany.productsDescription = productsDescription;
 
-        if (company.verified) {
-            Methods.sendErrorResponse(resp, 400, "Vendor has already been verified");
-            return;
-        }
+		const updatedCompany = await this.companyRepository.save(dbCompany);
+		const validResponse = new FormResponse<Company>({
+			isValid: true,
+			target: MapCompany.inUsersControllerUpdateAsync(updatedCompany)
+		});
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        company.verified = true;
+	async verifyAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = req.params.id as string;
+		// const company = await this.companyRepository.findOne(id);
+		const company = await this.companyRepository
+			.createQueryBuilder("company")
+			.leftJoinAndSelect("company.user", "user")
+			.leftJoinAndSelect("company.address", "address")
+			.leftJoinAndSelect("company.category", "category")
+			.leftJoinAndSelect("company.products", "product")
+			.where("company.id = :id", { id })
+			.getOne();
 
-        const verifiedCompany = await this.companyRepository.save(company);
-        const response = MapCompany.inUsersControllerVerifyAsync(verifiedCompany);
+		if (!company) {
+			Methods.sendErrorResponse(resp, 404, "Vendor was not found");
+			return;
+		}
 
-        const notification = new Notification({
-            user: new User({ id: company.user.id }),
-            content: `Your organization, ${company.name} has been successfully! Your profile will now be available to other members of the network!`,
-            type: NotificationTypeEnum.VerificationSuccess,
-            hasBeenRead: false
-        } as Notification);
+		if (company.verified) {
+			Methods.sendErrorResponse(resp, 400, "Vendor has already been verified");
+			return;
+		}
 
-        try {
-            await NotificationService.sendNotificationAsync(req, notification);
-        } catch (error) { }
+		company.verified = true;
 
-        return Methods.getJsonResponse(response, "Vendor was successfully verified");
-    }
+		const verifiedCompany = await this.companyRepository.save(company);
+		const response = MapCompany.inUsersControllerVerifyAsync(verifiedCompany);
+
+		const notification = new Notification({
+			user: new User({ id: company.user.id }),
+			content: `Your organization, ${company.name} has been successfully! Your profile will now be available to other members of the network!`,
+			type: NotificationTypeEnum.VerificationSuccess,
+			hasBeenRead: false
+		} as Notification);
+
+		try {
+			await NotificationService.sendNotificationAsync(req, notification);
+		} catch (error) {}
+
+		return Methods.getJsonResponse(response, "Vendor was successfully verified");
+	}
 }

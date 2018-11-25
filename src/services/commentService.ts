@@ -20,6 +20,7 @@ import { Constants } from "../shared/constants";
 export namespace CommentService {
 	export async function addCommentAsync(req: Request, comment: Comment): Promise<IJsonResponse<FormResponse<Comment>>> {
 		const validationResult = await validate(comment);
+		const authUser = await UserService.getAuthenticatedUserAsync(req);
 
 		if (validationResult.length > 0) {
 			const invalidResponse = new FormResponse<Comment>({
@@ -44,10 +45,16 @@ export namespace CommentService {
 			timelinePhoto: !!timelinePhoto && isRootComment ? new TimelinePhoto({ id: timelinePhoto.id }) : null,
 			webinar: !!webinar && isRootComment ? new Webinar({ id: webinar.id }) : null,
 			parentComment: !!parentComment ? new Comment({ id: parentComment.id }) : null,
-			author: new User({ id: UserService.getAuthenticatedUserId(req) })
+			author: new User({ id: authUser.id })
 		} as Comment);
 
 		const createdComment = await commentRepository.save(commentToCreate);
+
+		createdComment.author.firstName = authUser.firstName;
+		createdComment.author.lastName = authUser.lastName;
+		createdComment.author.profilePhoto = authUser.profilePhoto;
+		createdComment.author.company = authUser.company;
+		createdComment.author.type = authUser.type;
 
 		const validResponse = new FormResponse<Comment>({
 			isValid: true,
@@ -72,6 +79,7 @@ export namespace CommentService {
 			.where(`${escapeAlias("treeEntity")}.${escapeColumn(parentPropertyName)} IS NULL`)
 			.leftJoinAndSelect("treeEntity.author", "author")
 			.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+			.leftJoinAndSelect("author.company", "company")
 			.leftJoinAndSelect("treeEntity.article", "article")
 			.leftJoinAndSelect("treeEntity.discussion", "discussion")
 			.leftJoinAndSelect("treeEntity.timelineUpdate", "timelineUpdate")
@@ -93,6 +101,7 @@ export namespace CommentService {
 			.createDescendantsQueryBuilder("treeEntity", "treeClosure", entity)
 			.leftJoinAndSelect("treeEntity.author", "author")
 			.leftJoinAndSelect("author.profilePhoto", "profilePhoto")
+			.leftJoinAndSelect("author.company", "company")
 			.orderBy("treeEntity.createdDate", "DESC")
 			.getRawAndEntities()
 			.then(entitiesAndScalars => {

@@ -62,6 +62,7 @@ export class ArticlesController {
 			.createQueryBuilder("article")
 			.where("article.urlToken = :urlToken", { urlToken })
 			.leftJoinAndSelect("article.author", "user")
+			.leftJoinAndSelect("user.company", "company")
 			.leftJoinAndSelect("article.featuredImage", "featuredImage")
 			.leftJoinAndSelect("article.category", "category")
 			.getOne();

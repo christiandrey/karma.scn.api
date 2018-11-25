@@ -122,6 +122,8 @@ export class WebinarsController {
 
 			try {
 				await NotificationService.sendNotificationToAllAsync(req, notification);
+				//TODO: Send Email reminders to all users 1 hour before webinar starts
+				//TODO: Send Email reminder to anchor telling him that he has been assigned to anchor a webinar. The email should contain the link to the webinar.
 			} catch (error) {}
 		}
 
@@ -316,6 +318,11 @@ export class WebinarsController {
 		const comment = new Comment(req.body);
 		comment.webinar = new Webinar({ id: webinar.id });
 
-		return await CommentService.addCommentAsync(req, comment);
+		const response = await CommentService.addCommentAsync(req, comment);
+
+		if (response.status) {
+			CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
+		}
+		return response;
 	}
 }

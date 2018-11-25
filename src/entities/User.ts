@@ -16,6 +16,7 @@ import { Webinar } from "./Webinar";
 import { Address } from "./Address";
 import { Methods } from "../shared/methods";
 import { SocketRecord } from "./SocketRecord";
+import { IsNotEmptyForMember, MaxLengthForMember } from "../shared/decorators";
 
 @Entity()
 export class User extends BaseEntity {
@@ -44,7 +45,8 @@ export class User extends BaseEntity {
 		eager: true,
 		cascade: true
 	})
-	@IsNotEmpty()
+	// @IsNotEmpty()
+	@IsNotEmptyForMember("type")
 	@JoinColumn()
 	address?: Address;
 
@@ -122,7 +124,8 @@ export class User extends BaseEntity {
 		length: 500,
 		nullable: true
 	})
-	@MaxLength(500)
+	// @MaxLength(500)
+	@MaxLengthForMember("type", 500)
 	description: string;
 
 	@OneToMany(type => Experience, experience => experience.user, {
@@ -138,10 +141,16 @@ export class User extends BaseEntity {
 	@JoinTable()
 	skills: Array<Skill>;
 
-	@OneToMany(type => Article, article => article.author)
+	@OneToMany(type => Article, article => article.author, {
+		cascade: false,
+		persistence: false
+	})
 	articles: Array<Article>;
 
-	@OneToMany(type => Resource, resource => resource.user)
+	@OneToMany(type => Resource, resource => resource.user, {
+		cascade: false,
+		persistence: false
+	})
 	resources: Array<Resource>;
 
 	@OneToMany(type => View, view => view.user, {
@@ -151,13 +160,22 @@ export class User extends BaseEntity {
 	})
 	views: Array<View>;
 
-	@OneToMany(type => SocketRecord, socketRecord => socketRecord.user)
+	@OneToMany(type => SocketRecord, socketRecord => socketRecord.user, {
+		cascade: false,
+		persistence: false
+	})
 	socketRecords: Array<SocketRecord>;
 
-	@OneToMany(type => Notification, notification => notification.user)
+	@OneToMany(type => Notification, notification => notification.user, {
+		cascade: false,
+		persistence: false
+	})
 	notifications: Array<Notification>;
 
-	@ManyToMany(type => Webinar, webinar => webinar.participants)
+	@ManyToMany(type => Webinar, webinar => webinar.participants, {
+		cascade: false,
+		persistence: false
+	})
 	attendedWebinars: Array<Webinar>;
 
 	@BeforeInsert()

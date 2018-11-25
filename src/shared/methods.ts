@@ -270,7 +270,7 @@ export namespace Methods {
 	// -------------------------------------------------------------------------------------------------
 	/** Remap properties in a target entity to those of a source entity if those properties have changed */
 	export function toSentenceCase(text: string): string {
-		return `${text[0].toUpperCase()}${text[1].slice(1).toLowerCase()}`;
+		return `${text[0].toUpperCase()}${text.slice(1).toLowerCase()}`;
 	}
 
 	function getDescendantProp(source: any, property: string) {

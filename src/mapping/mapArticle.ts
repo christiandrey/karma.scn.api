@@ -3,6 +3,7 @@ import { User } from "../entities/User";
 import { Media } from "../entities/Media";
 import { MapComment } from "./mapComment";
 import { Comment } from "../entities/Comment";
+import { Company } from "../entities/Company";
 
 export namespace MapArticle {
 	export function inArticlesControllerGetLatestAsync(article: Article): Article {
@@ -66,7 +67,8 @@ export namespace MapArticle {
 				id: author.id,
 				firstName: author.firstName,
 				lastName: author.lastName,
-				urlToken: author.urlToken
+				urlToken: author.urlToken,
+				company: !!author.company ? new Company({ id: author.company.id, name: author.company.name }) : null
 			} as User,
 			featuredImage: {
 				id: featuredImage.id,
