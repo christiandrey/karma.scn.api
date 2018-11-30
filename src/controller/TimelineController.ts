@@ -111,7 +111,8 @@ export class TimelineController {
 
 			const webinars = await this.webinarRepository
 				.createQueryBuilder("webinar")
-				.where("status = :status", { status: WebinarStatusEnum.Finished })
+				.where("status = :status", { status: WebinarStatusEnum.Created })
+				.orWhere("status = :status", { status: WebinarStatusEnum.Started })
 				.getMany();
 
 			const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
