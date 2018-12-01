@@ -22,7 +22,7 @@ export class ConnectionsController {
 			.leftJoinAndSelect("connection.user", "user")
 			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
 			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
-			.where("user.id = :userId", { userId: id })
+			.andWhere("user.id = :userId", { userId: id })
 			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
 			.getCount();
 

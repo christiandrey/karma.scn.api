@@ -40,6 +40,7 @@ export class UsersController {
 	async getVendorsAsync(req: Request, resp: Response, next: NextFunction) {
 		const users = await this.userRepository
 			.createQueryBuilder("user")
+			.where("user.company IS NOT NULL")
 			.leftJoinAndSelect("user.company", "company")
 			.leftJoinAndSelect("company.category", "category")
 			.leftJoinAndSelect("company.address", "address")
@@ -48,7 +49,8 @@ export class UsersController {
 			.orderBy("user.createdDate", "DESC")
 			.getMany();
 
-		const response = users.map(u => MapCompany.inUsersControllerGetVendorsAsync(u.company));
+		// const response = users.map(u => MapCompany.inUsersControllerGetVendorsAsync(u.company));
+		const response = users.map(u => MapUser.inAllControllers(u));
 
 		return Methods.getJsonResponse(response, `${users.length} vendors found`);
 	}
@@ -88,7 +90,7 @@ export class UsersController {
 				similarCompanies = await this.userRepository
 					.createQueryBuilder("user")
 					.where("user.id <> :authUserId", { authUserId: authUser.id })
-					.where("user.company <> NULL")
+					.where("user.company IS NOT NULL")
 					.leftJoinAndSelect("user.company", "company")
 					.leftJoinAndSelect("company.category", "category")
 					.leftJoinAndSelect("company.address", "address")

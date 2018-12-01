@@ -49,8 +49,8 @@ export const Routes = [
 		action: "seedAsync"
 	},
 	{
-		method: "get",
-		route: "/search/:type/:category/:location",
+		method: "post",
+		route: "/search",
 		controller: SearchController,
 		action: "searchAsync"
 	},

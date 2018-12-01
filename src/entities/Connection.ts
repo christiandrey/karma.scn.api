@@ -6,29 +6,27 @@ import { IsNotEmpty } from "class-validator";
 
 @Entity()
 export class Connection extends BaseEntity {
+	@ManyToOne(type => User, user => user.connections, {
+		eager: true
+	})
+	user: User;
 
-    @ManyToOne(type => User, user => user.connections, {
-        eager: true
-    })
-    user: User;
+	@ManyToOne(type => User, {
+		eager: true
+	})
+	@IsNotEmpty()
+	connectedTo: User;
 
-    @OneToOne(type => User, {
-        eager: true,
-    })
-    @JoinColumn()
-    @IsNotEmpty()
-    connectedTo: User;
+	@Column()
+	status: ConnectionStatusEnum;
 
-    @Column()
-    status: ConnectionStatusEnum;
+	constructor(dto?: Connection | any) {
+		super(dto);
 
-    constructor(dto?: Connection | any) {
-        super(dto);
+		dto = dto || ({} as Connection);
 
-        dto = dto || {} as Connection;
-
-        this.user = dto.user ? new User(dto.user) : null;
-        this.connectedTo = dto.connectedTo ? new User(dto.connectedTo) : null;
-        this.status = dto.status;
-    }
+		this.user = dto.user ? new User(dto.user) : null;
+		this.connectedTo = dto.connectedTo ? new User(dto.connectedTo) : null;
+		this.status = dto.status;
+	}
 }
