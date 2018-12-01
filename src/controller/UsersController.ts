@@ -42,6 +42,8 @@ export class UsersController {
 			.createQueryBuilder("user")
 			.leftJoinAndSelect("user.company", "company")
 			.leftJoinAndSelect("company.category", "category")
+			.leftJoinAndSelect("company.address", "address")
+			.leftJoinAndSelect("address.country", "country")
 			.where("company.verified = :verified", { verified: true })
 			.orderBy("user.createdDate", "DESC")
 			.getMany();

@@ -45,6 +45,7 @@ export class ConnectionsController {
 			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
 			.leftJoinAndSelect("connectedToAddress.country", "connectedToAddressCountry")
 			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
+			.where("connection.status = :status", { status: ConnectionStatusEnum.Pending })
 			.where("user.id = :userId", { userId: id })
 			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
 			.orderBy("connection.createdDate", "DESC")
