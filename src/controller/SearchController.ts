@@ -26,8 +26,10 @@ export class SearchController {
 		let members = new Array<User>();
 		let vendors = new Array<User>();
 
-		if (!type) {
-			members = await this.findMembers(location, query);
+		if (type == undefined || type === null) {
+			if (!category) {
+				members = await this.findMembers(location, query);
+			}
 			vendors = await this.findVendors(category, location, query);
 		}
 

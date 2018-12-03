@@ -1,4 +1,4 @@
-import { getRepository } from "typeorm";
+import { getRepository, Brackets } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { Methods } from "../shared/methods";
 import { validate } from "class-validator";
@@ -10,20 +10,23 @@ import { MapConnection } from "../mapping/mapConnection";
 import { Notification } from "../entities/Notification";
 import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
 
 export class ConnectionsController {
 	private connectionRepository = getRepository(Connection);
+	private userRepository = getRepository(User);
 
 	async getConnectionsCountAsync(req: Request, resp: Response, next: NextFunction) {
 		const id = UserService.getAuthenticatedUserId(req);
 
 		const connectionCount = await this.connectionRepository
 			.createQueryBuilder("connection")
-			.leftJoinAndSelect("connection.user", "user")
-			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
 			.where("connection.status = :status", { status: ConnectionStatusEnum.Accepted })
-			.andWhere("user.id = :userId", { userId: id })
-			.orWhere("connectedTo.id = :connectedToUserId", { connectedToUserId: id })
+			.andWhere(
+				new Brackets(qb => {
+					qb.where("connection.user.id = :userId", { userId: id }).orWhere("connection.connectedTo.id = :connectedToUserId", { connectedToUserId: id });
+				})
+			)
 			.getCount();
 
 		return Methods.getJsonResponse({ count: connectionCount }, `${connectionCount} connections found`);
@@ -35,11 +38,17 @@ export class ConnectionsController {
 		const connections = await this.connectionRepository
 			.createQueryBuilder("connection")
 			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("user.company", "userCompany")
+			.leftJoinAndSelect("userCompany.address", "userCompanyAddress")
+			.leftJoinAndSelect("userCompanyAddress.country", "userCompanyAddressCountry")
 			.leftJoinAndSelect("user.profilePhoto", "userProfilePhoto")
 			.leftJoinAndSelect("user.experiences", "userExperiences")
 			.leftJoinAndSelect("user.address", "userAddress")
 			.leftJoinAndSelect("userAddress.country", "userAddressCountry")
 			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.leftJoinAndSelect("connectedTo.company", "connectedToCompany")
+			.leftJoinAndSelect("connectedToCompany.address", "connectedToCompanyAddress")
+			.leftJoinAndSelect("connectedToCompanyAddress.country", "connectedToCompanyAddressCountry")
 			.leftJoinAndSelect("connectedTo.profilePhoto", "connectedToProfilePhoto")
 			.leftJoinAndSelect("connectedTo.experiences", "connectedToExperiences")
 			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
@@ -93,11 +102,17 @@ export class ConnectionsController {
 		const connections = await this.connectionRepository
 			.createQueryBuilder("connection")
 			.leftJoinAndSelect("connection.user", "user")
+			.leftJoinAndSelect("user.company", "userCompany")
+			.leftJoinAndSelect("userCompany.address", "userCompanyAddress")
+			.leftJoinAndSelect("userCompanyAddress.country", "userCompanyAddressCountry")
 			.leftJoinAndSelect("user.profilePhoto", "userProfilePhoto")
 			.leftJoinAndSelect("user.experiences", "userExperiences")
 			.leftJoinAndSelect("user.address", "userAddress")
 			.leftJoinAndSelect("userAddress.country", "userAddressCountry")
 			.leftJoinAndSelect("connection.connectedTo", "connectedTo")
+			.leftJoinAndSelect("connectedTo.company", "connectedToCompany")
+			.leftJoinAndSelect("connectedToCompany.address", "connectedToCompanyAddress")
+			.leftJoinAndSelect("connectedToCompanyAddress.country", "connectedToCompanyAddressCountry")
 			.leftJoinAndSelect("connectedTo.profilePhoto", "connectedToProfilePhoto")
 			.leftJoinAndSelect("connectedTo.experiences", "connectedToExperiences")
 			.leftJoinAndSelect("connectedTo.address", "connectedToAddress")
@@ -144,13 +159,17 @@ export class ConnectionsController {
 		});
 
 		const createdConnection = await this.connectionRepository.save(connectionToCreate);
+		createdConnection.connectedTo = await this.userRepository.findOne(createdConnection.connectedTo.id);
 
 		// ------------------------------------------------------------------------
 		// Send notification to connectedTo user
 		// ------------------------------------------------------------------------
 		const notification = new Notification({
 			user: new User({ id: createdConnection.connectedTo.id }),
-			content: `${authUser.firstName} ${authUser.lastName} has just requested to connect with you.`,
+			content:
+				authUser.type === UserTypeEnum.Member
+					? `${authUser.firstName} ${authUser.lastName} has just requested to connect with you.`
+					: `${authUser.company.name} has just requested to connect with you.`,
 			type: NotificationTypeEnum.ConnectionRequest,
 			data: JSON.stringify({
 				id: createdConnection.id
@@ -190,16 +209,21 @@ export class ConnectionsController {
 		connection.status = ConnectionStatusEnum.Accepted;
 
 		const acceptedConnection = await this.connectionRepository.save(connection);
+		acceptedConnection.connectedTo = await this.userRepository.findOne(acceptedConnection.connectedTo.id);
 
 		// ------------------------------------------------------------------------
 		// Send notification to connectedTo user
 		// ------------------------------------------------------------------------
 		const notification = new Notification({
 			user: new User({ id: acceptedConnection.user.id }),
-			content: `${acceptedConnection.connectedTo.firstName} ${acceptedConnection.connectedTo.lastName} has accepted your connection request!`,
+			content:
+				acceptedConnection.connectedTo.type === UserTypeEnum.Member
+					? `${acceptedConnection.connectedTo.firstName} ${acceptedConnection.connectedTo.lastName} has accepted your connection request!`
+					: `${acceptedConnection.connectedTo.company} has accepted your connection request!`,
 			type: NotificationTypeEnum.ConnectionResult,
 			data: JSON.stringify({
-				id: acceptedConnection.connectedTo.id
+				type: acceptedConnection.connectedTo.type,
+				urlToken: acceptedConnection.connectedTo.urlToken
 			}),
 			hasBeenRead: false
 		} as Notification);
