@@ -112,12 +112,15 @@ export class UsersController {
 
 	async getProfileAsync(req: Request, resp: Response, next: NextFunction) {
 		const authUser = await UserService.getAuthenticatedUserAsync(req);
+		const thisWeekNumber = moment().isoWeek();
+
+		authUser.views = authUser.views.filter(v => moment(v.createdDate).isoWeek() === thisWeekNumber);
 
 		if (authUser.type === UserTypeEnum.Member) {
 			const response = MapUser.inUsersControllerGetProfileAsync(authUser);
 			return Methods.getJsonResponse(response);
 		} else {
-			const { id, type, firstName, lastName, email, phone, company, cpdPoints } = authUser;
+			const { id, type, firstName, lastName, email, phone, company, cpdPoints, views } = authUser;
 			const response = new User({
 				id,
 				type,
@@ -126,6 +129,7 @@ export class UsersController {
 				lastName,
 				email,
 				phone,
+				views,
 				company: !!company ? MapCompany.inUsersControllerGetProfileAsync(company) : null
 			} as User);
 			return Methods.getJsonResponse(response);

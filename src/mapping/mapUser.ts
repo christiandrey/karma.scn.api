@@ -152,6 +152,7 @@ export namespace MapUser {
 			description,
 			experiences,
 			certifications,
+			views,
 			skills
 		} = user;
 		return {
@@ -185,6 +186,7 @@ export namespace MapUser {
 			address: MapAddress.inAllControllers(address),
 			experiences: !!experiences ? experiences.map(x => MapExperience.inAllControllers(x)) : new Array<Experience>(),
 			skills: !!skills ? skills.map(x => MapSkill.inAllControllers(x)) : new Array<Skill>(),
+			views: !!views ? views.map(x => new View({ id: x.id })) : new Array<View>(),
 			certifications: !!certifications ? certifications.map(x => MapCertificate.inAllControllers(x)) : new Array<Certificate>()
 		} as User;
 	}
