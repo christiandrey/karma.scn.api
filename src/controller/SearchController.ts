@@ -62,6 +62,7 @@ export class SearchController {
 
 		let users = await dbQuery
 			.leftJoinAndSelect("user.profilePhoto", "profilePhoto")
+			.leftJoinAndSelect("user.views", "view")
 			.leftJoinAndSelect("user.address", "address")
 			.leftJoinAndSelect("address.country", "country")
 			.take(10)
@@ -84,6 +85,7 @@ export class SearchController {
 			.createQueryBuilder("user")
 			.where("user.type = :type", { type: UserTypeEnum.Vendor })
 			.andWhere("user.company IS NOT NULL")
+			.leftJoinAndSelect("user.views", "view")
 			.leftJoinAndSelect("user.company", "company")
 			.leftJoinAndSelect("company.category", "category");
 

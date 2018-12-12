@@ -4,6 +4,8 @@ import { MapProduct } from "./mapProduct";
 import { MapCategory } from "./mapCategory";
 import { MapAddress } from "./mapAddress";
 import { User } from "../entities/User";
+import { MapMedia } from "./mapMedia";
+import { Media } from "../entities/Media";
 
 export namespace MapCompany {
 	export function inSearchControllerSearchAsync(company: Company): Company {
@@ -106,8 +108,11 @@ export namespace MapCompany {
 			vatRegistrationNumber,
 			averageAnnualContractValue,
 			highestSingularContractValue,
+			backgroundCheck,
+			noBackgroundCheckReason,
 			category,
 			products,
+			documents,
 			user
 		} = company;
 		return {
@@ -128,9 +133,12 @@ export namespace MapCompany {
 			vatRegistrationNumber,
 			averageAnnualContractValue,
 			highestSingularContractValue,
+			backgroundCheck,
+			noBackgroundCheckReason,
 			address: !!address ? MapAddress.inAllControllers(address) : null,
 			category: !!category ? MapCategory.inAllControllers(category) : null,
 			products: !!products ? products.map(x => MapProduct.inAllControllers(x)) : new Array<Product>(),
+			documents: !!documents ? documents.map(x => MapMedia.inAllControllers(x)) : new Array<Media>(),
 			user: new User({
 				id: user.id,
 				urlToken: user.urlToken,

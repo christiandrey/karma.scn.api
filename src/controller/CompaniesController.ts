@@ -17,6 +17,7 @@ import { Country } from "../entities/Country";
 import { Notification } from "../entities/Notification";
 import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
 
 export class CompaniesController {
 	private companyRepository = getRepository(Company);
@@ -32,6 +33,7 @@ export class CompaniesController {
 			.leftJoinAndSelect("address.country", "country")
 			.leftJoinAndSelect("company.category", "category")
 			.leftJoinAndSelect("company.products", "product")
+			.leftJoinAndSelect("company.documents", "document")
 			.where("company.urlToken = :urlToken", { urlToken })
 			.getOne();
 
@@ -39,13 +41,17 @@ export class CompaniesController {
 			Methods.sendErrorResponse(resp, 404, "Vendor was not found");
 			return;
 		}
-
+		const authUser = await UserService.getAuthenticatedUserAsync(req);
 		const viewRepository = getRepository(View);
 		const viewToCreate = new View({
 			user: new User({ id: company.user.id }),
-			viewedBy: new User({ id: UserService.getAuthenticatedUserId(req) })
+			viewedBy: new User({ id: authUser.id })
 		});
 		await viewRepository.save(viewToCreate);
+
+		if (authUser.type !== UserTypeEnum.Admin) {
+			company.documents === null;
+		}
 
 		const response = MapCompany.inCompaniesControllerGetByUrlTokenAsync(company);
 		return Methods.getJsonResponse(response);

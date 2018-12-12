@@ -68,7 +68,8 @@ export namespace MapUser {
 							organization: user.latestExperience.organization
 					  }
 					: null,
-			address: !!user.address ? MapAddress.inAllControllers(user.address) : null
+			address: !!user.address ? MapAddress.inAllControllers(user.address) : null,
+			views: !!user.views ? user.views.map(x => new View({ id: x.id })) : new Array<View>()
 		} as User;
 	}
 
@@ -211,7 +212,8 @@ export namespace MapUser {
 			profilePhoto,
 			experiences,
 			certifications,
-			skills
+			skills,
+			views
 		} = user;
 		return {
 			id,
@@ -244,7 +246,8 @@ export namespace MapUser {
 			address: MapAddress.inAllControllers(address),
 			experiences: !!experiences ? experiences.map(x => MapExperience.inAllControllers(x)) : new Array<Experience>(),
 			skills: !!skills ? skills.map(x => MapSkill.inAllControllers(x)) : new Array<Skill>(),
-			certifications: !!certifications ? certifications.map(x => MapCertificate.inAllControllers(x)) : new Array<Certificate>()
+			certifications: !!certifications ? certifications.map(x => MapCertificate.inAllControllers(x)) : new Array<Certificate>(),
+			views: !!user.views ? user.views.map(x => new View({ id: x.id, createdDate: x.createdDate })) : new Array<View>()
 		} as User;
 	}
 }

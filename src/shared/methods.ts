@@ -132,7 +132,7 @@ export namespace Methods {
 				return "image/bmp";
 			case ".png":
 				return "image/png";
-			case "pdf":
+			case ".pdf":
 				return "application/pdf";
 			default:
 				return undefined;
