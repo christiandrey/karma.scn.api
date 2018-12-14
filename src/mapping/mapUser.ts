@@ -51,6 +51,7 @@ export namespace MapUser {
 			company: !!user.company
 				? new Company({
 						id: user.company.id,
+						verified: user.company.verified,
 						address: !!user.company.address ? MapAddress.inAllControllers(user.company.address) : null,
 						name: user.company.name,
 						logoUrl: user.company.logoUrl,

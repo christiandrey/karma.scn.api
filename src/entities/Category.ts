@@ -6,35 +6,36 @@ import { Methods } from "../shared/methods";
 
 @Entity()
 export class Category extends BaseEntity {
+	@Column()
+	name: string;
 
-    @Column()
-    name: string;
+	@Column()
+	@IsNotEmpty()
+	@Matches(/^[a-zA-Z0-9\s&-]*$/)
+	title: string;
 
-    @Column()
-    @IsNotEmpty()
-    @Matches(/^[a-zA-Z0-9\s&-]*$/)
-    title: string;
+	@OneToMany(type => Product, product => product.category, {
+		persistence: false
+	})
+	products: Array<Product>;
 
-    @OneToMany(type => Product, product => product.category)
-    products: Array<Product>;
+	@BeforeInsert()
+	createCategoryName() {
+		this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+	}
 
-    @BeforeInsert()
-    createCategoryName() {
-        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
-    }
+	@BeforeUpdate()
+	updateCategoryName() {
+		this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+	}
 
-    @BeforeUpdate()
-    updateCategoryName() {
-        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
-    }
+	constructor(dto?: Category | any) {
+		super(dto);
 
-    constructor(dto?: Category | any) {
-        super(dto);
+		dto = dto || ({} as Category);
 
-        dto = dto || {} as Category;
-
-        this.name = dto.name;
-        this.title = dto.title;
-        this.products = dto.products ? dto.products.map(p => new Product(p)) : null;
-    }
+		this.name = dto.name;
+		this.title = dto.title;
+		this.products = dto.products ? dto.products.map(p => new Product(p)) : null;
+	}
 }

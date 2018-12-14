@@ -42,10 +42,30 @@ export class UsersController {
 			.createQueryBuilder("user")
 			.where("user.company IS NOT NULL")
 			.leftJoinAndSelect("user.company", "company")
+			.leftJoinAndSelect("user.views", "views")
 			.leftJoinAndSelect("company.category", "category")
 			.leftJoinAndSelect("company.address", "address")
 			.leftJoinAndSelect("address.country", "country")
 			.where("company.verified = :verified", { verified: true })
+			.orderBy("user.createdDate", "DESC")
+			.getMany();
+
+		// const response = users.map(u => MapCompany.inUsersControllerGetVendorsAsync(u.company));
+		const response = users.map(u => MapUser.inAllControllers(u));
+
+		return Methods.getJsonResponse(response, `${users.length} vendors found`);
+	}
+
+	async getPendingVendorsAsync(req: Request, resp: Response, next: NextFunction) {
+		const users = await this.userRepository
+			.createQueryBuilder("user")
+			.where("user.company IS NOT NULL")
+			.leftJoinAndSelect("user.company", "company")
+			.leftJoinAndSelect("user.views", "views")
+			.leftJoinAndSelect("company.category", "category")
+			.leftJoinAndSelect("company.address", "address")
+			.leftJoinAndSelect("address.country", "country")
+			.where("company.verified = :verified", { verified: false })
 			.orderBy("user.createdDate", "DESC")
 			.getMany();
 

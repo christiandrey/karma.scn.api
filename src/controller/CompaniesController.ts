@@ -215,8 +215,10 @@ export class CompaniesController {
 			.createQueryBuilder("company")
 			.leftJoinAndSelect("company.user", "user")
 			.leftJoinAndSelect("company.address", "address")
+			.leftJoinAndSelect("address.country", "country")
 			.leftJoinAndSelect("company.category", "category")
 			.leftJoinAndSelect("company.products", "product")
+			.leftJoinAndSelect("company.documents", "documents")
 			.where("company.id = :id", { id })
 			.getOne();
 

@@ -195,6 +195,14 @@ export const Routes = [
 	},
 	{
 		method: "get",
+		route: "/users/vendors/pending",
+		controller: UsersController,
+		action: "getPendingVendorsAsync",
+		admin: true,
+		protected: true
+	},
+	{
+		method: "get",
 		route: "/users/me/lite",
 		controller: UsersController,
 		action: "getProfileLiteAsync",
@@ -281,7 +289,7 @@ export const Routes = [
 	},
 	{
 		method: "delete",
-		route: "/categories",
+		route: "/categories/:id",
 		controller: CategoriesController,
 		action: "deleteAsync",
 		protected: true,

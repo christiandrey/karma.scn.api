@@ -8,103 +8,102 @@ import { Methods } from "../shared/methods";
 import { MapCategory } from "../mapping/mapCategory";
 
 export class CategoriesController {
+	private categoryRepository = getRepository(Category);
 
-    private categoryRepository = getRepository(Category);
+	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
+		const categories = await this.categoryRepository
+			.createQueryBuilder("category")
+			.leftJoinAndSelect("category.products", "product")
+			.orderBy("category.title", "ASC")
+			.getMany();
 
-    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-        const categories = await this.categoryRepository.find({
-            order: {
-                title: "ASC"
-            }
-        });
+		const response = categories.map(x => MapCategory.inAllControllers(x));
 
-        const response = categories.map(x => MapCategory.inAllControllers(x));
+		return Methods.getJsonResponse(response, `${categories.length} categories found`);
+	}
 
-        return Methods.getJsonResponse(response, `${categories.length} categories found`);
-    }
+	async createAsync(req: Request, resp: Response, next: NextFunction) {
+		const category = new Category(req.body);
 
-    async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const category = new Category(req.body);
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
+		const validationResult = await validate(category);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
+		}
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
-        const validationResult = await validate(category);
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
-        }
+		// ------------------------------------------------------------------------
+		// Check for existing Entity
+		// ------------------------------------------------------------------------
+		const dbCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
+		if (!!dbCategory) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: ["A category with the same title already exists"]
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "A category with the same title already exists", false);
+		}
 
-        // ------------------------------------------------------------------------
-        // Check for existing Entity
-        // ------------------------------------------------------------------------
-        const dbCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
-        if (!!dbCategory) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: ["A category with the same title already exists"]
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "A category with the same title already exists", false);
-        }
+		// ------------------------------------------------------------------------
+		// Create New Entity
+		// ------------------------------------------------------------------------
+		const categoryToCreate = new Category({
+			title: category.title
+		});
 
-        // ------------------------------------------------------------------------
-        // Create New Entity
-        // ------------------------------------------------------------------------
-        const categoryToCreate = new Category({
-            title: category.title
-        });
+		const createdCategory = await this.categoryRepository.save(categoryToCreate);
+		const validResponse = new FormResponse<Category>({
+			isValid: true,
+			target: MapCategory.inCategoriesControllerCreateAsync(createdCategory)
+		});
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        const createdCategory = await this.categoryRepository.save(categoryToCreate);
-        const validResponse = new FormResponse<Category>({
-            isValid: true,
-            target: MapCategory.inCategoriesControllerCreateAsync(createdCategory)
-        });
-        return Methods.getJsonResponse(validResponse);
-    }
+	async updateAsync(req: Request, resp: Response, next: NextFunction) {
+		const category = new Category(req.body);
+		const validationResult = await validate(category);
 
-    async updateAsync(req: Request, resp: Response, next: NextFunction) {
-        const category = new Category(req.body);
-        const validationResult = await validate(category);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
+		}
 
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
-        }
+		const dbCategory = await this.categoryRepository.findOne({ id: category.id });
 
-        const dbCategory = await this.categoryRepository.findOne({ id: category.id });
+		if (!dbCategory) {
+			Methods.sendErrorResponse(resp, 404, "Category was not found");
+			return;
+		}
 
-        if (!dbCategory) {
-            Methods.sendErrorResponse(resp, 404, "Category was not found");
-            return;
-        }
+		dbCategory.title = category.title;
 
-        dbCategory.title = category.title;
+		const updatedCategory = await this.categoryRepository.save(dbCategory);
+		const validResponse = new FormResponse<Category>({
+			isValid: true,
+			target: MapCategory.inCategoriesControllerUpdateAsync(updatedCategory)
+		});
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        const updatedCategory = await this.categoryRepository.save(dbCategory);
-        const validResponse = new FormResponse<Category>({
-            isValid: true,
-            target: MapCategory.inCategoriesControllerUpdateAsync(updatedCategory)
-        });
-        return Methods.getJsonResponse(validResponse);
-    }
+	async deleteAsync(req: Request, resp: Response, next: NextFunction) {
+		const categoryToDelete = await this.categoryRepository.findOne(req.params.id);
 
-    async deleteAsync(req: Request, resp: Response, next: NextFunction) {
-        const categoryToDelete = await this.categoryRepository.findOne(req.params.id);
-
-        if (!!categoryToDelete) {
-            try {
-                const deletedCategory = await this.categoryRepository.remove(categoryToDelete);
-                return Methods.getJsonResponse(MapCategory.inCategoriesControllerDeleteAsync(deletedCategory), "Delete operation was successful");
-            } catch (error) {
-                return Methods.getJsonResponse({}, error.toString(), false);
-            }
-        }
-        Methods.sendErrorResponse(resp, 404, "Category was not found");
-    }
+		if (!!categoryToDelete) {
+			try {
+				const deletedCategory = await this.categoryRepository.remove(categoryToDelete);
+				return Methods.getJsonResponse(MapCategory.inCategoriesControllerDeleteAsync(deletedCategory), "Delete operation was successful");
+			} catch (error) {
+				return Methods.getJsonResponse({}, error.toString(), false);
+			}
+		}
+		Methods.sendErrorResponse(resp, 404, "Category was not found");
+	}
 }
