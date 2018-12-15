@@ -30,7 +30,7 @@ export namespace MapArticle {
 	}
 
 	export function inArticlesControllerGetAll(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis } = article;
+		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
@@ -48,7 +48,11 @@ export namespace MapArticle {
 			featuredImage: {
 				id: featuredImage.id,
 				url: featuredImage.url
-			} as Media
+			} as Media,
+			category: {
+				id: category.id,
+				title: category.title
+			}
 		} as Article;
 	}
 
@@ -79,7 +83,7 @@ export namespace MapArticle {
 	}
 
 	export function inArticlesControllerCreateAsync(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis } = article;
+		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
@@ -97,12 +101,16 @@ export namespace MapArticle {
 			featuredImage: {
 				id: featuredImage.id,
 				url: featuredImage.url
-			} as Media
+			} as Media,
+			category: {
+				id: category.id,
+				title: category.title
+			}
 		} as Article;
 	}
 
 	export function inArticlesControllerUpdateAsync(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis } = article;
+		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
@@ -120,12 +128,16 @@ export namespace MapArticle {
 			featuredImage: {
 				id: featuredImage.id,
 				url: featuredImage.url
-			} as Media
+			} as Media,
+			category: {
+				id: category.id,
+				title: category.title
+			}
 		} as Article;
 	}
 
 	export function inArticlesControllerPublishAsync(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis } = article;
+		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
@@ -143,12 +155,16 @@ export namespace MapArticle {
 			featuredImage: {
 				id: featuredImage.id,
 				url: featuredImage.url
-			} as Media
+			} as Media,
+			category: {
+				id: category.id,
+				title: category.title
+			}
 		} as Article;
 	}
 
 	export function inArticlesControllerUnPublishAsync(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis } = article;
+		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
@@ -166,7 +182,11 @@ export namespace MapArticle {
 			featuredImage: {
 				id: featuredImage.id,
 				url: featuredImage.url
-			} as Media
+			} as Media,
+			category: {
+				id: category.id,
+				title: category.title
+			}
 		} as Article;
 	}
 }

@@ -6,35 +6,36 @@ import { Methods } from "../shared/methods";
 
 @Entity()
 export class ArticleCategory extends BaseEntity {
+	@Column()
+	name: string;
 
-    @Column()
-    name: string;
+	@Column()
+	@IsNotEmpty()
+	@Matches(/^[a-zA-Z0-9\s&-]*$/)
+	title: string;
 
-    @Column()
-    @IsNotEmpty()
-    @Matches(/^[a-zA-Z0-9\s&-]*$/)
-    title: string;
+	@OneToMany(type => Article, article => article.category, {
+		persistence: false
+	})
+	articles: Array<Article>;
 
-    @OneToMany(type => Article, article => article.category)
-    articles: Array<Article>;
+	@BeforeInsert()
+	createCategoryName() {
+		this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+	}
 
-    @BeforeInsert()
-    createCategoryName() {
-        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
-    }
+	@BeforeUpdate()
+	updateCategoryName() {
+		this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
+	}
 
-    @BeforeUpdate()
-    updateCategoryName() {
-        this.name = Methods.toCamelCase(this.title.replace(/[^a-zA-Z0-9\s\s+]/g, ""));
-    }
+	constructor(dto?: ArticleCategory | any) {
+		super(dto);
 
-    constructor(dto?: ArticleCategory | any) {
-        super(dto);
+		dto = dto || ({} as ArticleCategory);
 
-        dto = dto || {} as ArticleCategory;
-
-        this.name = dto.name;
-        this.title = dto.title;
-        this.articles = dto.articles ? dto.articles.map(a => new Article(a)) : null;
-    }
+		this.name = dto.name;
+		this.title = dto.title;
+		this.articles = dto.articles ? dto.articles.map(a => new Article(a)) : null;
+	}
 }

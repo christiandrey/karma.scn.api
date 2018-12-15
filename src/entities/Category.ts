@@ -15,7 +15,8 @@ export class Category extends BaseEntity {
 	title: string;
 
 	@OneToMany(type => Product, product => product.category, {
-		persistence: false
+		persistence: false,
+		cascade: ["remove"]
 	})
 	products: Array<Product>;
 

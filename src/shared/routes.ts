@@ -318,6 +318,14 @@ export const Routes = [
 		admin: true
 	},
 	{
+		method: "delete",
+		route: "/products/:id",
+		controller: ProductsController,
+		action: "deleteAsync",
+		protected: true,
+		admin: true
+	},
+	{
 		method: "get",
 		route: "/announcements",
 		controller: AnnouncementsController,
@@ -558,6 +566,14 @@ export const Routes = [
 		route: "/skills",
 		controller: SkillsController,
 		action: "createAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "delete",
+		route: "/skills/:id",
+		controller: SkillsController,
+		action: "deleteAsync",
 		protected: true,
 		admin: true
 	},

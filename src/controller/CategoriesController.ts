@@ -76,6 +76,18 @@ export class CategoriesController {
 			return Methods.getJsonResponse(invalidResponse, "Category data provided was not valid", false);
 		}
 
+		// ------------------------------------------------------------------------
+		// Check for existing Entity with same title
+		// ------------------------------------------------------------------------
+		const existingDbCategory = await this.categoryRepository.findOne({ name: Methods.toCamelCase(category.title.replace(/[^a-zA-Z0-9\s\s+]/g, "")) });
+		if (!!existingDbCategory && existingDbCategory.id !== category.id) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: ["A category with the same title already exists"]
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "A category with the same title already exists", false);
+		}
+
 		const dbCategory = await this.categoryRepository.findOne({ id: category.id });
 
 		if (!dbCategory) {
@@ -94,7 +106,11 @@ export class CategoriesController {
 	}
 
 	async deleteAsync(req: Request, resp: Response, next: NextFunction) {
-		const categoryToDelete = await this.categoryRepository.findOne(req.params.id);
+		const categoryToDelete = await this.categoryRepository
+			.createQueryBuilder("category")
+			.where("category.id = :id", { id: req.params.id })
+			.leftJoinAndSelect("category.products", "product")
+			.getOne();
 
 		if (!!categoryToDelete) {
 			try {
@@ -103,6 +119,12 @@ export class CategoriesController {
 			} catch (error) {
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
+			// try {
+			// 	await this.categoryRepository.delete(categoryToDelete.id);
+			// 	return Methods.getJsonResponse(MapCategory.inCategoriesControllerDeleteAsync(categoryToDelete), "Delete operation was successful");
+			// } catch (error) {
+			// 	return Methods.getJsonResponse({}, error.toString(), false);
+			// }
 		}
 		Methods.sendErrorResponse(resp, 404, "Category was not found");
 	}

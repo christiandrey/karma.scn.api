@@ -26,6 +26,7 @@ export namespace MapCategory {
 	export function inAllControllers(category: Category): Category {
 		return {
 			id: category.id,
+			createdDate: category.createdDate,
 			name: category.name,
 			title: category.title,
 			products: category.products
