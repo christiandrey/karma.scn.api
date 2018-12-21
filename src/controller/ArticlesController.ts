@@ -43,8 +43,9 @@ export class ArticlesController {
 	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
 		const articles = await this.articleRepository
 			.createQueryBuilder("article")
-			.where("article.isPublished = :isPublished", { isPublished: true })
 			.leftJoinAndSelect("article.author", "user")
+			.leftJoinAndSelect("user.profilePhoto", "profilePhoto")
+			.leftJoinAndSelect("user.company", "company")
 			.leftJoinAndSelect("article.featuredImage", "featuredImage")
 			.leftJoinAndSelect("article.category", "category")
 			.orderBy("article.createdDate", "DESC")

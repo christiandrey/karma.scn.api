@@ -4,6 +4,7 @@ import { Media } from "../entities/Media";
 import { MapComment } from "./mapComment";
 import { Comment } from "../entities/Comment";
 import { Company } from "../entities/Company";
+import { MapMedia } from "./mapMedia";
 
 export namespace MapArticle {
 	export function inArticlesControllerGetLatestAsync(article: Article): Article {
@@ -30,10 +31,11 @@ export namespace MapArticle {
 	}
 
 	export function inArticlesControllerGetAll(article: Article): Article {
-		const { id, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
+		const { id, isPublished, createdDate, readingTime, author, title, urlToken, featuredImage, synopsis, category } = article;
 
 		return {
 			id,
+			isPublished,
 			createdDate,
 			readingTime,
 			title,
@@ -41,6 +43,15 @@ export namespace MapArticle {
 			synopsis,
 			author: {
 				id: author.id,
+				type: author.type,
+				profilePhoto: author.profilePhoto ? MapMedia.inAllControllers(author.profilePhoto) : null,
+				company: author.company
+					? {
+							id: author.company.id,
+							name: author.company.name,
+							logoUrl: author.company.logoUrl
+					  }
+					: null,
 				firstName: author.firstName,
 				lastName: author.lastName,
 				urlToken: author.urlToken

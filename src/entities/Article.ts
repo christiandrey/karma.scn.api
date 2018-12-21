@@ -66,7 +66,8 @@ export class Article extends BaseEntity {
 	status: ArticleStatusEnum;
 
 	@OneToMany(type => Like, like => like.article, {
-		eager: true
+		// eager: true,
+		persistence: false
 	})
 	likes: Array<Like>;
 
