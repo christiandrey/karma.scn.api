@@ -4,10 +4,11 @@ import { MapMedia } from "./mapMedia";
 import { MapComment } from "./mapComment";
 import { Comment } from "../entities/Comment";
 import { User } from "../entities/User";
+import { Company } from "../entities/Company";
 
 export namespace MapWebinar {
 	export function inWebinarControllersGetAllAsync(webinar: Webinar): Webinar {
-		const { id, anchor, cpdPoints, status, topic, description, urlToken, startDateTime } = webinar;
+		const { id, anchor, cpdPoints, status, topic, description, urlToken, startDateTime, participants } = webinar;
 		return {
 			id,
 			cpdPoints,
@@ -16,12 +17,29 @@ export namespace MapWebinar {
 			description,
 			urlToken,
 			startDateTime,
-			anchor: MapUser.inAllControllers(anchor)
+			anchor: MapUser.inAllControllers(anchor),
+			participants: !!participants
+				? participants.map(
+						x =>
+							new User({
+								id: x.id,
+								firstName: x.firstName,
+								lastName: x.lastName,
+								type: x.type,
+								company: !!x.company
+									? new Company({
+											id: x.company.id,
+											name: x.company.name
+									  })
+									: null
+							})
+				  )
+				: new Array<User>()
 		} as Webinar;
 	}
 
 	export function inWebinarControllersCreateAsync(webinar: Webinar): Webinar {
-		const { id, cpdPoints, status, topic, description, urlToken, startDateTime } = webinar;
+		const { id, cpdPoints, status, topic, description, urlToken, startDateTime, anchor } = webinar;
 		return {
 			id,
 			cpdPoints,
@@ -29,7 +47,9 @@ export namespace MapWebinar {
 			topic,
 			description,
 			urlToken,
-			startDateTime
+			startDateTime,
+			anchor: MapUser.inAllControllers(anchor),
+			participants: new Array<User>()
 		} as Webinar;
 	}
 

@@ -36,14 +36,25 @@ export class JobsController {
 	}
 
 	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-		const jobs = await this.jobRepository.find({
-			where: {
-				isPublished: true
-			},
-			order: {
-				createdDate: "DESC"
-			}
-		});
+		const userType = UserService.getAuthenticatedUserType(req);
+		let jobs = new Array<Job>();
+
+		if (userType === UserTypeEnum.Admin) {
+			jobs = await this.jobRepository.find({
+				order: {
+					createdDate: "DESC"
+				}
+			});
+		} else {
+			jobs = await this.jobRepository.find({
+				where: {
+					isPublished: true
+				},
+				order: {
+					createdDate: "DESC"
+				}
+			});
+		}
 
 		const response = jobs.map(a => MapJob.inJobsControllerGetAllAsync(a));
 
@@ -51,10 +62,15 @@ export class JobsController {
 	}
 
 	async getByUrlTokenAsync(req: Request, resp: Response, next: NextFunction) {
+		const userType = UserService.getAuthenticatedUserType(req);
 		const urlToken = req.params.urlToken as string;
 		const job = await this.jobRepository.findOne({ urlToken });
 
-		if (!job || !job.isPublished) {
+		if (!job) {
+			Methods.sendErrorResponse(resp, 404, "Job was not found");
+		}
+
+		if (userType !== UserTypeEnum.Admin && !job.isPublished) {
 			Methods.sendErrorResponse(resp, 404, "Job was not found");
 		}
 

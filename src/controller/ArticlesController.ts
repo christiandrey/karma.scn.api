@@ -68,7 +68,7 @@ export class ArticlesController {
 			.leftJoinAndSelect("article.category", "category")
 			.getOne();
 
-		if (!article || !article.isPublished) {
+		if (!article) {
 			Methods.sendErrorResponse(resp, 404, "Article was not found");
 			return;
 		}
