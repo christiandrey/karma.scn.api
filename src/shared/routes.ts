@@ -19,6 +19,7 @@ import { ResourcesController } from "../controller/ResourcesController";
 import { SkillsController } from "../controller/SkillsController";
 import { WebinarsController } from "../controller/WebinarsController";
 import { TimelineController } from "../controller/TimelineController";
+import { AdsController } from "../controller/AdsController";
 
 export interface IRoute {
 	method: string;
@@ -696,5 +697,41 @@ export const Routes = [
 		controller: TimelineController,
 		action: "unLikeTimelinePostAsync",
 		protected: true
+	},
+	{
+		method: "get",
+		route: "/ads/:number",
+		controller: AdsController,
+		action: "getAsync"
+	},
+	{
+		method: "get",
+		route: "/ads",
+		controller: AdsController,
+		action: "getAllAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "post",
+		route: "/ads",
+		controller: AdsController,
+		action: "createAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "put",
+		route: "/ads/:id",
+		controller: AdsController,
+		action: "registerClickAsync"
+	},
+	{
+		method: "delete",
+		route: "/ads/:id",
+		controller: AdsController,
+		action: "deleteAsync",
+		protected: true,
+		admin: true
 	}
 ];
