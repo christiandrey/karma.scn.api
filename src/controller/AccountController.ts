@@ -104,13 +104,13 @@ export class AccountController {
 
 			//TODO: Schedule birthday message using DOB
 
-			// const sendEmailConfig = {
-			//     to: user.email,
-			//     subject: "Welcome to SCN",
-			//     text: "Welcome to the Supply Chain Network"
-			// } as SendEmailConfig;
+			const sendEmailConfig = {
+				to: user.email,
+				subject: "Welcome to SCN",
+				text: "Welcome to the Supply Chain Network"
+			} as SendEmailConfig;
 
-			// const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
+			const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
 
 			const token = UserService.getUserToken(user);
 			const response = new FormResponse<string>({
