@@ -67,7 +67,7 @@ export namespace MediaService {
 
 	// -------------------------------------------------------------------------------------------------
 	/** Upload a file or group of files asynchronously and returns a list of media */
-	export async function deleteFileAsync(req, path: string): Promise<boolean> {
+	export async function deleteFileAsync(req: Request, path: string): Promise<boolean> {
 		const name = path.replace(`${Methods.getAppHostName(req)}/media/`, "");
 		const extension = Methods.getExtension(name);
 

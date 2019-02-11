@@ -65,11 +65,15 @@ export class Company extends BaseEntity {
 	@IsNotEmpty()
 	registrationType: BusinessRegistrationTypeEnum;
 
-	@Column()
+	@Column({
+		nullable: true
+	})
 	@IsNotEmpty()
 	registrationNumber: string;
 
-	@Column()
+	@Column({
+		nullable: true
+	})
 	@IsDateString()
 	registrationDate: Date;
 
