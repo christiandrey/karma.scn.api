@@ -12,6 +12,7 @@ import { Job } from "../entities/Job";
 import { Webinar } from "../entities/Webinar";
 import { Resource } from "../entities/Resource";
 import { Article } from "../entities/Article";
+import { WebinarStatusEnum } from "../enums/WebinarStatusEnum";
 
 export namespace Methods {
 	// -------------------------------------------------------------------------------------------------
@@ -205,12 +206,13 @@ export namespace Methods {
 
 		if (type === TimelinePostTypeEnum.Webinar) {
 			const toTransform = item as Webinar;
-			const { id, author, urlToken, topic, description, startDateTime } = toTransform;
+			const { id, author, urlToken, topic, description, startDateTime, status } = toTransform;
 			(timelinePost.comments = [...comments.filter(x => !!x.webinar && x.webinar.id === id)]), (timelinePost.content = topic);
 			timelinePost.extraContent = description;
 			timelinePost.urlToken = urlToken;
 			timelinePost.author = author;
 			timelinePost.extraDate = startDateTime;
+			timelinePost.status = WebinarStatusEnum[status];
 		}
 
 		if (type === TimelinePostTypeEnum.Resource) {

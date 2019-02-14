@@ -21,7 +21,7 @@ export class SearchController {
 
 	async searchAsync(req: Request, resp: Response, next: NextFunction) {
 		const searchRequest = req.body as ISearchRequest;
-		const { type, category, location, query } = searchRequest;
+		const { type, category, product, location, query } = searchRequest;
 
 		let members = new Array<User>();
 		let vendors = new Array<User>();
@@ -38,7 +38,7 @@ export class SearchController {
 		}
 
 		if (type === UserTypeEnum.Vendor) {
-			vendors = await this.findVendors(category, location, query);
+			vendors = await this.findVendors(category, product, location, query);
 		}
 
 		const response = {
@@ -80,14 +80,15 @@ export class SearchController {
 		return Promise.resolve(users);
 	}
 
-	private async findVendors(category?: string, location?: string, query?: string): Promise<Array<User>> {
+	private async findVendors(category?: string, product?: string, location?: string, query?: string): Promise<Array<User>> {
 		let dbQuery = this.userRepository
 			.createQueryBuilder("user")
 			.where("user.type = :type", { type: UserTypeEnum.Vendor })
 			.andWhere("user.company IS NOT NULL")
 			.leftJoinAndSelect("user.views", "view")
 			.leftJoinAndSelect("user.company", "company")
-			.leftJoinAndSelect("company.category", "category");
+			.leftJoinAndSelect("company.category", "category")
+			.leftJoinAndSelect("company.products", "products");
 
 		if (query) {
 			const sanitizedQuery = query
@@ -101,11 +102,20 @@ export class SearchController {
 			dbQuery = dbQuery.andWhere("category.name = :category", { category });
 		}
 
+		// if (product) {
+		// 	dbQuery = dbQuery.andWhere("")
+		// }
+
 		let vendors = await dbQuery
 			.leftJoinAndSelect("company.address", "address")
 			.leftJoinAndSelect("address.country", "country")
 			.take(10)
 			.getMany();
+
+		if (product) {
+			// vendors = vendors.filter(x => x.company.products.findIndex(p => p.id === product) > -1);
+			vendors = vendors.filter(x => x.company.products.find(p => p.id === product));
+		}
 
 		if (!location) return Promise.resolve(vendors);
 

@@ -94,7 +94,6 @@ export class CompaniesController {
 		const {
 			name,
 			logoUrl,
-			postalBox,
 			address,
 			phone,
 			website,
@@ -118,7 +117,6 @@ export class CompaniesController {
 		const companyToCreate = new Company({
 			name,
 			logoUrl,
-			postalBox,
 			phone,
 			website,
 			email,
@@ -141,20 +139,14 @@ export class CompaniesController {
 			}),
 			user: new User({ id: authUserId }),
 			category: new Category({ id: category.id }),
-			products: products.map(x => new Product({ id: x.id }))
-			// documents: !!documents ? documents.map(x => new Media({ id: x.id })) : null
+			products: products.map(x => new Product({ id: x.id })),
+			documents: !!documents ? documents.map(x => new Media(x)) : null
 		});
 
 		const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
 		companyToCreate.address.country = new Country({ id: defaultCountry.id });
 
 		const createdCompany = await this.companyRepository.save(companyToCreate);
-
-		if (!!documents) {
-			const mediaToUpdate = documents.map(x => new Media({ id: x.id, company: new Company({ id: createdCompany.id }) } as Media));
-			await this.mediaRepository.save(mediaToUpdate);
-		}
-
 		const validResponse = new FormResponse<Company>({
 			isValid: true,
 			target: MapCompany.inUsersControllerCreateAsync(createdCompany)
@@ -186,11 +178,10 @@ export class CompaniesController {
 			return;
 		}
 
-		const { name, logoUrl, postalBox, address, phone, website, email, registrationDate, registrationNumber, registrationType, productsDescription } = company;
+		const { name, logoUrl, address, phone, website, email, registrationDate, registrationNumber, registrationType, productsDescription } = company;
 
 		dbCompany.name = name;
 		dbCompany.logoUrl = logoUrl;
-		dbCompany.postalBox = postalBox;
 		dbCompany.address = new Address({ id: address.id, country: new Country({ id: address.country.id }) });
 		dbCompany.phone = phone;
 		dbCompany.website = website;
@@ -200,10 +191,21 @@ export class CompaniesController {
 		dbCompany.registrationType = registrationType;
 		dbCompany.productsDescription = productsDescription;
 
-		const updatedCompany = await this.companyRepository.save(dbCompany);
+		await this.companyRepository.update(dbCompany.id, {
+			name,
+			logoUrl,
+			address,
+			phone,
+			website,
+			email,
+			registrationDate,
+			registrationNumber,
+			registrationType,
+			productsDescription
+		});
 		const validResponse = new FormResponse<Company>({
 			isValid: true,
-			target: MapCompany.inUsersControllerUpdateAsync(updatedCompany)
+			target: MapCompany.inUsersControllerUpdateAsync(dbCompany)
 		});
 		return Methods.getJsonResponse(validResponse);
 	}
@@ -239,7 +241,7 @@ export class CompaniesController {
 
 		const notification = new Notification({
 			user: new User({ id: company.user.id }),
-			content: `Your organization, ${company.name} has been successfully! Your profile will now be available to other members of the network!`,
+			content: `Your organization, ${company.name} has been successfully verified! Your profile will now be available to other members of the network!`,
 			type: NotificationTypeEnum.VerificationSuccess,
 			hasBeenRead: false
 		} as Notification);

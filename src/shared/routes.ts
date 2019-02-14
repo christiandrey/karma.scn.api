@@ -277,8 +277,7 @@ export const Routes = [
 		route: "/categories",
 		controller: CategoriesController,
 		action: "createAsync",
-		protected: true,
-		admin: true
+		protected: true
 	},
 	{
 		method: "put",
@@ -307,8 +306,7 @@ export const Routes = [
 		route: "/products",
 		controller: ProductsController,
 		action: "createAsync",
-		protected: true,
-		admin: true
+		protected: true
 	},
 	{
 		method: "put",

@@ -15,6 +15,7 @@ export class TimelinePost {
 	extraContent: string;
 	likes: Array<Like>;
 	comments: Array<Comment>;
+	status: string;
 
 	constructor(dto?: TimelinePost | any) {
 		dto = dto || ({} as TimelinePost);
@@ -30,5 +31,6 @@ export class TimelinePost {
 		this.extraContent = dto.extraContent;
 		this.likes = dto.likes ? dto.likes.map(l => new Like(l)) : null;
 		this.comments = dto.comments ? dto.comments.map(c => new Comment(c)) : null;
+		this.status = dto.status;
 	}
 }

@@ -23,11 +23,6 @@ export class Company extends BaseEntity {
 	})
 	logoUrl: string;
 
-	@Column({
-		nullable: true
-	})
-	postalBox: number;
-
 	@OneToOne(type => Address, {
 		eager: true,
 		cascade: true
@@ -43,8 +38,6 @@ export class Company extends BaseEntity {
 	@Column({
 		nullable: true
 	})
-	@IsNotEmpty()
-	@IsNotWhitespace()
 	website: string;
 
 	@Column()
@@ -116,8 +109,7 @@ export class Company extends BaseEntity {
 	products: Array<Product>;
 
 	@OneToMany(type => Media, media => media.company, {
-		eager: true,
-		cascade: true
+		eager: true
 	})
 	// @IsNotEmpty()
 	// @ArrayNotEmpty()
@@ -125,8 +117,7 @@ export class Company extends BaseEntity {
 	documents: Array<Media>;
 
 	@OneToOne(type => User, user => user.company, {
-		cascade: false,
-		persistence: false
+		cascade: false
 	})
 	user: User;
 
@@ -153,7 +144,6 @@ export class Company extends BaseEntity {
 		this.name = dto.name;
 		this.urlToken = dto.urlToken;
 		this.logoUrl = dto.logoUrl;
-		this.postalBox = dto.postalBox;
 		this.address = dto.address ? new Address(dto.address) : null;
 		this.phone = dto.phone;
 		this.website = dto.website;

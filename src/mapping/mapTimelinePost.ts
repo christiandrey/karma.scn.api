@@ -7,7 +7,7 @@ import { Like } from "../entities/Like";
 
 export namespace MapTimelinePost {
 	export function inTimelineControllerGetLatestAsync(timelinePost: TimelinePost): TimelinePost {
-		const { id, urlToken, createdDate, imageUrl, author, type, content, extraContent, likes, comments, extraDate } = timelinePost;
+		const { id, urlToken, createdDate, imageUrl, author, type, content, extraContent, likes, comments, extraDate, status } = timelinePost;
 		return {
 			id,
 			urlToken,
@@ -17,6 +17,7 @@ export namespace MapTimelinePost {
 			content,
 			extraContent,
 			extraDate,
+			status,
 			author: !!author ? MapUser.inAllControllers(author) : null,
 			likes: !!likes ? likes.map(x => MapLike.inTimelineController(x)) : new Array<Like>(),
 			comments: !!comments ? comments.map(x => MapComment.inAllControllers(x)) : new Array<Comment>()

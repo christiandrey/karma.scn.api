@@ -13,6 +13,12 @@ export class Ad extends BaseEntity {
 	@IsNotEmpty()
 	media: Media;
 
+	@Column({
+		nullable: true
+	})
+	@IsNotEmpty()
+	url: string;
+
 	@Column("int", {
 		default: 0
 	})
@@ -24,6 +30,7 @@ export class Ad extends BaseEntity {
 		dto = dto || ({} as Ad);
 
 		this.media = dto.media ? new Media(dto.media) : null;
+		this.url = dto.url;
 		this.clickCount = dto.clickCount;
 	}
 }

@@ -245,3 +245,85 @@
 [2019-01-02T12:47:09.354Z][QUERY]: INSERT INTO `karmascnDB`.`migrations`(`timestamp`, `name`) VALUES (?, ?) -- PARAMETERS: [1546433217022,"InitialMigration1546433217022"]
 [2019-01-02T12:47:09.356Z]Migration InitialMigration1546433217022 has been executed successfully.
 [2019-01-02T12:47:09.356Z][QUERY]: COMMIT
+[2019-02-14T02:49:02.016Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascn' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T02:49:02.024Z][QUERY]: SELECT * FROM `karmascn`.`migrations` `migrations`
+[2019-02-14T02:49:02.030Z]25 migrations are already loaded in the database.
+[2019-02-14T02:49:02.030Z]2 migrations were found in the source code.
+[2019-02-14T02:49:02.031Z]AddAdsEntity1546238499109 is the last executed migration. It was executed on Mon Dec 31 2018 07:41:39 GMT+0100 (West Africa Standard Time).
+[2019-02-14T02:49:02.031Z]2 migrations are new migrations that needs to be executed.
+[2019-02-14T02:49:02.031Z][QUERY]: START TRANSACTION
+[2019-02-14T02:49:02.035Z][QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T02:49:02.077Z][FAILED QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T02:49:02.077Z][QUERY ERROR]: Error: ER_TABLE_EXISTS_ERROR: Table 'timeline_photo' already exists
+[2019-02-14T02:49:02.078Z][QUERY]: ROLLBACK
+[2019-02-14T02:49:34.026Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascn' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T02:49:34.032Z][QUERY]: SELECT * FROM `karmascn`.`migrations` `migrations`
+[2019-02-14T02:49:34.035Z]25 migrations are already loaded in the database.
+[2019-02-14T02:49:34.035Z]2 migrations were found in the source code.
+[2019-02-14T02:49:34.036Z]AddAdsEntity1546238499109 is the last executed migration. It was executed on Mon Dec 31 2018 07:41:39 GMT+0100 (West Africa Standard Time).
+[2019-02-14T02:49:34.036Z]2 migrations are new migrations that needs to be executed.
+[2019-02-14T02:49:34.037Z][QUERY]: START TRANSACTION
+[2019-02-14T02:49:34.040Z][QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T02:49:34.076Z][FAILED QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T02:49:34.076Z][QUERY ERROR]: Error: ER_TABLE_EXISTS_ERROR: Table 'timeline_photo' already exists
+[2019-02-14T02:49:34.077Z][QUERY]: ROLLBACK
+[2019-02-14T02:50:13.146Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T02:50:13.153Z][QUERY]: SELECT * FROM `karmascnDB`.`migrations` `migrations`
+[2019-02-14T02:50:13.159Z]1 migrations are already loaded in the database.
+[2019-02-14T02:50:13.160Z]2 migrations were found in the source code.
+[2019-02-14T02:50:13.160Z]InitialMigration1546433217022 is the last executed migration. It was executed on Wed Jan 02 2019 13:46:57 GMT+0100 (West Africa Standard Time).
+[2019-02-14T02:50:13.161Z]1 migrations are new migrations that needs to be executed.
+[2019-02-14T02:50:13.161Z][QUERY]: START TRANSACTION
+[2019-02-14T02:50:13.167Z][QUERY]: ALTER TABLE `company` DROP COLUMN `postalBox`
+[2019-02-14T02:50:13.387Z][QUERY]: ALTER TABLE `company` CHANGE `registrationNumber` `registrationNumber` varchar(255) NULL
+[2019-02-14T02:50:13.540Z][QUERY]: ALTER TABLE `company` CHANGE `registrationDate` `registrationDate` datetime NULL
+[2019-02-14T02:50:13.692Z][QUERY]: INSERT INTO `karmascnDB`.`migrations`(`timestamp`, `name`) VALUES (?, ?) -- PARAMETERS: [1550112514698,"CompaniesRemovePostalBox1550112514698"]
+[2019-02-14T02:50:13.696Z]Migration CompaniesRemovePostalBox1550112514698 has been executed successfully.
+[2019-02-14T02:50:13.696Z][QUERY]: COMMIT
+[2019-02-14T04:05:59.457Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T04:05:59.466Z][QUERY]: SELECT * FROM `karmascnDB`.`migrations` `migrations`
+[2019-02-14T04:05:59.469Z]2 migrations are already loaded in the database.
+[2019-02-14T04:05:59.469Z]3 migrations were found in the source code.
+[2019-02-14T04:05:59.470Z]CompaniesRemovePostalBox1550112514698 is the last executed migration. It was executed on Thu Feb 14 2019 03:48:34 GMT+0100 (West Africa Standard Time).
+[2019-02-14T04:05:59.470Z]1 migrations are new migrations that needs to be executed.
+[2019-02-14T04:05:59.470Z][QUERY]: START TRANSACTION
+[2019-02-14T04:05:59.473Z][QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T04:05:59.513Z][FAILED QUERY]: CREATE TABLE `timeline_photo` (`id` varchar(255) NOT NULL, `createdDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `modifiedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), `caption` longtext NULL, `isDisabled` tinyint NOT NULL DEFAULT 0, `commentsCount` int NOT NULL DEFAULT 0, `likesCount` int NOT NULL DEFAULT 0, `authorId` varchar(255) NULL, `mediaId` varchar(255) NULL, UNIQUE INDEX `REL_44e860ff060b678c12418f741e` (`mediaId`), PRIMARY KEY (`id`)) ENGINE=InnoDB
+[2019-02-14T04:05:59.513Z][QUERY ERROR]: Error: ER_TABLE_EXISTS_ERROR: Table 'timeline_photo' already exists
+[2019-02-14T04:05:59.514Z][QUERY]: ROLLBACK
+[2019-02-14T04:10:34.415Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T04:10:34.422Z][QUERY]: SELECT * FROM `karmascnDB`.`migrations` `migrations`
+[2019-02-14T04:10:34.424Z]No migrations are pending
+[2019-02-14T04:20:39.134Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T04:20:39.141Z][QUERY]: SELECT * FROM `karmascnDB`.`migrations` `migrations`
+[2019-02-14T04:20:39.143Z]1 migrations are already loaded in the database.
+[2019-02-14T04:20:39.143Z]2 migrations were found in the source code.
+[2019-02-14T04:20:39.144Z]InitialMigration1546433217022 is the last executed migration. It was executed on Wed Jan 02 2019 13:46:57 GMT+0100 (West Africa Standard Time).
+[2019-02-14T04:20:39.144Z]1 migrations are new migrations that needs to be executed.
+[2019-02-14T04:20:39.144Z][QUERY]: START TRANSACTION
+[2019-02-14T04:20:39.147Z][QUERY]: SELECT DATABASE() AS `db_name`
+[2019-02-14T04:20:39.150Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE (`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ads')
+[2019-02-14T04:20:39.150Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE (`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ads')
+[2019-02-14T04:20:39.150Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` WHERE `CONSTRAINT_NAME` = 'PRIMARY' AND ((`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ads'))
+[2019-02-14T04:20:39.150Z][QUERY]: SELECT `SCHEMA_NAME`, `DEFAULT_CHARACTER_SET_NAME` as `CHARSET`, `DEFAULT_COLLATION_NAME` AS `COLLATION` FROM `INFORMATION_SCHEMA`.`SCHEMATA`
+[2019-02-14T04:20:39.151Z][QUERY]: SELECT `s`.* FROM `INFORMATION_SCHEMA`.`STATISTICS` `s` LEFT JOIN `INFORMATION_SCHEMA`.`REFERENTIAL_CONSTRAINTS` `rc` ON `s`.`INDEX_NAME` = `rc`.`CONSTRAINT_NAME` WHERE ((`s`.`TABLE_SCHEMA` = 'karmascnDB' AND `s`.`TABLE_NAME` = 'ads')) AND `s`.`INDEX_NAME` != 'PRIMARY' AND `rc`.`CONSTRAINT_NAME` IS NULL
+[2019-02-14T04:20:39.151Z][QUERY]: SELECT `kcu`.`TABLE_SCHEMA`, `kcu`.`TABLE_NAME`, `kcu`.`CONSTRAINT_NAME`, `kcu`.`COLUMN_NAME`, `kcu`.`REFERENCED_TABLE_SCHEMA`, `kcu`.`REFERENCED_TABLE_NAME`, `kcu`.`REFERENCED_COLUMN_NAME`, `rc`.`DELETE_RULE` `ON_DELETE`, `rc`.`UPDATE_RULE` `ON_UPDATE` FROM `INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` `kcu` INNER JOIN `INFORMATION_SCHEMA`.`REFERENTIAL_CONSTRAINTS` `rc` ON `rc`.`constraint_name` = `kcu`.`constraint_name` WHERE (`kcu`.`TABLE_SCHEMA` = 'karmascnDB' AND `kcu`.`TABLE_NAME` = 'ads')
+[2019-02-14T04:20:39.178Z][QUERY]: ROLLBACK
+[2019-02-14T04:20:57.355Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'migrations'
+[2019-02-14T04:20:57.362Z][QUERY]: SELECT * FROM `karmascnDB`.`migrations` `migrations`
+[2019-02-14T04:20:57.365Z]1 migrations are already loaded in the database.
+[2019-02-14T04:20:57.366Z]2 migrations were found in the source code.
+[2019-02-14T04:20:57.366Z]InitialMigration1546433217022 is the last executed migration. It was executed on Wed Jan 02 2019 13:46:57 GMT+0100 (West Africa Standard Time).
+[2019-02-14T04:20:57.367Z]1 migrations are new migrations that needs to be executed.
+[2019-02-14T04:20:57.367Z][QUERY]: START TRANSACTION
+[2019-02-14T04:20:57.371Z][QUERY]: SELECT DATABASE() AS `db_name`
+[2019-02-14T04:20:57.375Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE (`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ad')
+[2019-02-14T04:20:57.375Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE (`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ad')
+[2019-02-14T04:20:57.375Z][QUERY]: SELECT * FROM `INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` WHERE `CONSTRAINT_NAME` = 'PRIMARY' AND ((`TABLE_SCHEMA` = 'karmascnDB' AND `TABLE_NAME` = 'ad'))
+[2019-02-14T04:20:57.375Z][QUERY]: SELECT `SCHEMA_NAME`, `DEFAULT_CHARACTER_SET_NAME` as `CHARSET`, `DEFAULT_COLLATION_NAME` AS `COLLATION` FROM `INFORMATION_SCHEMA`.`SCHEMATA`
+[2019-02-14T04:20:57.375Z][QUERY]: SELECT `s`.* FROM `INFORMATION_SCHEMA`.`STATISTICS` `s` LEFT JOIN `INFORMATION_SCHEMA`.`REFERENTIAL_CONSTRAINTS` `rc` ON `s`.`INDEX_NAME` = `rc`.`CONSTRAINT_NAME` WHERE ((`s`.`TABLE_SCHEMA` = 'karmascnDB' AND `s`.`TABLE_NAME` = 'ad')) AND `s`.`INDEX_NAME` != 'PRIMARY' AND `rc`.`CONSTRAINT_NAME` IS NULL
+[2019-02-14T04:20:57.376Z][QUERY]: SELECT `kcu`.`TABLE_SCHEMA`, `kcu`.`TABLE_NAME`, `kcu`.`CONSTRAINT_NAME`, `kcu`.`COLUMN_NAME`, `kcu`.`REFERENCED_TABLE_SCHEMA`, `kcu`.`REFERENCED_TABLE_NAME`, `kcu`.`REFERENCED_COLUMN_NAME`, `rc`.`DELETE_RULE` `ON_DELETE`, `rc`.`UPDATE_RULE` `ON_UPDATE` FROM `INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` `kcu` INNER JOIN `INFORMATION_SCHEMA`.`REFERENTIAL_CONSTRAINTS` `rc` ON `rc`.`constraint_name` = `kcu`.`constraint_name` WHERE (`kcu`.`TABLE_SCHEMA` = 'karmascnDB' AND `kcu`.`TABLE_NAME` = 'ad')
+[2019-02-14T04:20:57.408Z][QUERY]: ALTER TABLE `karmascnDB`.`ad` ADD `url` varchar(255) NULL
+[2019-02-14T04:20:57.437Z][QUERY]: INSERT INTO `karmascnDB`.`migrations`(`timestamp`, `name`) VALUES (?, ?) -- PARAMETERS: [1550117759593,"AdsAddUrlProperty1550117759593"]
+[2019-02-14T04:20:57.440Z]Migration AdsAddUrlProperty1550117759593 has been executed successfully.
+[2019-02-14T04:20:57.440Z][QUERY]: COMMIT

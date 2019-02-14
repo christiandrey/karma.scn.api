@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getRepository, getTreeRepository } from "typeorm";
+import { getRepository, getTreeRepository, Brackets } from "typeorm";
 import { Constants } from "../shared/constants";
 import { Methods } from "../shared/methods";
 import { TimelinePhoto } from "../entities/TimelinePhoto";
@@ -111,8 +111,9 @@ export class TimelineController {
 
 			const webinars = await this.webinarRepository
 				.createQueryBuilder("webinar")
-				.where("status = :status", { status: WebinarStatusEnum.Created })
-				.orWhere("status = :status", { status: WebinarStatusEnum.Started })
+				.where("webinar.status = :statusCreated", { statusCreated: WebinarStatusEnum.Created })
+				.orWhere("webinar.status = :statusStarted", { statusStarted: WebinarStatusEnum.Started })
+				.orWhere("webinar.status = :statusFinished", { statusFinished: WebinarStatusEnum.Finished })
 				.getMany();
 
 			const comments = await CacheService.getCacheItemValue(Constants.commentsTree, async () => await CommentService.findTrees());
@@ -137,7 +138,9 @@ export class TimelineController {
 			return Methods.sortByDate(timelinePosts);
 		});
 
-		const dto = Methods.getPaginatedItems(sortedTimelinePosts, pageSize, page).map(x => MapTimelinePost.inTimelineControllerGetLatestAsync(x));
+		const dto = Methods.getPaginatedItems(sortedTimelinePosts.filter(x => !x.status || (x.status && x.status !== "Created" && x.status !== "Started")), pageSize, page)
+			.concat(sortedTimelinePosts.filter(x => x.status && (x.status === "Created" || x.status === "Started")))
+			.map(x => MapTimelinePost.inTimelineControllerGetLatestAsync(x));
 		const totalItems = sortedTimelinePosts.length;
 		const totalPages = totalItems >= pageSize ? (totalItems + pageSize) / pageSize : 1;
 		const response = {
