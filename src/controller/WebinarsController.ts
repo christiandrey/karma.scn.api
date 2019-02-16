@@ -36,6 +36,18 @@ export class WebinarsController {
 		return Methods.getJsonResponse(response, `${webinars.length} webinars found`);
 	}
 
+	async getAllUpcomingAsync(req: Request, resp: Response, next: NextFunction) {
+		const webinars = await this.webinarRepository.find({
+			where: {
+				status: WebinarStatusEnum.Created
+			}
+		});
+
+		const response = webinars.map(x => MapWebinar.inWebinarControllersGetAllAsync(x));
+
+		return Methods.getJsonResponse(response, `${webinars.length} webinars found`);
+	}
+
 	async getTotalCpdPoints(req: Request, resp: Response, next: NextFunction) {
 		const webinars = await this.webinarRepository.find({
 			where: {

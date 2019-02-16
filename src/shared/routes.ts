@@ -585,6 +585,12 @@ export const Routes = [
 	},
 	{
 		method: "get",
+		route: "/webinars/upcoming",
+		controller: WebinarsController,
+		action: "getAllUpcomingAsync"
+	},
+	{
+		method: "get",
 		route: "/webinars/total-points",
 		controller: WebinarsController,
 		action: "getTotalCpdPoints"
