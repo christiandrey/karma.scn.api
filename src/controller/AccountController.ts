@@ -14,6 +14,7 @@ import { UserService } from "../services/userService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { Address } from "../entities/Address";
 import { Country } from "../entities/Country";
+import { LogService } from "../services/logService";
 
 export class AccountController {
 	private userRepository = getRepository(User);
@@ -110,7 +111,8 @@ export class AccountController {
 				text: "Welcome to the Supply Chain Network"
 			} as SendEmailConfig;
 
-			const emailResponse = await EmailService.sendEmailAsync(sendEmailConfig);
+			await EmailService.sendEmailAsync(req, sendEmailConfig);
+			await LogService.log(req, `${user.firstName} ${user.lastName} just signed up as a ${UserTypeEnum[user.type]}.`);
 
 			const token = UserService.getUserToken(user);
 			const response = new FormResponse<string>({

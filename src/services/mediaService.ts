@@ -9,6 +9,8 @@ import { MediaNameEnum } from "../enums/MediaNameEnum";
 import { MediaTypeEnum } from "../enums/MediaTypeEnum";
 import { promisify } from "util";
 import { unlink } from "fs";
+import { LogService } from "./logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export namespace MediaService {
 	// -------------------------------------------------------------------------------------------------
@@ -92,6 +94,7 @@ export namespace MediaService {
 			}
 			return true;
 		} catch (error) {
+			await LogService.log(req, `An error occured while deleting the file ${name}.`, error.toString(), LogTypeEnum.Exception);
 			return false;
 		}
 	}

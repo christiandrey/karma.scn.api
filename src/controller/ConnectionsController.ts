@@ -11,6 +11,8 @@ import { Notification } from "../entities/Notification";
 import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
+import { LogService } from "../services/logService";
 
 export class ConnectionsController {
 	private connectionRepository = getRepository(Connection);
@@ -185,7 +187,9 @@ export class ConnectionsController {
 
 		try {
 			await NotificationService.sendNotificationAsync(req, notification);
-		} catch (error) {}
+		} catch (error) {
+			await LogService.log(req, "An error occured while sending a connection request notification.", error.toString(), LogTypeEnum.Exception);
+		}
 
 		const response = MapConnection.inConnectionControllerConnectAsync(createdConnection);
 
@@ -236,7 +240,9 @@ export class ConnectionsController {
 
 		try {
 			await NotificationService.sendNotificationAsync(req, notification);
-		} catch (error) {}
+		} catch (error) {
+			await LogService.log(req, "An error occured while sending a connection acceptance notification.", error.toString(), LogTypeEnum.Exception);
+		}
 
 		const response = MapConnection.inConnectionControllerAcceptConnectionRequestAsync(acceptedConnection);
 

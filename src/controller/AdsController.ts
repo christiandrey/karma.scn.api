@@ -9,6 +9,8 @@ import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { Media } from "../entities/Media";
 import { CacheService } from "../services/cacheService";
 import { Constants } from "../shared/constants";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class AdsController {
 	private adRepository = getRepository(Ad);
@@ -98,6 +100,7 @@ export class AdsController {
 				const deletedAd = await this.adRepository.remove(adToDelete);
 				return Methods.getJsonResponse(MapAd.inAllControllers(deletedAd), "Delete operation was successful");
 			} catch (error) {
+				await LogService.log(req, "An error occured while deleting an Ad.", error.toString(), LogTypeEnum.Exception);
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
 		}

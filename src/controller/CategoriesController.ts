@@ -6,6 +6,8 @@ import { FormResponse } from "../dto/classes/FormResponse";
 import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { Methods } from "../shared/methods";
 import { MapCategory } from "../mapping/mapCategory";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class CategoriesController {
 	private categoryRepository = getRepository(Category);
@@ -113,10 +115,20 @@ export class CategoriesController {
 			.getOne();
 
 		if (!!categoryToDelete) {
+			if (categoryToDelete.products.length > 0) {
+				Methods.sendErrorResponse(
+					resp,
+					400,
+					"There are products attached to this category. Please either delete these products manually or assign them to a different category."
+				);
+				return;
+			}
+
 			try {
 				const deletedCategory = await this.categoryRepository.remove(categoryToDelete);
 				return Methods.getJsonResponse(MapCategory.inCategoriesControllerDeleteAsync(deletedCategory), "Delete operation was successful");
 			} catch (error) {
+				await LogService.log(req, `An error occured while deleting the '${categoryToDelete.title}' category.`, error.toString(), LogTypeEnum.Exception);
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
 			// try {

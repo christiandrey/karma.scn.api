@@ -8,6 +8,10 @@ import { Discussion } from "../entities/Discussion";
 import { CommentService } from "./commentService";
 import { Webinar } from "../entities/Webinar";
 import { Notification } from "../entities/Notification";
+import { Log } from "../entities/Log";
+import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { LogService } from "./logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export namespace SocketService {
 	// -------------------------------------------------------------------------------------------------
@@ -23,6 +27,7 @@ export namespace SocketService {
 			await socketRecordRepository.save(socketRecordToCreate);
 			return true;
 		} catch (error) {
+			await LogService.log(req, "An error occured while creating a socket record.", error.toString(), LogTypeEnum.Exception);
 			return false;
 		}
 	}
@@ -70,6 +75,22 @@ export namespace SocketService {
 		commentToCreate.webinar = new Webinar({ id: webinar.id });
 		const createdComment = await CommentService.addCommentAsync(req, comment);
 		return createdComment.data.target;
+	}
+
+	// -------------------------------------------------------------------------------------------------
+	/** Send a log alert to all admin users */
+	export async function emitLogEventToAdminAsync(req: Request, log: Log): Promise<void> {
+		const userRepository = getRepository(User);
+		const users = await userRepository.find({
+			where: {
+				type: UserTypeEnum.Admin
+			},
+			relations: ["socketRecords"]
+		});
+		const socketRecords = users.reduce((a, b) => [...a, ...b.socketRecords], new Array<SocketRecord>());
+		socketRecords.forEach(s => {
+			req.io.to(`${s.socketId}`).emit("log", log);
+		});
 	}
 
 	// -------------------------------------------------------------------------------------------------

@@ -1,10 +1,11 @@
-import { Entity, OneToOne, ManyToOne, JoinColumn, Column, BeforeInsert } from "typeorm";
+import { Entity, OneToOne, ManyToOne, JoinColumn, Column, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { User } from "./User";
 import { JobTypeEnum } from "../enums/JobTypeEnum";
 import { Address } from "./Address";
 import { IsFQDN, IsNotEmpty, MaxLength, Matches, IsLowercase, Length } from "class-validator";
 import { Chance } from "chance";
+import { Methods } from "../shared/methods";
 
 @Entity()
 export class Job extends BaseEntity {
@@ -84,6 +85,18 @@ export class Job extends BaseEntity {
 			pool: "abcdefghijklmnopqrstuvwxyz0123456789"
 		});
 		this.urlToken = urlToken;
+	}
+
+	@BeforeInsert()
+	sanitizeUrlBeforeInsert() {
+		const sanitizedUrl = Methods.sanitizeURL(this.applicationUrl);
+		this.applicationUrl = sanitizedUrl;
+	}
+
+	@BeforeUpdate()
+	sanitizeUrlBeforeUpdate() {
+		const sanitizedUrl = Methods.sanitizeURL(this.applicationUrl);
+		this.applicationUrl = sanitizedUrl;
 	}
 
 	constructor(dto?: Job | any) {

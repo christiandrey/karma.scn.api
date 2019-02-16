@@ -13,121 +13,125 @@ import { Notification } from "../entities/Notification";
 import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
 import { CacheService } from "../services/cacheService";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class AnnouncementsController {
+	private announcementRepository = getRepository(Announcement);
 
-    private announcementRepository = getRepository(Announcement);
+	async getAllAsync(req: Request, resp: Response, next: NextFunction) {
+		const announcements = await this.announcementRepository.find({
+			where: {
+				isPublished: true
+			},
+			order: {
+				createdDate: "DESC"
+			}
+		});
 
-    async getAllAsync(req: Request, resp: Response, next: NextFunction) {
-        const announcements = await this.announcementRepository.find({
-            where: {
-                isPublished: true
-            },
-            order: {
-                createdDate: "DESC"
-            }
-        });
+		const response = announcements.map(a => MapAnnouncement.inAnnouncementsControllerAllMethods(a));
 
-        const response = announcements.map(a => MapAnnouncement.inAnnouncementsControllerAllMethods(a));
+		return Methods.getJsonResponse(response, `${announcements.length} announcements found`);
+	}
 
-        return Methods.getJsonResponse(response, `${announcements.length} announcements found`);
-    }
+	async createAsync(req: Request, resp: Response, next: NextFunction) {
+		const announcement = new Announcement(req.body);
 
-    async createAsync(req: Request, resp: Response, next: NextFunction) {
-        const announcement = new Announcement(req.body);
+		// ------------------------------------------------------------------------
+		// Validate the data
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Validate the data
-        // ------------------------------------------------------------------------
+		const validationResult = await validate(announcement);
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Announcement data provided was not valid", false);
+		}
 
-        const validationResult = await validate(announcement);
-        if (validationResult.length > 0) {
-            const invalidResponse = new FormResponse({
-                isValid: false,
-                errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
-            } as IFormResponse);
-            return Methods.getJsonResponse(invalidResponse, "Announcement data provided was not valid", false);
-        }
+		// ------------------------------------------------------------------------
+		// Create New Entity
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Create New Entity
-        // ------------------------------------------------------------------------
+		const { content, isPublished } = announcement;
 
-        const { content, isPublished } = announcement;
+		const announcementToCreate = new Announcement({
+			content,
+			isPublished,
+			author: new User({ id: UserService.getAuthenticatedUserId(req) })
+		});
 
-        const announcementToCreate = new Announcement({
-            content, isPublished,
-            author: new User({ id: UserService.getAuthenticatedUserId(req) })
-        });
+		const createdAnnouncement = await this.announcementRepository.save(announcementToCreate);
+		const validResponse = new FormResponse<Announcement>({
+			isValid: true,
+			target: MapAnnouncement.inAnnouncementsControllerAllMethods(createdAnnouncement)
+		});
 
-        const createdAnnouncement = await this.announcementRepository.save(announcementToCreate);
-        const validResponse = new FormResponse<Announcement>({
-            isValid: true,
-            target: MapAnnouncement.inAnnouncementsControllerAllMethods(createdAnnouncement)
-        });
+		return Methods.getJsonResponse(validResponse);
+	}
 
-        return Methods.getJsonResponse(validResponse);
-    }
+	async publishAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = req.params.id as string;
+		const announcement = await this.announcementRepository.findOne(id);
 
-    async publishAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = req.params.id as string;
-        const announcement = await this.announcementRepository.findOne(id);
+		if (!announcement) {
+			Methods.sendErrorResponse(resp, 404, "Announcement was not found");
+			return;
+		}
 
-        if (!announcement) {
-            Methods.sendErrorResponse(resp, 404, "Announcement was not found");
-            return;
-        }
+		if (announcement.isPublished) {
+			Methods.sendErrorResponse(resp, 400, "Announcement has already been published");
+			return;
+		}
 
-        if (announcement.isPublished) {
-            Methods.sendErrorResponse(resp, 400, "Announcement has already been published");
-            return;
-        }
+		announcement.isPublished = true;
+		announcement.publicationDate = new Date();
 
-        announcement.isPublished = true;
-        announcement.publicationDate = new Date();
+		const publishedAnnouncement = await this.announcementRepository.save(announcement);
+		const response = MapAnnouncement.inAnnouncementsControllerAllMethods(publishedAnnouncement);
 
-        const publishedAnnouncement = await this.announcementRepository.save(announcement);
-        const response = MapAnnouncement.inAnnouncementsControllerAllMethods(publishedAnnouncement);
+		// ------------------------------------------------------------------------
+		// Send Notifications
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Send Notifications
-        // ------------------------------------------------------------------------
+		if (!!publishedAnnouncement) {
+			const notification = new Notification({
+				content: publishedAnnouncement.content,
+				type: NotificationTypeEnum.WebinarStart,
+				hasBeenRead: false
+			} as Notification);
 
-        if (!!publishedAnnouncement) {
-            const notification = new Notification({
-                content: publishedAnnouncement.content,
-                type: NotificationTypeEnum.WebinarStart,
-                hasBeenRead: false
-            } as Notification);
+			try {
+				await NotificationService.sendNotificationToAllAsync(req, notification);
+			} catch (error) {
+				await LogService.log(req, "An error occured while sending an announcement.", error.toString(), LogTypeEnum.Exception);
+			}
+		}
 
-            try {
-                await NotificationService.sendNotificationToAllAsync(req, notification);
-            } catch (error) { }
-        }
+		CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
+		return Methods.getJsonResponse(response, "Announcement was successfully published");
+	}
 
-        CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
-        return Methods.getJsonResponse(response, "Announcement was successfully published");
-    }
+	async unPublishAsync(req: Request, resp: Response, next: NextFunction) {
+		const id = req.params.id as string;
+		const announcement = await this.announcementRepository.findOne(id);
 
-    async unPublishAsync(req: Request, resp: Response, next: NextFunction) {
-        const id = req.params.id as string;
-        const announcement = await this.announcementRepository.findOne(id);
+		if (!announcement) {
+			Methods.sendErrorResponse(resp, 404, "Announcement was not found");
+			return;
+		}
 
-        if (!announcement) {
-            Methods.sendErrorResponse(resp, 404, "Announcement was not found");
-            return;
-        }
+		if (!announcement.isPublished) {
+			Methods.sendErrorResponse(resp, 400, "Announcement is not yet published");
+			return;
+		}
 
-        if (!announcement.isPublished) {
-            Methods.sendErrorResponse(resp, 400, "Announcement is not yet published");
-            return;
-        }
+		announcement.isPublished = false;
 
-        announcement.isPublished = false;
+		const unpublishedAnnouncement = await this.announcementRepository.save(announcement);
+		const response = MapAnnouncement.inAnnouncementsControllerAllMethods(unpublishedAnnouncement);
 
-        const unpublishedAnnouncement = await this.announcementRepository.save(announcement);
-        const response = MapAnnouncement.inAnnouncementsControllerAllMethods(unpublishedAnnouncement);
-
-        return Methods.getJsonResponse(response, "Announcement was successfully unpublished");
-    }
+		return Methods.getJsonResponse(response, "Announcement was successfully unpublished");
+	}
 }

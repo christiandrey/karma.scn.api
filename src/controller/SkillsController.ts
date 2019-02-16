@@ -6,6 +6,8 @@ import { FormResponse } from "../dto/classes/FormResponse";
 import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { Skill } from "../entities/Skill";
 import { MapSkill } from "../mapping/mapSkill";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class SkillsController {
 	private skillRepository = getRepository(Skill);
@@ -79,6 +81,7 @@ export class SkillsController {
 				const deletedSkill = await this.skillRepository.remove(skillToDelete);
 				return Methods.getJsonResponse(MapSkill.inAllControllers(deletedSkill), "Delete operation was successful");
 			} catch (error) {
+				await LogService.log(req, `An error occured while deleting the skill '${skillToDelete.title}'`, error.toString(), LogTypeEnum.Exception);
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
 		}

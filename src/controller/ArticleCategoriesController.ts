@@ -8,6 +8,8 @@ import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { MapArticleCategory } from "../mapping/mapArticleCategory";
 import { Constants } from "../shared/constants";
 import { CacheService } from "../services/cacheService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
+import { LogService } from "../services/logService";
 
 export class ArticleCategoriesController {
 	private articleCategoryRepository = getRepository(ArticleCategory);
@@ -102,6 +104,7 @@ export class ArticleCategoriesController {
 				const deletedArticleCategory = await this.articleCategoryRepository.remove(articleCategoryToDelete);
 				return Methods.getJsonResponse(MapArticleCategory.inArticleCategoriesControllerDeleteAsync(deletedArticleCategory), "Delete operation was successful");
 			} catch (error) {
+				await LogService.log(req, "An error occured while deleting an Article Category.", error.toString(), LogTypeEnum.Exception);
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
 		}

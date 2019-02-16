@@ -275,6 +275,45 @@ export namespace Methods {
 		return `${text[0].toUpperCase()}${text.slice(1).toLowerCase()}`;
 	}
 
+	// -------------------------------------------------------------------------------------------------
+	/** Sanitizes a given url */
+	export function sanitizeURL(url: string): string {
+		const invalidProtocolRegex = /^(%20|\s)*(javascript|data)/im;
+		const ctrlCharactersRegex = /[^\x20-\x7E]/gim;
+		const urlSchemeRegex = /^([^:]+):/gm;
+		const relativeFirstCharacters = [".", "/"];
+		const absoluteUrlTestRegex = /^http[s]?:\/\//g;
+
+		if (!url) {
+			return "about:blank";
+		}
+
+		let urlScheme: string, urlSchemeParseResults: RegExpMatchArray;
+		var sanitizedUrl = url.replace(ctrlCharactersRegex, "");
+
+		if (relativeFirstCharacters.indexOf(sanitizedUrl[0]) > -1) {
+			return sanitizedUrl;
+		}
+
+		urlSchemeParseResults = sanitizedUrl.match(urlSchemeRegex);
+
+		if (!urlSchemeParseResults) {
+			return "about:blank";
+		}
+
+		urlScheme = urlSchemeParseResults[0];
+
+		if (invalidProtocolRegex.test(urlScheme)) {
+			return "about:blank";
+		}
+
+		if (!absoluteUrlTestRegex.test(sanitizedUrl)) {
+			sanitizedUrl = `http://${sanitizedUrl}`;
+		}
+
+		return sanitizedUrl;
+	}
+
 	function getDescendantProp(source: any, property: string) {
 		var arr = property.split(".");
 		while (arr.length) {

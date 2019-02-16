@@ -20,6 +20,7 @@ import { SkillsController } from "../controller/SkillsController";
 import { WebinarsController } from "../controller/WebinarsController";
 import { TimelineController } from "../controller/TimelineController";
 import { AdsController } from "../controller/AdsController";
+import { LogsController } from "../controller/LogsController";
 
 export interface IRoute {
 	method: string;
@@ -735,6 +736,14 @@ export const Routes = [
 		route: "/ads/:id",
 		controller: AdsController,
 		action: "deleteAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "get",
+		route: "/logs/latest",
+		controller: LogsController,
+		action: "getLatestAsync",
 		protected: true,
 		admin: true
 	}

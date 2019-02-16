@@ -12,6 +12,7 @@ import { Comment } from "../entities/Comment";
 import { CommentService } from "../services/commentService";
 import { CacheService } from "../services/cacheService";
 import { Constants } from "../shared/constants";
+import { LogService } from "../services/logService";
 
 export class DiscussionsController {
 	private discussionRepository = getRepository(Discussion);
@@ -92,6 +93,7 @@ export class DiscussionsController {
 		});
 
 		const createdDiscussion = await this.discussionRepository.save(discussionToCreate);
+		await LogService.log(req, `A new discussion, with topic, ${createdDiscussion.topic} has just been created.`);
 		const validResponse = new FormResponse<Discussion>({
 			isValid: true,
 			target: MapDiscussion.inDiscussionsControllerCreateAsync(createdDiscussion)

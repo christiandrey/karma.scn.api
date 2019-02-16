@@ -8,6 +8,7 @@ import { Product } from "./Product";
 import { User } from "./User";
 import { Address } from "./Address";
 import { IsNotWhitespace } from "../shared/decorators";
+import { Methods } from "../shared/methods";
 
 @Entity()
 export class Company extends BaseEntity {
@@ -134,6 +135,18 @@ export class Company extends BaseEntity {
 	updateUrlToken() {
 		const urlToken = this.name.toLowerCase().replace(/[^a-z]/g, "");
 		this.urlToken = urlToken;
+	}
+
+	@BeforeInsert()
+	sanitizeUrlBeforeInsert() {
+		const sanitizedUrl = Methods.sanitizeURL(this.website);
+		this.website = sanitizedUrl;
+	}
+
+	@BeforeInsert()
+	sanitizeUrlBeforeUpdate() {
+		const sanitizedUrl = Methods.sanitizeURL(this.website);
+		this.website = sanitizedUrl;
 	}
 
 	constructor(dto?: Company | any) {

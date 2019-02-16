@@ -7,6 +7,8 @@ import { IFormResponse } from "../dto/interfaces/IFormResponse";
 import { Product } from "../entities/Product";
 import { MapProduct } from "../mapping/mapProduct";
 import { Category } from "../entities/Category";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class ProductsController {
 	private productRepository = getRepository(Product);
@@ -125,6 +127,7 @@ export class ProductsController {
 				const deletedProduct = await this.productRepository.remove(productToDelete);
 				return Methods.getJsonResponse(MapProduct.inAllControllers(deletedProduct), "Delete operation was successful");
 			} catch (error) {
+				await LogService.log(req, `An error occured while deleting the product ${productToDelete.title}.`, error.toString(), LogTypeEnum.Exception);
 				return Methods.getJsonResponse({}, error.toString(), false);
 			}
 		}

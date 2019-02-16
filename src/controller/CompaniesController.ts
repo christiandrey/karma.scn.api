@@ -18,6 +18,8 @@ import { Notification } from "../entities/Notification";
 import { NotificationTypeEnum } from "../enums/NotificationTypeEnum";
 import { NotificationService } from "../services/notificationService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class CompaniesController {
 	private companyRepository = getRepository(Company);
@@ -147,6 +149,7 @@ export class CompaniesController {
 		companyToCreate.address.country = new Country({ id: defaultCountry.id });
 
 		const createdCompany = await this.companyRepository.save(companyToCreate);
+		await LogService.log(req, `${createdCompany.name} just signed up as a vendor.`);
 		const validResponse = new FormResponse<Company>({
 			isValid: true,
 			target: MapCompany.inUsersControllerCreateAsync(createdCompany)
@@ -248,7 +251,10 @@ export class CompaniesController {
 
 		try {
 			await NotificationService.sendNotificationAsync(req, notification);
-		} catch (error) {}
+			await LogService.log(req, `The vendor, ${company.name} has just been verified.`);
+		} catch (error) {
+			await LogService.log(req, `An error occured while sending a vendor verification notification for ${company.name}.`, error.toString(), LogTypeEnum.Exception);
+		}
 
 		return Methods.getJsonResponse(response, "Vendor was successfully verified");
 	}

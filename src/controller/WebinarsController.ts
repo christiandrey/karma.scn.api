@@ -19,6 +19,8 @@ import { CacheService } from "../services/cacheService";
 import { CommentService } from "../services/commentService";
 import { Comment } from "../entities/Comment";
 import { SocketService } from "../services/socketService";
+import { LogService } from "../services/logService";
+import { LogTypeEnum } from "../enums/LogTypeEnum";
 
 export class WebinarsController {
 	private webinarRepository = getRepository(Webinar);
@@ -137,7 +139,14 @@ export class WebinarsController {
 				await NotificationService.sendNotificationToAllAsync(req, notification);
 				//TODO: Send Email reminders to all users 1 hour before webinar starts
 				//TODO: Send Email reminder to anchor telling him that he has been assigned to anchor a webinar. The email should contain the link to the webinar.
-			} catch (error) {}
+			} catch (error) {
+				await LogService.log(
+					req,
+					`An error occured while sending webinar reminder notifications for the webinar with url token, ${createdWebinar.urlToken}.`,
+					error.toString(),
+					LogTypeEnum.Exception
+				);
+			}
 		}
 
 		// ------------------------------------------------------------------------
@@ -156,7 +165,15 @@ export class WebinarsController {
 			} as Announcement);
 			try {
 				await announcementRepository.save(announcementToCreate);
-			} catch (error) {}
+				await LogService.log(req, `A webinar with ID, ${createdWebinar.urlToken} has just been created.`);
+			} catch (error) {
+				await LogService.log(
+					req,
+					`An error occured while sending webinar creation announcements for the webinar with ID, ${createdWebinar.urlToken}`,
+					error.toString(),
+					LogTypeEnum.Exception
+				);
+			}
 		}
 
 		const validResponse = new FormResponse<Webinar>({
@@ -269,7 +286,15 @@ export class WebinarsController {
 
 		try {
 			await NotificationService.sendNotificationToAllAsync(req, notification);
-		} catch (error) {}
+			await LogService.log(req, `The webinar with ID, ${dbWebinar.urlToken} has just started.`);
+		} catch (error) {
+			await LogService.log(
+				req,
+				`An error occured while sending webinar start notifications for the webinar with ID, ${dbWebinar.urlToken}.`,
+				error.toString(),
+				LogTypeEnum.Exception
+			);
+		}
 
 		const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(startedWebinar);
 
@@ -311,6 +336,7 @@ export class WebinarsController {
 		await this.userRepository.save(participants);
 
 		SocketService.finishWebinar(req, dbWebinar.urlToken);
+		await LogService.log(req, `The webinar with ID, ${dbWebinar.urlToken} has just finished.`);
 
 		const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(finishedWebinar);
 
