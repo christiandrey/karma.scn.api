@@ -18,6 +18,7 @@ import { Announcement } from "../entities/Announcement";
 import { CacheService } from "../services/cacheService";
 import { CommentService } from "../services/commentService";
 import { Comment } from "../entities/Comment";
+import { SocketService } from "../services/socketService";
 
 export class WebinarsController {
 	private webinarRepository = getRepository(Webinar);
@@ -297,6 +298,8 @@ export class WebinarsController {
 
 		await this.userRepository.save(participants);
 
+		SocketService.finishWebinar(req, dbWebinar.urlToken);
+
 		const response = MapWebinar.inWebinarControllersJoinStartFinishAsync(finishedWebinar);
 
 		return Methods.getJsonResponse(response, "Webinar was successfully ended");
@@ -319,6 +322,10 @@ export class WebinarsController {
 		comment.webinar = new Webinar({ id: webinar.id });
 
 		const response = await CommentService.addCommentAsync(req, comment);
+
+		response.data.target.webinar = comment.webinar;
+
+		req.io.emit("webinarComment", response.data.target);
 
 		if (response.status) {
 			CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);

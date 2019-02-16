@@ -94,4 +94,10 @@ export namespace SocketService {
 	// -------------------------------------------------------------------------------------------------
 	/** Write webinar video stream to file */
 	export function writeWebinarVideoStreamToFile(stream: any) {}
+
+	// -------------------------------------------------------------------------------------------------
+	/** Sends a finish signal to all users when a webinar has been marked as finished */
+	export function finishWebinar(req: Request, webinarUrlToken: string) {
+		req.io.emit("finishWebinar", webinarUrlToken);
+	}
 }

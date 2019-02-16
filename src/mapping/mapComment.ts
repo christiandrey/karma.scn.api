@@ -35,6 +35,7 @@ export namespace MapComment {
 			discussion: !!comment.discussion ? new Discussion({ id: comment.discussion.id }) : null,
 			webinar: !!comment.webinar ? new Webinar({ id: comment.webinar.id }) : null,
 			content: comment.content,
+			parentComment: !!comment.parentComment ? new Comment(comment.parentComment) : null,
 			childComments: !!comment.childComments ? comment.childComments.map(c => inAllControllers(c)) : new Array<Comment>()
 		} as Comment;
 	}

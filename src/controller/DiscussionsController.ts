@@ -113,9 +113,9 @@ export class DiscussionsController {
 
 		const response = await CommentService.addCommentAsync(req, comment);
 
-		if (!comment.parentComment) {
-			req.io.emit("discussionComment", response.data.target);
-		}
+		response.data.target.discussion = comment.discussion;
+
+		req.io.emit("discussionComment", response.data.target);
 
 		if (response.status) {
 			CacheService.invalidateCacheItem(Constants.sortedTimelinePosts);
