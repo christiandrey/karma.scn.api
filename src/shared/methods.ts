@@ -1,5 +1,5 @@
 import { IJsonResponse } from "../interfaces/IJsonResponse";
-import { Validator } from "class-validator";
+import { Validator, ValidationError } from "class-validator";
 import { Response, Request } from "express";
 import * as path from "path";
 import { TimelinePost } from "../dto/classes/TimelinePost";
@@ -312,6 +312,14 @@ export namespace Methods {
 		}
 
 		return sanitizedUrl;
+	}
+
+	// -------------------------------------------------------------------------------------------------
+	/** Gets validation errors including the nested validation errors */
+	export function getValidationErrors(validationResult: Array<ValidationError>): Array<ValidationError> {
+		const validationErrors = validationResult.filter(x => !!x.constraints);
+		const nestedValidationErrors = validationResult.filter(x => x.children.length).reduce((a, b) => [...a, ...b.children], new Array<ValidationError>());
+		return [...validationErrors, ...nestedValidationErrors];
 	}
 
 	function getDescendantProp(source: any, property: string) {

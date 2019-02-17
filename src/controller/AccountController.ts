@@ -6,7 +6,7 @@ import { IVerifyOptions } from "passport-local";
 import { FormResponse } from "../dto/classes/FormResponse";
 import { Methods } from "../shared/methods";
 import { RegisterDetails } from "../dto/classes/RegisterDetails";
-import { validate } from "class-validator";
+import { validate, ValidationError } from "class-validator";
 import * as bcrypt from "bcrypt";
 import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
 import { EmailService } from "../services/emailService";
@@ -60,7 +60,7 @@ export class AccountController {
 		if (validationResult.length) {
 			const response = new FormResponse({
 				isValid: false,
-				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+				errors: Methods.getValidationErrors(validationResult).map(e => e.constraints && e.constraints[Object.keys(e.constraints)[0]])
 			});
 
 			return Methods.getJsonResponse(response, "Invalid sign in details", false);
@@ -92,13 +92,15 @@ export class AccountController {
 				verified: false,
 				address: new Address({
 					city: Methods.toSentenceCase(address.city),
-					state: Methods.toSentenceCase(address.state)
+					state: Methods.toSentenceCase(address.state),
+					country: new Country({ id: address.country.id })
 				} as Address),
 				email: email.toLowerCase()
 			});
 
-			const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
-			user.address.country = new Country({ id: defaultCountry.id });
+			// const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
+			// user.address.country = new Country({ id: defaultCountry.id });
+
 			user.password = await bcrypt.hash(password, 2);
 
 			dbUser = await this.userRepository.save(user);

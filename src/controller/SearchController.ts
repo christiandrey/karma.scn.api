@@ -27,10 +27,10 @@ export class SearchController {
 		let vendors = new Array<User>();
 
 		if (type == undefined || type === null) {
-			if (!category) {
+			if (!category && !product) {
 				members = await this.findMembers(location, query);
 			}
-			vendors = await this.findVendors(category, location, query);
+			vendors = await this.findVendors(category, product, location, query);
 		}
 
 		if (type === UserTypeEnum.Member) {
@@ -102,10 +102,6 @@ export class SearchController {
 			dbQuery = dbQuery.andWhere("category.name = :category", { category });
 		}
 
-		// if (product) {
-		// 	dbQuery = dbQuery.andWhere("")
-		// }
-
 		let vendors = await dbQuery
 			.leftJoinAndSelect("company.address", "address")
 			.leftJoinAndSelect("address.country", "country")
@@ -113,8 +109,7 @@ export class SearchController {
 			.getMany();
 
 		if (product) {
-			// vendors = vendors.filter(x => x.company.products.findIndex(p => p.id === product) > -1);
-			vendors = vendors.filter(x => x.company.products.find(p => p.id === product));
+			vendors = vendors.filter(x => x.company.products.find(p => p.name === product));
 		}
 
 		if (!location) return Promise.resolve(vendors);

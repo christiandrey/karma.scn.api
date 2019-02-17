@@ -70,7 +70,7 @@ export class CompaniesController {
 		if (validationResult.length > 0) {
 			const invalidResponse = new FormResponse({
 				isValid: false,
-				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+				errors: Methods.getValidationErrors(validationResult).map(e => e.constraints[Object.keys(e.constraints)[0]])
 			} as IFormResponse);
 			return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
 		}
@@ -164,7 +164,7 @@ export class CompaniesController {
 		if (validationResult.length > 0) {
 			const invalidResponse = new FormResponse({
 				isValid: false,
-				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+				errors: Methods.getValidationErrors(validationResult).map(e => e.constraints[Object.keys(e.constraints)[0]])
 			} as IFormResponse);
 			return Methods.getJsonResponse(invalidResponse, "Vendor data provided was not valid", false);
 		}

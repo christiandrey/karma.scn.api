@@ -1,7 +1,7 @@
 import { Entity, Column, OneToOne, JoinColumn, ManyToMany, OneToMany, ManyToOne, AfterLoad, BeforeInsert, BeforeUpdate, JoinTable } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
-import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha, IsNotEmpty } from "class-validator";
+import { IsEmail, MinLength, IsFQDN, MaxLength, IsLowercase, Matches, IsAlpha, IsNotEmpty, ValidateNested } from "class-validator";
 import { Company } from "./Company";
 import { Media } from "./Media";
 import { View } from "./View";
@@ -45,9 +45,8 @@ export class User extends BaseEntity {
 		eager: true,
 		cascade: true
 	})
-	// @IsNotEmpty()
-	@IsNotEmptyForMember("type")
 	@JoinColumn()
+	@IsNotEmptyForMember("type")
 	address?: Address;
 
 	@OneToOne(type => Experience)

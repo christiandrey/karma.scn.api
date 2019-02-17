@@ -1,13 +1,12 @@
 import { Entity, Column, OneToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
-import { IsEmail, IsFQDN, IsDate, IsNotEmpty, MaxLength, IsLowercase, Matches, IsDateString, IsNumber, ArrayNotEmpty, ArrayMinSize } from "class-validator";
+import { IsEmail, IsNotEmpty, MaxLength, IsDateString, IsNumber, ValidateNested, ValidateIf } from "class-validator";
 import { BusinessRegistrationTypeEnum } from "../enums/BusinessRegistrationTypeEnum";
 import { Media } from "./Media";
 import { Category } from "./Category";
 import { Product } from "./Product";
 import { User } from "./User";
 import { Address } from "./Address";
-import { IsNotWhitespace } from "../shared/decorators";
 import { Methods } from "../shared/methods";
 
 @Entity()
@@ -24,12 +23,13 @@ export class Company extends BaseEntity {
 	})
 	logoUrl: string;
 
-	@OneToOne(type => Address, {
+	@OneToOne(() => Address, {
 		eager: true,
 		cascade: true
 	})
 	@JoinColumn()
 	@IsNotEmpty()
+	@ValidateNested()
 	address: Address;
 
 	@Column()
@@ -62,24 +62,28 @@ export class Company extends BaseEntity {
 	@Column({
 		nullable: true
 	})
+	@ValidateIf(o => o.registrationType !== BusinessRegistrationTypeEnum.NotRegistered)
 	@IsNotEmpty()
 	registrationNumber: string;
 
 	@Column({
 		nullable: true
 	})
+	@ValidateIf(o => o.registrationType !== BusinessRegistrationTypeEnum.NotRegistered)
 	@IsDateString()
 	registrationDate: Date;
 
 	@Column({
 		nullable: true
 	})
+	@ValidateIf(o => o.registrationType !== BusinessRegistrationTypeEnum.NotRegistered)
 	@IsNumber()
 	taxpayersIdentificationNumber: number;
 
 	@Column({
 		nullable: true
 	})
+	@ValidateIf(o => o.registrationType !== BusinessRegistrationTypeEnum.NotRegistered)
 	@IsNumber()
 	vatRegistrationNumber: number;
 
@@ -97,19 +101,19 @@ export class Company extends BaseEntity {
 	@MaxLength(500)
 	productsDescription: string;
 
-	@ManyToOne(type => Category, {
+	@ManyToOne(() => Category, {
 		eager: true
 	})
 	@IsNotEmpty()
 	category: Category;
 
-	@ManyToMany(type => Product, product => product.companies, {
+	@ManyToMany(() => Product, product => product.companies, {
 		eager: true
 	})
 	@JoinTable()
 	products: Array<Product>;
 
-	@OneToMany(type => Media, media => media.company, {
+	@OneToMany(() => Media, media => media.company, {
 		eager: true
 	})
 	// @IsNotEmpty()
@@ -117,7 +121,7 @@ export class Company extends BaseEntity {
 	// @ArrayMinSize(7)
 	documents: Array<Media>;
 
-	@OneToOne(type => User, user => user.company, {
+	@OneToOne(() => User, user => user.company, {
 		cascade: false
 	})
 	user: User;
