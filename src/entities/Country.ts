@@ -7,6 +7,11 @@ export class Country extends BaseEntity {
 	@Column()
 	name: string;
 
+	@Column("longtext", {
+		nullable: true
+	})
+	states: string;
+
 	@Column({
 		default: false
 	})
@@ -21,6 +26,7 @@ export class Country extends BaseEntity {
 		dto = dto || ({} as Country);
 
 		this.name = dto.name;
+		this.states = dto.states;
 		this.isDefault = dto.isDefault;
 		this.addresses = dto.addresses ? dto.addresses.map(a => new Address(a)) : null;
 	}

@@ -6,7 +6,7 @@ export namespace CacheService {
 	// -------------------------------------------------------------------------------------------------
 	/** Creates a new redis client */
 	export function createRedisClient(): RedisClient {
-		const client = createClient();
+		const client = createClient(Constants.redisURL);
 		return client;
 	}
 

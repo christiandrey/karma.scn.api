@@ -3,19 +3,20 @@ import { getRepository } from "typeorm";
 import { Country } from "../entities/Country";
 import { MapCountry } from "../mapping/mapCountry";
 import { Methods } from "../shared/methods";
+import RawCountries from "../shared/rawcountries";
 
 export class CountriesController {
 	private countryRepository = getRepository(Country);
 
 	async seedAsync(req: Request, resp: Response, next: NextFunction) {
-		const countries = ["Nigeria", "United Kingdom"];
-		const countryEntities = countries.map(
+		const countryEntities = RawCountries.map(
 			c =>
 				new Country({
-					name: c
+					name: c.country,
+					states: c.states.join(",,")
 				} as Country)
 		);
-		countryEntities[0].isDefault = true;
+		countryEntities[countryEntities.findIndex(c => c.name === "Nigeria")].isDefault = true;
 		return await this.countryRepository.save(countryEntities);
 	}
 
