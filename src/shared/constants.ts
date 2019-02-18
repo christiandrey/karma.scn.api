@@ -21,6 +21,8 @@ export namespace Constants {
 
 	export const sortedTimelinePosts = "sortedTimelinePosts";
 
+	export const cronJobs = "cronJobs";
+
 	export const commentsTree = "commentsTree";
 
 	export const redisURL = "redis://h:pc55953e41819fa4d618407fd526fda20b9a39cda7f2dad6d83bd99f526e98acb@ec2-63-35-36-61.eu-west-1.compute.amazonaws.com:13269";

@@ -111,10 +111,14 @@ createConnection()
 			}
 		});
 
-		const port = process.env.PORT || 2311;
+		// ----------------------------------------------------------------------
+		// Restart all CRON jobs
+		// ----------------------------------------------------------------------
+
+		const port = process.env.PORT || 1811;
 
 		server.listen(port);
 
-		console.log("Express server has started on port %s. Open http://localhost:1811/users to see results", port);
+		console.log("Express server has started on port %s. Open http://localhost:%s/users to see results", port, port);
 	})
 	.catch(error => console.log(error));

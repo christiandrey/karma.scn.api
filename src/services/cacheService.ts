@@ -6,7 +6,7 @@ export namespace CacheService {
 	// -------------------------------------------------------------------------------------------------
 	/** Creates a new redis client */
 	export function createRedisClient(): RedisClient {
-		const client = createClient(Constants.redisURL);
+		const client = createClient();
 		return client;
 	}
 
@@ -38,6 +38,20 @@ export namespace CacheService {
 			const value = await storeFunction();
 			await addOrUpdateCacheItem(key, value, client);
 			return Promise.resolve(value);
+		}
+	}
+
+	// -------------------------------------------------------------------------------------------------
+	/** Persists a cache item */
+	export async function persistCacheItem(key: string, redisClient?: RedisClient): Promise<void> {
+		const client = !!redisClient ? redisClient : createRedisClient();
+		const persistAsync = promisify(client.persist).bind(client);
+
+		try {
+			await persistAsync(key);
+			return Promise.resolve();
+		} catch (error) {
+			return Promise.reject();
 		}
 	}
 

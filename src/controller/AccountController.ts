@@ -1,13 +1,13 @@
+import * as bcrypt from "bcrypt";
+import * as passport from "passport";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entities/User";
 import { getRepository } from "typeorm";
-import * as passport from "passport";
 import { IVerifyOptions } from "passport-local";
 import { FormResponse } from "../dto/classes/FormResponse";
 import { Methods } from "../shared/methods";
 import { RegisterDetails } from "../dto/classes/RegisterDetails";
 import { validate, ValidationError } from "class-validator";
-import * as bcrypt from "bcrypt";
 import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
 import { EmailService } from "../services/emailService";
 import { UserService } from "../services/userService";
@@ -19,7 +19,6 @@ import { Constants } from "../shared/constants";
 
 export class AccountController {
 	private userRepository = getRepository(User);
-	private countryRepository = getRepository(Country);
 
 	async login(req: Request, resp: Response, next: NextFunction) {
 		passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
@@ -98,9 +97,6 @@ export class AccountController {
 				} as Address),
 				email: email.toLowerCase()
 			});
-
-			// const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
-			// user.address.country = new Country({ id: defaultCountry.id });
 
 			user.password = await bcrypt.hash(password, 2);
 
