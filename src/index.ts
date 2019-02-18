@@ -10,11 +10,9 @@ import * as fileUpload from "express-fileupload";
 import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
 import { SocketService } from "./services/socketService";
-import { Comment } from "./entities/Comment";
 import { Constants } from "./shared/constants";
 import { User } from "./entities/User";
 import { VerifiedCallback } from "passport-jwt";
-import { CacheService } from "./services/cacheService";
 
 createConnection()
 	.then(async connection => {
@@ -40,25 +38,7 @@ createConnection()
 		// ----------------------------------------------------------------------
 		// CORS
 		// ----------------------------------------------------------------------
-		// var whitelist = [
-		// 	"http://localhost:1313",
-		// 	"http://localhost:1810",
-		// 	"http://192.168.4.208:1810",
-		// 	"192.168.4.208:1810",
-		// 	"192.168.8.106:1313/viz",
-		// 	"http://192.168.8.106:1313/viz"
-		// ];
-		// var options = {
-		// 	credentials: true,
-		// 	origin: function(origin, callback) {
-		// 		if (whitelist.indexOf(origin) !== -1) {
-		// 			callback(null, true);
-		// 		} else {
-		// 			callback(new Error("Not allowed by CORS"));
-		// 		}
-		// 	}
-		// };
-		// app.use(cors(options));
+
 		app.use(cors());
 
 		// ----------------------------------------------------------------------
@@ -93,23 +73,6 @@ createConnection()
 
 		io.on("connection", async socket => {
 			await SocketService.createSocketRecord(socket.request, socket.id);
-
-			// socket.on("webinarComment", async (comment: Comment, id: string) => {
-			// 	console.log({ comment }, { id });
-			// 	const createdComment = await SocketService.addWebinarComment(socket.request, comment, id);
-
-			// 	if (!!createdComment) {
-			// 		socket.broadcast.emit("webinarComment", createdComment);
-			// 	}
-			// });
-
-			// socket.on("discussionComment", async (comment: Comment, id: string) => {
-			// 	const createdComment = await SocketService.addDiscussionComment(socket.request, comment, id);
-
-			// 	if (!!createdComment) {
-			// 		socket.broadcast.emit("discussionComment", createdComment);
-			// 	}
-			// });
 
 			socket.on("disconnect", async () => {
 				await SocketService.deleteSocketRecord(socket.id);
