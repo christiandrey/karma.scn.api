@@ -17,25 +17,25 @@ export namespace EmailService {
 
 		try {
 			const account = await Nodemailer.createTestAccount(); //Using this cause there's no real account yet
+			// const transporter = await Nodemailer.createTransport({
+			// 	host: "smtp.ethereal.email",
+			// 	port: 587,
+			// 	secure: false,
+			// 	auth: {
+			// 		user: account.user,
+			// 		pass: account.pass
+			// 	}
+			// });
+
 			const transporter = await Nodemailer.createTransport({
-				host: "smtp.ethereal.email",
+				host: "smtp.gmail.com",
 				port: 587,
 				secure: false,
 				auth: {
-					user: account.user,
-					pass: account.pass
+					user: "blaise.disposables@gmail.com",
+					pass: "loremIPSUM2012"
 				}
 			});
-
-			// const transporter = await Nodemailer.createTransport({
-			//     host: 'smtp.gmail.com',
-			//     port: 587,
-			//     secure: false,
-			//     auth: {
-			//         user: "blaise.disposables@gmail.com",
-			//         pass: "loremIPSUM2012"
-			//     }
-			// });
 
 			const { to, subject, text, html } = config;
 			const sendMailOptions = {
