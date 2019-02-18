@@ -45,8 +45,14 @@ export const Routes = [
 		action: "register"
 	},
 	{
+		method: "post",
+		route: "/account/seed/:key",
+		controller: AccountController,
+		action: "seedAsync"
+	},
+	{
 		method: "get",
-		route: "/countries/seed",
+		route: "/countries/seed/:key",
 		controller: CountriesController,
 		action: "seedAsync"
 	},

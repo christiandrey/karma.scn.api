@@ -15,6 +15,7 @@ import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { Address } from "../entities/Address";
 import { Country } from "../entities/Country";
 import { LogService } from "../services/logService";
+import { Constants } from "../shared/constants";
 
 export class AccountController {
 	private userRepository = getRepository(User);
@@ -124,5 +125,35 @@ export class AccountController {
 
 			return Methods.getJsonResponse(response, "New user was created successfully");
 		}
+	}
+
+	async seedAsync(req: Request, resp: Response, next: NextFunction) {
+		const key = req.params.key;
+
+		if (key !== Constants.seedKey) {
+			Methods.sendErrorResponse(resp, 401);
+			return;
+		}
+
+		const user = new User({
+			firstName: "Admin",
+			lastName: "User",
+			type: UserTypeEnum.Admin,
+			phone: "08144398813",
+			dateOfBirth: new Date("1990-10-30T02:41:17.396Z"),
+			verified: true,
+			address: new Address({
+				city: "Ikeja",
+				state: "Lagos",
+				country: new Country({ id: "d44199d3-c6ef-421c-b63d-0ff47dddc3bb" })
+			}),
+			email: "admin@supplychainnetwork.com"
+		} as User);
+
+		user.password = await bcrypt.hash("cxBeNT7czs4iOMXsQ25D", 2);
+
+		await this.userRepository.save(user);
+
+		return Methods.getJsonResponse({}, "Seed complete");
 	}
 }

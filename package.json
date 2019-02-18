@@ -56,6 +56,7 @@
 		"start": "TS_NODE_FILES=true node --inspect=5858 -r ts-node/register ./src/index.ts",
 		"dev": "./node_modules/nodemon/bin/nodemon.js",
 		"gen-mig": "./node_modules/.bin/ts-node ./node_modules/.bin/typeorm migration:generate -n $name",
-		"run-mig": "./node_modules/.bin/ts-node ./node_modules/.bin/typeorm migration:run"
+		"run-mig": "./node_modules/.bin/ts-node ./node_modules/.bin/typeorm migration:run",
+		"deploy": "git add . && git commit -m 'Heroku updates' && git push heroku deployment:master"
 	}
 }

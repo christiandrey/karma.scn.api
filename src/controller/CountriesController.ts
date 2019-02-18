@@ -4,11 +4,19 @@ import { Country } from "../entities/Country";
 import { MapCountry } from "../mapping/mapCountry";
 import { Methods } from "../shared/methods";
 import RawCountries from "../shared/rawcountries";
+import { Constants } from "../shared/constants";
 
 export class CountriesController {
 	private countryRepository = getRepository(Country);
 
 	async seedAsync(req: Request, resp: Response, next: NextFunction) {
+		const key = req.params.key;
+
+		if (key !== Constants.seedKey) {
+			Methods.sendErrorResponse(resp, 401);
+			return;
+		}
+
 		const countryEntities = RawCountries.map(
 			c =>
 				new Country({

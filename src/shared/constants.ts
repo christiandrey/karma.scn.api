@@ -26,4 +26,6 @@ export namespace Constants {
 	export const redisURL = "redis://h:pc55953e41819fa4d618407fd526fda20b9a39cda7f2dad6d83bd99f526e98acb@ec2-63-35-36-61.eu-west-1.compute.amazonaws.com:13269";
 
 	export const redisTTL = 3600;
+
+	export const seedKey = "3BWB5%3$C1hpsGWHiMNsSWo#!B^9JoFELf^WZL2V7NTVX@VT0^re$K%NUKq2RCCF!!0W^U";
 }
