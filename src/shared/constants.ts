@@ -27,5 +27,5 @@ export namespace Constants {
 
 	export const redisTTL = 3600;
 
-	export const seedKey = "3BWB5%3$C1hpsGWHiMNsSWo#!B^9JoFELf^WZL2V7NTVX@VT0^re$K%NUKq2RCCF!!0W^U";
+	export const seedKey = "8XNXegy4nhjKh80CruU2tM97QioWh0dcWau8TbnD3wHNjlhc5fDhqoKd3cnnLjPaNz2xJs";
 }
