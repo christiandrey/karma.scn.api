@@ -111,7 +111,7 @@ createConnection()
 			}
 		});
 
-		var port = process.env.PORT || 2311;
+		const port = process.env.PORT || 2311;
 
 		server.listen(port);
 
