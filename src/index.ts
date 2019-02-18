@@ -111,8 +111,10 @@ createConnection()
 			}
 		});
 
-		server.listen(1811);
+		var port = process.env.PORT || 2311;
 
-		console.log("Express server has started on port 1811. Open http://localhost:1811/users to see results");
+		server.listen(port);
+
+		console.log("Express server has started on port %s. Open http://localhost:1811/users to see results", port);
 	})
 	.catch(error => console.log(error));
