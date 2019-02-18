@@ -51,7 +51,7 @@ export const Routes = [
 		action: "seedAsync"
 	},
 	{
-		method: "get",
+		method: "post",
 		route: "/countries/seed/:key",
 		controller: CountriesController,
 		action: "seedAsync"
