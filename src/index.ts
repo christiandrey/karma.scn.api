@@ -13,6 +13,7 @@ import { SocketService } from "./services/socketService";
 import { Constants } from "./shared/constants";
 import { User } from "./entities/User";
 import { VerifiedCallback } from "passport-jwt";
+import { CronService } from "./services/cronService";
 
 createConnection()
 	.then(async connection => {
@@ -21,6 +22,11 @@ createConnection()
 		const app = express();
 
 		app.use(bodyParser.json());
+
+		// ----------------------------------------------------------------------
+		// Restart all CRON jobs (Middleware)
+		// ----------------------------------------------------------------------
+		await CronService.startAllCronJobs(app.request);
 
 		// ----------------------------------------------------------------------
 		// File upload
@@ -110,10 +116,6 @@ createConnection()
 				});
 			}
 		});
-
-		// ----------------------------------------------------------------------
-		// Restart all CRON jobs
-		// ----------------------------------------------------------------------
 
 		const port = process.env.PORT || 1811;
 

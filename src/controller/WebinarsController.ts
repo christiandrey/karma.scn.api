@@ -21,6 +21,8 @@ import { Comment } from "../entities/Comment";
 import { SocketService } from "../services/socketService";
 import { LogService } from "../services/logService";
 import { LogTypeEnum } from "../enums/LogTypeEnum";
+import { CronService } from "../services/cronService";
+import { CronJobTypeEnum } from "../enums/CronJobTypeEnum";
 
 export class WebinarsController {
 	private webinarRepository = getRepository(Webinar);
@@ -136,8 +138,14 @@ export class WebinarsController {
 			} as Notification);
 
 			try {
+				const timeToSendReminderEmail = moment(startDateTime)
+					.subtract(1, "hours")
+					.toDate();
 				await NotificationService.sendNotificationToAllAsync(req, notification);
-				//TODO: Send Email reminders to all users 1 hour before webinar starts
+				await CronService.scheduleJobWithDate(req, timeToSendReminderEmail, CronJobTypeEnum.WebinarReminder, [
+					`https://supply-chain-network-client.herokuapp.com/webinars/${createdWebinar.urlToken}`,
+					createdWebinar.topic
+				]);
 				//TODO: Send Email reminder to anchor telling him that he has been assigned to anchor a webinar. The email should contain the link to the webinar.
 			} catch (error) {
 				await LogService.log(
