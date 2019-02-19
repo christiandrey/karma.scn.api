@@ -26,7 +26,7 @@ createConnection()
 		// ----------------------------------------------------------------------
 		// Restart all CRON jobs (Middleware)
 		// ----------------------------------------------------------------------
-		// await CronService.startAllCronJobs(app.request);
+		await CronService.startAllCronJobs(app.request);
 
 		// ----------------------------------------------------------------------
 		// File upload
