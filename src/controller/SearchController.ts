@@ -7,9 +7,6 @@ import { MapUser } from "../mapping/mapUser";
 import { ISearchResults } from "../dto/interfaces/ISearchResults";
 import { Address } from "../entities/Address";
 import { ISearchRequest } from "../dto/interfaces/ISearchRequest";
-import { Constants } from "../shared/constants";
-import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
-import { EmailService } from "../services/emailService";
 
 export class SearchController {
 	private userRepository = getRepository(User);
@@ -18,15 +15,6 @@ export class SearchController {
 	async getLocationsAsync(req: Request, resp: Response, next: NextFunction) {
 		const addresses = await this.addressRepository.find();
 		const response = addresses.map(x => `${x.state}, ${x.country.name}`).filter((x, i, s) => s.indexOf(x) === i);
-
-		const sendEmailConfig = {
-			to: "oluwaseun.adedire@gmail.com",
-			subject: "Welcome to the Supply Chain Network",
-			heading: "Hey Oluwaseun,",
-			body: Constants.welcomeEmailContent
-		} as SendEmailConfig;
-
-		await EmailService.sendEmailAsync(req, sendEmailConfig);
 
 		return Methods.getJsonResponse(response, `${response.length} location(s) found`);
 	}
