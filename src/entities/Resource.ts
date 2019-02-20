@@ -1,8 +1,9 @@
-import { Entity, ManyToOne, Column, BeforeInsert, BeforeUpdate } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne } from "typeorm";
+import { IsFQDN, IsNotEmpty, IsUrl, MaxLength } from "class-validator";
+
 import { BaseEntity } from "./BaseEntity";
-import { User } from "./User";
-import { MaxLength, IsFQDN, IsNotEmpty } from "class-validator";
 import { Methods } from "../shared/methods";
+import { User } from "./User";
 
 @Entity()
 export class Resource extends BaseEntity {
@@ -32,6 +33,7 @@ export class Resource extends BaseEntity {
 
 	@Column()
 	@IsNotEmpty()
+	@IsUrl()
 	purchaseUrl: string;
 
 	@BeforeInsert()

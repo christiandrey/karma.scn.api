@@ -1,11 +1,12 @@
-import { Entity, OneToOne, ManyToOne, JoinColumn, Column, BeforeInsert, BeforeUpdate } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
-import { User } from "./User";
-import { JobTypeEnum } from "../enums/JobTypeEnum";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
+import { IsFQDN, IsLowercase, IsNotEmpty, IsUrl, Length, Matches, MaxLength } from "class-validator";
+
 import { Address } from "./Address";
-import { IsFQDN, IsNotEmpty, MaxLength, Matches, IsLowercase, Length } from "class-validator";
+import { BaseEntity } from "./BaseEntity";
 import { Chance } from "chance";
+import { JobTypeEnum } from "../enums/JobTypeEnum";
 import { Methods } from "../shared/methods";
+import { User } from "./User";
 
 @Entity()
 export class Job extends BaseEntity {
@@ -52,6 +53,7 @@ export class Job extends BaseEntity {
 
 	@Column()
 	@IsNotEmpty()
+	@IsUrl()
 	applicationUrl: string;
 
 	@Column({

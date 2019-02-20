@@ -1,17 +1,19 @@
-import { IJsonResponse } from "../interfaces/IJsonResponse";
-import { Validator, ValidationError } from "class-validator";
-import { Response, Request } from "express";
 import * as path from "path";
+
+import { Request, Response } from "express";
+import { ValidationError, Validator } from "class-validator";
+
+import { Article } from "../entities/Article";
+import { Comment } from "../entities/Comment";
+import { IJsonResponse } from "../interfaces/IJsonResponse";
+import { Job } from "../entities/Job";
+import { Like } from "../entities/Like";
+import { Resource } from "../entities/Resource";
+import { TimelinePhoto } from "../entities/TimelinePhoto";
 import { TimelinePost } from "../dto/classes/TimelinePost";
 import { TimelinePostTypeEnum } from "../enums/TimelinePostTypeEnum";
 import { TimelineUpdate } from "../entities/TimelineUpdate";
-import { Comment } from "../entities/Comment";
-import { Like } from "../entities/Like";
-import { TimelinePhoto } from "../entities/TimelinePhoto";
-import { Job } from "../entities/Job";
 import { Webinar } from "../entities/Webinar";
-import { Resource } from "../entities/Resource";
-import { Article } from "../entities/Article";
 import { WebinarStatusEnum } from "../enums/WebinarStatusEnum";
 
 export namespace Methods {
@@ -278,40 +280,40 @@ export namespace Methods {
 	// -------------------------------------------------------------------------------------------------
 	/** Sanitizes a given url */
 	export function sanitizeURL(url: string): string {
-		const invalidProtocolRegex = /^(%20|\s)*(javascript|data)/im;
-		const ctrlCharactersRegex = /[^\x20-\x7E]/gim;
-		const urlSchemeRegex = /^([^:]+):/gm;
-		const relativeFirstCharacters = [".", "/"];
+		// const invalidProtocolRegex = /^(%20|\s)*(javascript|data)/im;
+		// const ctrlCharactersRegex = /[^\x20-\x7E]/gim;
+		// const urlSchemeRegex = /^([^:]+):/gm;
+		// const relativeFirstCharacters = [".", "/"];
 		const absoluteUrlTestRegex = /^http[s]?:\/\//g;
 
-		if (!url) {
-			return "about:blank";
+		// if (!url) {
+		// 	return "about:blank";
+		// }
+
+		// let urlScheme: string, urlSchemeParseResults: RegExpMatchArray;
+		// var sanitizedUrl = url.replace(ctrlCharactersRegex, "");
+
+		// if (relativeFirstCharacters.indexOf(sanitizedUrl[0]) > -1) {
+		// 	return sanitizedUrl;
+		// }
+
+		// urlSchemeParseResults = sanitizedUrl.match(urlSchemeRegex);
+
+		// if (!urlSchemeParseResults) {
+		// 	return "about:blank";
+		// }
+
+		// urlScheme = urlSchemeParseResults[0];
+
+		// if (invalidProtocolRegex.test(urlScheme)) {
+		// 	return "about:blank";
+		// }
+
+		if (!absoluteUrlTestRegex.test(url)) {
+			url = `http://${url}`;
 		}
 
-		let urlScheme: string, urlSchemeParseResults: RegExpMatchArray;
-		var sanitizedUrl = url.replace(ctrlCharactersRegex, "");
-
-		if (relativeFirstCharacters.indexOf(sanitizedUrl[0]) > -1) {
-			return sanitizedUrl;
-		}
-
-		urlSchemeParseResults = sanitizedUrl.match(urlSchemeRegex);
-
-		if (!urlSchemeParseResults) {
-			return "about:blank";
-		}
-
-		urlScheme = urlSchemeParseResults[0];
-
-		if (invalidProtocolRegex.test(urlScheme)) {
-			return "about:blank";
-		}
-
-		if (!absoluteUrlTestRegex.test(sanitizedUrl)) {
-			sanitizedUrl = `http://${sanitizedUrl}`;
-		}
-
-		return sanitizedUrl;
+		return url;
 	}
 
 	// -------------------------------------------------------------------------------------------------
