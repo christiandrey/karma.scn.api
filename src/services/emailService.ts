@@ -31,13 +31,14 @@ export namespace EmailService {
 			// 	}
 			// });
 
+			const { server, port, username, password } = Constants.sendGrid;
 			const transporter = await Nodemailer.createTransport({
-				host: "smtp.gmail.com",
-				port: 587,
-				secure: false,
+				host: server,
+				port,
+				secure: true,
 				auth: {
-					user: "blaise.disposables@gmail.com",
-					pass: "loremIPSUM2012"
+					user: username,
+					pass: password
 				}
 			});
 
