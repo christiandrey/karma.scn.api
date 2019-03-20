@@ -5,6 +5,13 @@ export namespace Constants {
 
 	export const passwordHashCipherKey = "3AtMY72o%PK60#X5&f9Hj%QT8Q3weMLWazOAN9sUy7sdyp3MznPqX0V6eDCeVewBp@v$!s";
 
+	export const cloudinary = {
+		cloudName: "scnnigeria",
+		apiKey: "348976631695729",
+		apiSecret: "rhbGfKPUO-huwSJLLbHWxrBg-NA",
+		environmentVariable: "cloudinary://348976631695729:rhbGfKPUO-huwSJLLbHWxrBg-NA@ds1ea2d3v/"
+	};
+
 	export const locationEverywhere = "everywhere";
 
 	export const categoryAll = "all";

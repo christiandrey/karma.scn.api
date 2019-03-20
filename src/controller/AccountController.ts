@@ -145,7 +145,7 @@ export class AccountController {
 			address: new Address({
 				city: "Ikeja",
 				state: "Lagos",
-				country: new Country({ id: "d44199d3-c6ef-421c-b63d-0ff47dddc3bb" })
+				country: new Country({ id: "9b14ccbf-c2a0-4ee0-ba80-d08e983d1504" })
 			}),
 			email: "admin@supplychainnetwork.com"
 		} as User);

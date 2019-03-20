@@ -7,6 +7,7 @@ import * as cors from "cors";
 import * as bodyParser from "body-parser";
 import * as passport from "passport";
 import * as fileUpload from "express-fileupload";
+import * as cloudinary from "cloudinary";
 import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
 import { SocketService } from "./services/socketService";
@@ -22,6 +23,15 @@ createConnection()
 		const app = express();
 
 		app.use(bodyParser.json());
+
+		// ----------------------------------------------------------------------
+		// Configure Cloudinary for this session
+		// ----------------------------------------------------------------------
+		cloudinary.config({
+			cloud_name: Constants.cloudinary.cloudName,
+			api_key: Constants.cloudinary.apiKey,
+			api_secret: Constants.cloudinary.apiSecret
+		});
 
 		// ----------------------------------------------------------------------
 		// Restart all CRON jobs (Middleware)
