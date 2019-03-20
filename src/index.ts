@@ -8,6 +8,7 @@ import * as bodyParser from "body-parser";
 import * as passport from "passport";
 import * as fileUpload from "express-fileupload";
 import * as cloudinary from "cloudinary";
+import * as helmet from "helmet";
 import { Request, Response } from "express";
 import { Routes, IRoute } from "./shared/routes";
 import { SocketService } from "./services/socketService";
@@ -21,6 +22,8 @@ createConnection()
 		require("./auth/passport");
 
 		const app = express();
+
+		app.use(helmet());
 
 		app.use(bodyParser.json());
 
