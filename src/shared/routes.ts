@@ -781,5 +781,21 @@ export const Routes = [
 		action: "getAllAsync",
 		protected: true,
 		admin: true
+	},
+	{
+		method: "put",
+		route: "/contentsections",
+		controller: ContentSectionsController,
+		action: "updateAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "delete",
+		route: "/contentsections/:id",
+		controller: ContentSectionsController,
+		action: "deleteAsync",
+		protected: true,
+		admin: true
 	}
 ];

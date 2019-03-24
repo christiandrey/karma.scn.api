@@ -29,6 +29,20 @@ export class ContentSectionsController {
 		}
 
 		// ------------------------------------------------------------------------
+		// Check for existing entity
+		// ------------------------------------------------------------------------
+
+		const dbContentSection = await this.contentSectionRepository.findOne({ title: contentSection.title });
+
+		if (!!dbContentSection) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: ["A content with the same title already exists"]
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "A content with the same title already exists", false);
+		}
+
+		// ------------------------------------------------------------------------
 		// Create New Entity
 		// ------------------------------------------------------------------------
 
@@ -38,6 +52,49 @@ export class ContentSectionsController {
 			target: MapContentSection.inAllControllers(createdContentSection)
 		});
 
+		return Methods.getJsonResponse(validResponse);
+	}
+
+	async updateAsync(req: Request, resp: Response, next: NextFunction) {
+		const contentSection = new ContentSection(req.body);
+		const validationResult = await validate(contentSection);
+
+		if (validationResult.length > 0) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: validationResult.map(e => e.constraints[Object.keys(e.constraints)[0]])
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "Content section data provided was not valid", false);
+		}
+
+		// ------------------------------------------------------------------------
+		// Check for existing entity with same title
+		// ------------------------------------------------------------------------
+
+		const existingContentSection = await this.contentSectionRepository.findOne({ title: contentSection.title });
+
+		if (!!existingContentSection && existingContentSection.id !== contentSection.id) {
+			const invalidResponse = new FormResponse({
+				isValid: false,
+				errors: ["A content section with the same title already exists"]
+			} as IFormResponse);
+			return Methods.getJsonResponse(invalidResponse, "A product with the same title already exists", false);
+		}
+
+		const dbContentSection = await this.contentSectionRepository.findOne({ id: contentSection.id });
+
+		if (!dbContentSection) {
+			Methods.sendErrorResponse(resp, 404, "Content Section was not found");
+			return;
+		}
+
+		dbContentSection.title = contentSection.title;
+
+		const updatedContentSection = await this.contentSectionRepository.save(dbContentSection);
+		const validResponse = new FormResponse<ContentSection>({
+			isValid: true,
+			target: MapContentSection.inAllControllers(updatedContentSection)
+		});
 		return Methods.getJsonResponse(validResponse);
 	}
 
