@@ -21,6 +21,7 @@ import { WebinarsController } from "../controller/WebinarsController";
 import { TimelineController } from "../controller/TimelineController";
 import { AdsController } from "../controller/AdsController";
 import { LogsController } from "../controller/LogsController";
+import { ContentSectionsController } from "../controller/ContentSectionsController";
 
 export interface IRoute {
 	method: string;
@@ -45,8 +46,14 @@ export const Routes = [
 		action: "register"
 	},
 	{
-		method: "get",
-		route: "/countries/seed",
+		method: "post",
+		route: "/account/seed/:key",
+		controller: AccountController,
+		action: "seedAsync"
+	},
+	{
+		method: "post",
+		route: "/countries/seed/:key",
 		controller: CountriesController,
 		action: "seedAsync"
 	},
@@ -750,6 +757,44 @@ export const Routes = [
 		route: "/logs/latest",
 		controller: LogsController,
 		action: "getLatestAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "post",
+		route: "/contentsections",
+		controller: ContentSectionsController,
+		action: "createAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "post",
+		route: "/contentsections/some",
+		controller: ContentSectionsController,
+		action: "getAsync"
+	},
+	{
+		method: "get",
+		route: "/contentsections",
+		controller: ContentSectionsController,
+		action: "getAllAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "put",
+		route: "/contentsections",
+		controller: ContentSectionsController,
+		action: "updateAsync",
+		protected: true,
+		admin: true
+	},
+	{
+		method: "delete",
+		route: "/contentsections/:id",
+		controller: ContentSectionsController,
+		action: "deleteAsync",
 		protected: true,
 		admin: true
 	}

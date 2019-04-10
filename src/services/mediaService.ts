@@ -1,5 +1,6 @@
 import * as fileUpload from "express-fileupload";
 import * as sharp from "sharp";
+import * as cloudinary from "cloudinary";
 import { Request } from "express";
 import { Methods } from "../shared/methods";
 import { Constants } from "../shared/constants";
@@ -39,13 +40,29 @@ export namespace MediaService {
 					const optimiseImageResult = await optimiseImage(file.data, fileExtension, fileSaveRelativePath);
 
 					if (optimiseImageResult) {
+						// --------------------------------------------------------------
+						// UPLOAD MEDIA FILE TO FILE HOST
+						// --------------------------------------------------------------
+						await uploadToFileHost(fileSaveRelativePath.replace(fileExtension, `_thumb${fileExtension}`), `${generatedFileName}_thumb`);
+						const uploadedMedia = await uploadToFileHost(fileSaveRelativePath, generatedFileName);
+
+						// --------------------------------------------------------------
+						// CREATE AND PERSIST MEDIA INSTANCE IN DATABASE
+						// --------------------------------------------------------------
 						const media = new Media({
 							note,
 							type: mediaType,
 							name: mediaName,
-							url: fileSavePath
+							url: uploadedMedia.secure_url
 						});
 						createdMedia.push(media);
+
+						// --------------------------------------------------------------
+						// CLEAN UP UNUSED FILES
+						// --------------------------------------------------------------
+						const unlinkAsync = promisify(unlink);
+						await unlinkAsync(fileSaveRelativePath);
+						await unlinkAsync(fileSaveRelativePath.replace(fileExtension, `_thumb${fileExtension}`));
 					}
 				} else {
 					const mediaType = MediaTypeEnum.Document;
@@ -53,13 +70,27 @@ export namespace MediaService {
 					const fileSaveRelativePath = `${Methods.getBaseFolder()}${Constants.paths.documentUploadPath}${fileSaveName}`;
 					await file.mv(fileSaveRelativePath);
 
+					// --------------------------------------------------------------
+					// UPLOAD MEDIA FILE TO FILE HOST
+					// --------------------------------------------------------------
+					const uploadedMedia = await uploadToFileHost(fileSaveRelativePath, generatedFileName, "document");
+
+					// --------------------------------------------------------------
+					// CREATE AND PERSIST MEDIA INSTANCE IN DATABASE
+					// --------------------------------------------------------------
 					const media = new Media({
 						note,
 						type: mediaType,
 						name: mediaName,
-						url: fileSavePath
+						url: uploadedMedia.secure_url
 					});
 					createdMedia.push(media);
+
+					// --------------------------------------------------------------
+					// CLEAN UP UNUSED FILE
+					// --------------------------------------------------------------
+					const unlinkAsync = promisify(unlink);
+					await unlinkAsync(fileSaveRelativePath);
 				}
 			});
 
@@ -138,5 +169,16 @@ export namespace MediaService {
 		}
 
 		return false;
+	}
+
+	// -------------------------------------------------------------------------------------------------
+	/** Upload file to file host */
+	async function uploadToFileHost(filePath: string, fileName?: string, type: "image" | "document" = "image"): Promise<MediaItem> {
+		const result = cloudinary.uploader.upload(filePath, null, {
+			folder: `${type}s/`,
+			public_id: fileName
+		});
+
+		return result;
 	}
 }

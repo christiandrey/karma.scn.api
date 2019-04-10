@@ -1,18 +1,18 @@
 import { MigrationInterface, QueryRunner, TableColumn } from "typeorm";
 
-export class AdsAddUrlProperty1550117759593 implements MigrationInterface {
+export class AddContentSectionTitle1553406851137 implements MigrationInterface {
 	public async up(queryRunner: QueryRunner): Promise<any> {
 		await queryRunner.addColumn(
-			"ad",
+			"content_section",
 			new TableColumn({
-				name: "url",
+				name: "title",
 				type: "varchar",
-				isNullable: true
+				isNullable: false
 			})
 		);
 	}
 
 	public async down(queryRunner: QueryRunner): Promise<any> {
-		await queryRunner.dropColumn("ad", "url");
+		await queryRunner.dropColumn("content_section", "title");
 	}
 }

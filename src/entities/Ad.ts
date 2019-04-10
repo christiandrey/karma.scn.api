@@ -1,7 +1,9 @@
-import { Entity, Column, OneToOne, JoinColumn } from "typeorm";
-import { Media } from "./Media";
+import { BeforeInsert, Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { IsNotEmpty, IsUrl } from "class-validator";
+
 import { BaseEntity } from "./BaseEntity";
-import { IsNotEmpty } from "class-validator";
+import { Media } from "./Media";
+import { Methods } from "../shared/methods";
 
 @Entity()
 export class Ad extends BaseEntity {
@@ -17,12 +19,25 @@ export class Ad extends BaseEntity {
 		nullable: true
 	})
 	@IsNotEmpty()
+	@IsUrl()
 	url: string;
 
 	@Column("int", {
 		default: 0
 	})
 	clickCount: number;
+
+	@BeforeInsert()
+	sanitizeUrlBeforeInsert() {
+		const sanitizedUrl = Methods.sanitizeURL(this.url);
+		this.url = sanitizedUrl;
+	}
+
+	@BeforeInsert()
+	sanitizeUrlBeforeUpdate() {
+		const sanitizedUrl = Methods.sanitizeURL(this.url);
+		this.url = sanitizedUrl;
+	}
 
 	constructor(dto?: Ad | any) {
 		super(dto);

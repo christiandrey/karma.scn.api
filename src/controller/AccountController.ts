@@ -1,24 +1,25 @@
+import * as bcrypt from "bcrypt";
+import * as passport from "passport";
+import * as moment from "moment";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entities/User";
 import { getRepository } from "typeorm";
-import * as passport from "passport";
 import { IVerifyOptions } from "passport-local";
 import { FormResponse } from "../dto/classes/FormResponse";
 import { Methods } from "../shared/methods";
 import { RegisterDetails } from "../dto/classes/RegisterDetails";
-import { validate, ValidationError } from "class-validator";
-import * as bcrypt from "bcrypt";
-import { SendEmailConfig } from "../dto/classes/SendEmailConfig";
-import { EmailService } from "../services/emailService";
+import { validate } from "class-validator";
 import { UserService } from "../services/userService";
 import { UserTypeEnum } from "../enums/UserTypeEnum";
 import { Address } from "../entities/Address";
 import { Country } from "../entities/Country";
 import { LogService } from "../services/logService";
+import { Constants } from "../shared/constants";
+import { CronService } from "../services/cronService";
+import { CronJobTypeEnum } from "../enums/CronJobTypeEnum";
 
 export class AccountController {
 	private userRepository = getRepository(User);
-	private countryRepository = getRepository(Country);
 
 	async login(req: Request, resp: Response, next: NextFunction) {
 		passport.authenticate("local", { session: false }, (error, user: User, info: IVerifyOptions) => {
@@ -98,22 +99,22 @@ export class AccountController {
 				email: email.toLowerCase()
 			});
 
-			// const defaultCountry = await this.countryRepository.findOne({ isDefault: true });
-			// user.address.country = new Country({ id: defaultCountry.id });
-
 			user.password = await bcrypt.hash(password, 2);
 
 			dbUser = await this.userRepository.save(user);
 
-			//TODO: Schedule birthday message using DOB
+			// ---------------------------------------------------------------
+			// Schedule Email and Birthday Jobs
+			// ---------------------------------------------------------------
 
-			const sendEmailConfig = {
-				to: user.email,
-				subject: "Welcome to SCN",
-				text: "Welcome to the Supply Chain Network"
-			} as SendEmailConfig;
+			const timeToSendWelcomeEmail = moment()
+				.add(1, "minutes")
+				.toDate();
+			const userDateOfBirthDay = new Date(dateOfBirth).getDate();
+			const userDateOfBirthMonth = new Date(dateOfBirth).getMonth();
 
-			await EmailService.sendEmailAsync(req, sendEmailConfig);
+			await CronService.scheduleJob(req, `0 0 ${userDateOfBirthDay} ${userDateOfBirthMonth + 1} *`, CronJobTypeEnum.BirthdayMessage, [email, firstName]);
+			await CronService.scheduleJobWithDate(req, timeToSendWelcomeEmail, CronJobTypeEnum.WelcomeEmail, [email, firstName]);
 			await LogService.log(req, `${user.firstName} ${user.lastName} just signed up as a ${UserTypeEnum[user.type]}.`);
 
 			const token = UserService.getUserToken(user);
@@ -124,5 +125,35 @@ export class AccountController {
 
 			return Methods.getJsonResponse(response, "New user was created successfully");
 		}
+	}
+
+	async seedAsync(req: Request, resp: Response, next: NextFunction) {
+		const key = req.params.key;
+
+		if (key !== Constants.seedKey) {
+			Methods.sendErrorResponse(resp, 401);
+			return;
+		}
+
+		const user = new User({
+			firstName: "Admin",
+			lastName: "User",
+			type: UserTypeEnum.Admin,
+			phone: "08144398813",
+			dateOfBirth: new Date("1990-10-30T02:41:17.396Z"),
+			verified: true,
+			address: new Address({
+				city: "Ikeja",
+				state: "Lagos",
+				country: new Country({ id: "9b14ccbf-c2a0-4ee0-ba80-d08e983d1504" })
+			}),
+			email: "admin@supplychainnetwork.com"
+		} as User);
+
+		user.password = await bcrypt.hash("cxBeNT7czs4iOMXsQ25D", 2);
+
+		await this.userRepository.save(user);
+
+		return Methods.getJsonResponse({}, "Seed complete");
 	}
 }
