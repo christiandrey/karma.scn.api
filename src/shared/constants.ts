@@ -1,23 +1,23 @@
 export namespace Constants {
-	export const cipherKey = "s*$D6n1x4U73i%urBQRFBPyU5$AHJQxFw&&4UrYrXdmvn8WGwvCRT@yn!5Y5JSXZ3G5Bkt";
+	export const cipherKey = "__REDACTED__";
 
-	export const emailSender = "noreply@supplychainnetwork.org";
+	export const emailSender = "__REDACTED__";
 
-	export const passwordHashCipherKey = "3AtMY72o%PK60#X5&f9Hj%QT8Q3weMLWazOAN9sUy7sdyp3MznPqX0V6eDCeVewBp@v$!s";
+	export const passwordHashCipherKey = "__REDACTED__";
 
 	export const cloudinary = {
-		cloudName: "scnnigeria",
-		apiKey: "348976631695729",
-		apiSecret: "rhbGfKPUO-huwSJLLbHWxrBg-NA",
-		environmentVariable: "cloudinary://348976631695729:rhbGfKPUO-huwSJLLbHWxrBg-NA@ds1ea2d3v/"
+		cloudName: "__REDACTED__",
+		apiKey: "__REDACTED__",
+		apiSecret: "__REDACTED__",
+		environmentVariable: "__REDACTED__"
 	};
 
 	export const sendGrid = {
-		apiKey: "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",
-		server: "smtp.sendgrid.net",
+		apiKey: "__REDACTED__",
+		server: "__REDACTED__",
 		port: 465,
-		username: "apikey",
-		password: "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"
+		username: "__REDACTED__",
+		password: "__REDACTED__"
 	};
 
 	export const locationEverywhere = "everywhere";
@@ -40,11 +40,11 @@ export namespace Constants {
 
 	export const commentsTree = "commentsTree";
 
-	export const redisURL = "redis://h:pc55953e41819fa4d618407fd526fda20b9a39cda7f2dad6d83bd99f526e98acb@ec2-63-35-36-61.eu-west-1.compute.amazonaws.com:13269";
+	export const redisURL = "__REDACTED__";
 
 	export const redisTTL = 3600;
 
-	export const seedKey = "8XNXegy4nhjKh80CruU2tM97QioWh0dcWau8TbnD3wHNjlhc5fDhqoKd3cnnLjPaNz2xJs";
+	export const seedKey = "__REDACTED__";
 
 	export const emailButton = `<table class="mob_btn" cellpadding="0" cellspacing="0" border="0" style="background: #27cbcc; border-radius: 4px;"> <tr> <td align="center" valign="top"> <a href="::buttonHref::" target="_blank" style="display: block; border: 1px solid #27cbcc; border-radius: 4px; padding: 12px 23px; font-family: 'Source Sans Pro', Arial, Verdana, Tahoma, Geneva, sans-serif; color: #ffffff; font-size: 20px; line-height: 30px; text-decoration: none; white-space: nowrap; font-weight: 600;"> <font face="'Source Sans Pro', sans-serif" color="#ffffff" style="font-size: 20px; line-height: 30px; text-decoration: none; white-space: nowrap; font-weight: 600;"> <span style="font-family: 'Source Sans Pro', Arial, Verdana, Tahoma, Geneva, sans-serif; color: #ffffff; font-size: 20px; line-height: 30px; text-decoration: none; white-space: nowrap; font-weight: 600;">::buttonTitle::</span> </font> </a> </td> </tr> </table>`;
 
